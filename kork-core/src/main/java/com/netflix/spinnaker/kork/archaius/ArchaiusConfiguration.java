@@ -51,10 +51,10 @@ import java.util.concurrent.TimeUnit;
 public class ArchaiusConfiguration {
 
   @Autowired
-  ConfigurableApplicationContext applicationContext;
+  private ConfigurableApplicationContext applicationContext;
 
   @Autowired(required = false)
-  List<ClasspathPropertySource> propertyBindings;
+  private List<ClasspathPropertySource> propertyBindings;
 
   /**
    * This is a BeanPostProcessor to ensure early initialization only.

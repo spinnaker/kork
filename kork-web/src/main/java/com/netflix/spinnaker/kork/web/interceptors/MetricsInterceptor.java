@@ -43,7 +43,7 @@ import java.util.concurrent.TimeUnit;
  * - cause (if success == false, the name of the raised exception)
  */
 public class MetricsInterceptor extends HandlerInterceptorAdapter {
-  static final String TIMER_ATTRIBUTE = "Metrics_startTime";
+  private static final String TIMER_ATTRIBUTE = "Metrics_startTime";
 
   private final Registry registry;
   private final String metricName;

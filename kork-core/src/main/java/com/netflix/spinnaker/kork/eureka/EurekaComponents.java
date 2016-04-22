@@ -43,19 +43,19 @@ import java.util.Map;
 public class EurekaComponents {
 
   @Autowired
-  HealthAggregator healthAggregator;
+  private HealthAggregator healthAggregator;
 
   @Autowired
-  Map<String, HealthIndicator> healthIndicators;
+  private Map<String, HealthIndicator> healthIndicators;
 
   @Autowired
-  ApplicationEventPublisher publisher;
+  private ApplicationEventPublisher publisher;
 
   @Value("${eureka.instance.namespace:netflix.appinfo.}")
-  String appInfoNamespace = "netflix.appinfo.";
+  private String appInfoNamespace = "netflix.appinfo.";
 
   @Value("${eureka.instance.namespace:netflix.discovery.}")
-  String clientConfigNamespace = "netflix.discovery.";
+  private String clientConfigNamespace = "netflix.discovery.";
 
   @Bean
   public EventBus eventBus() {
