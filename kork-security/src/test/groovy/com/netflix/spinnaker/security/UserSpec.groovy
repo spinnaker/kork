@@ -30,6 +30,7 @@ class UserSpec extends Specification {
       mutableUser.email == "email"
       mutableUser.allowedAccounts == ["abc"]
       immutableUser.email == "email"
+      immutableUser.username == "email"
       immutableUser.allowedAccounts == ["abc"]
 
     when:
@@ -48,5 +49,20 @@ class UserSpec extends Specification {
     then:
       mutableUser.allowedAccounts == ["xyz"]
       immutableUser.allowedAccounts == ["abc"]
+  }
+
+  def "should fallback to email if no username is set"() {
+    setup:
+      def user = new User(email: "email")
+
+    expect:
+      user.email == "email"
+      user.username == "email"
+
+    when:
+      user.username = "username"
+
+    then:
+      user.username == "username"
   }
 }

@@ -29,7 +29,7 @@ class User implements UserDetails {
   static final long serialVersionUID = 7392392099262597885L
 
   String email
-  String username = email
+  String username
   String firstName
   String lastName
 
@@ -39,6 +39,11 @@ class User implements UserDetails {
   @Override
   List getAuthorities() {
     roles.collect { new SimpleGrantedAuthority(it) }
+  }
+
+  @Override
+  String getUsername() {
+    return this.username ?: this.email
   }
 
   ImmutableUser asImmutable() {
