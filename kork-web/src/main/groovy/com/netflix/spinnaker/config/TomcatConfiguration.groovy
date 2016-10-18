@@ -22,6 +22,7 @@ import org.apache.catalina.connector.Connector
 import org.apache.coyote.http11.AbstractHttp11JsseProtocol
 import org.apache.coyote.http11.Http11NioProtocol
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.boot.actuate.endpoint.ResolvedEnvironmentEndpoint
 import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression
 import org.springframework.boot.context.embedded.ConfigurableEmbeddedServletContainer
 import org.springframework.boot.context.embedded.EmbeddedServletContainerCustomizer

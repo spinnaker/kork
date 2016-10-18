@@ -14,9 +14,8 @@
  * limitations under the License.
  */
 
-package com.netflix.spinnaker.config
+package org.springframework.boot.actuate.endpoint
 
-import org.springframework.boot.actuate.endpoint.AbstractEndpoint
 import org.springframework.boot.context.properties.ConfigurationProperties
 import org.springframework.core.env.ConfigurableEnvironment
 import org.springframework.core.env.EnumerablePropertySource
@@ -27,22 +26,22 @@ import org.springframework.core.env.StandardEnvironment
 @ConfigurationProperties(prefix = "endpoints.resolvedEnv")
 class ResolvedEnvironmentEndpoint extends AbstractEndpoint<Map<String, Object>> {
 
+  private final Sanitizer sanitizer = new Sanitizer();
+
   public ResolvedEnvironmentEndpoint() {
     super("resolvedEnv")
   }
 
   @Override
   Map<String, Object> invoke() {
-    def result = [:]
     Environment environment = getEnvironment()
-    getPropertyKeys().each {
-      result.put(it, environment.getProperty(it))
+    return getPropertyKeys().collectEntries {
+      [(it): sanitizer.sanitize(it, environment.getProperty(it))]
     }
-    return result
   }
 
   /**
-   * Impl paritially copied from
+   * Impl partially copied from
    * {@link org.springframework.boot.actuate.endpoint.EnvironmentEndpoint}
    *
    * This gathers all defined properties in the system (no matter the source)
@@ -67,5 +66,9 @@ class ResolvedEnvironmentEndpoint extends AbstractEndpoint<Map<String, Object>> 
     }
 
     return result
+  }
+
+  public void setKeysToSanitize(String... keysToSanitize) {
+    this.sanitizer.setKeysToSanitize(keysToSanitize);
   }
 }
