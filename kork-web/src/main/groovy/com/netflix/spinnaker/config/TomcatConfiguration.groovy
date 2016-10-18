@@ -28,11 +28,13 @@ import org.springframework.boot.context.embedded.EmbeddedServletContainerCustomi
 import org.springframework.boot.context.embedded.Ssl
 import org.springframework.boot.context.embedded.tomcat.TomcatConnectorCustomizer
 import org.springframework.boot.context.embedded.tomcat.TomcatEmbeddedServletContainerFactory
+import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 
 @Slf4j
 @Configuration
+@EnableConfigurationProperties(ResolvedEnvironmentEndpoint)
 class TomcatConfiguration {
   @Value('${default.legacyServerPort:-1}')
   int legacyServerPort
