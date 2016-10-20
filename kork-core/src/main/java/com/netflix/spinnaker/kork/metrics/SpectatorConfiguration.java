@@ -40,7 +40,7 @@ import java.util.List;
 public class SpectatorConfiguration {
 
   @Value("${spectator.gc.loggingEnabled:true}")
-  boolean jmxLoggingEnabled = true;
+  private boolean jmxLoggingEnabled = true;
 
   @Bean
   @ConditionalOnMissingBean(Registry.class)

@@ -10,7 +10,7 @@ import java.net.ServerSocket;
 import java.net.URI;
 import java.net.URISyntaxException;
 
-public class EmbeddedRedis {
+public final class EmbeddedRedis {
 
   private final URI connection;
   private final RedisServer redisServer;

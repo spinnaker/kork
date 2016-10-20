@@ -55,7 +55,7 @@ import java.util.concurrent.*;
 public class AstyanaxComponents {
 
     @Value("${cassandra.host:127.0.0.1}")
-    String seeds;
+    private String seeds;
 
     @Bean
     public ExecutorService cassandraAsyncExecutor(@Value("${cassandra.asyncExecutorPoolSize:5}") int asyncPoolSize) {

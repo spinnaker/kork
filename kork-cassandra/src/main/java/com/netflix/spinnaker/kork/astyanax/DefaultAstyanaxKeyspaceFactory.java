@@ -72,7 +72,7 @@ public class DefaultAstyanaxKeyspaceFactory implements AstyanaxKeyspaceFactory {
     //
     // visible for testing:
     //
-    static class KeyspaceKey {
+    static final class KeyspaceKey {
         private final String clusterName;
         private final String keyspaceName;
 
