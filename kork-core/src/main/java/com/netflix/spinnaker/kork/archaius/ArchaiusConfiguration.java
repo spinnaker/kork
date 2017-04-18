@@ -88,17 +88,17 @@ public class ArchaiusConfiguration {
     }
 
     private Optional<ResourcePropertySource> res(String base, String profile) {
-      String name = base;
-      String res = "/" + base;
+      StringBuilder name = new StringBuilder(base);
+      StringBuilder res = new StringBuilder("/").append(base);
       if (profile != null && !profile.isEmpty()) {
-        name += ": " + profile;
-        res += "-" + profile;
+        name.append(": ").append(profile);
+        res.append("-").append(profile);
       }
-      res += ".properties";
-      Resource r = applicationContext.getResource(res);
+      res.append(".properties");
+      Resource r = applicationContext.getResource(res.toString());
       if (r.exists()) {
         try {
-          return Optional.of(new ResourcePropertySource(name, r));
+          return Optional.of(new ResourcePropertySource(name.toString(), r));
         } catch (IOException ioe) {
           throw new RuntimeException("Error loading property source [" + name + "]: " + res, ioe);
         }
