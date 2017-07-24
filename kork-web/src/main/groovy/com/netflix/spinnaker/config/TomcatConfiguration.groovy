@@ -23,6 +23,7 @@ import groovy.util.logging.Slf4j
 import org.apache.catalina.connector.Connector
 import org.apache.coyote.http11.AbstractHttp11JsseProtocol
 import org.apache.coyote.http11.Http11NioProtocol
+import org.apache.tomcat.util.net.SSLHostConfig
 import org.springframework.boot.actuate.endpoint.ResolvedEnvironmentEndpoint
 import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression
 import org.springframework.boot.context.embedded.ConfigurableEmbeddedServletContainer
@@ -61,11 +62,13 @@ class TomcatConfiguration {
           def handler = connector.getProtocolHandler()
           if (handler instanceof AbstractHttp11JsseProtocol) {
             if (handler.isSSLEnabled()) {
-              handler.setProperty("useServerCipherSuitesOrder", "true")
-              handler.setProperty("sslEnabledProtocols", okHttpClientConfigurationProperties.tlsVersions.join(","))
-              handler.setCiphers(okHttpClientConfigurationProperties.cipherSuites.join(","))
-              handler.setSslImplementationName(BlacklistingSSLImplementation.name)
-              handler.setCrlFile(sslExtensionConfigurationProperties.getCrlFile())
+              SSLHostConfig sslHostConfig = new SSLHostConfig();
+              sslHostConfig.setHonorCipherOrder("true")
+              sslHostConfig.ciphers = okHttpClientConfigurationProperties.cipherSuites.join(",")
+              sslHostConfig.setProtocols(okHttpClientConfigurationProperties.tlsVersions.join(","))
+              sslHostConfig.setTrustManagerClassName(BlacklistingSSLImplementation.name)
+              sslHostConfig.setCertificateRevocationListFile(sslExtensionConfigurationProperties.getCrlFile())
+              handler.addSslHostConfig(sslHostConfig)
             }
           }
         }
