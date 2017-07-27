@@ -18,6 +18,7 @@ package com.netflix.spinnaker.config
 
 import com.netflix.spinnaker.okhttp.OkHttpClientConfigurationProperties
 import com.netflix.spinnaker.tomcat.x509.BlacklistingSSLImplementation
+import com.netflix.spinnaker.tomcat.x509.BlacklistingX509TrustManager
 import com.netflix.spinnaker.tomcat.x509.SslExtensionConfigurationProperties
 import groovy.util.logging.Slf4j
 import org.apache.catalina.connector.Connector
@@ -62,13 +63,16 @@ class TomcatConfiguration {
           def handler = connector.getProtocolHandler()
           if (handler instanceof AbstractHttp11JsseProtocol) {
             if (handler.isSSLEnabled()) {
-              SSLHostConfig sslHostConfig = new SSLHostConfig();
+              def sslConfigs = connector.findSslHostConfigs()
+              if (sslConfigs.size() != 1) {
+                throw new RuntimeException("Ssl configs: found ${sslConfigs.size()}, expected 1.")
+              }
+              handler.setSslImplementationName(BlacklistingSSLImplementation.name)
+              SSLHostConfig sslHostConfig = sslConfigs.first()
               sslHostConfig.setHonorCipherOrder("true")
               sslHostConfig.ciphers = okHttpClientConfigurationProperties.cipherSuites.join(",")
               sslHostConfig.setProtocols(okHttpClientConfigurationProperties.tlsVersions.join(","))
-              sslHostConfig.setTrustManagerClassName(BlacklistingSSLImplementation.name)
               sslHostConfig.setCertificateRevocationListFile(sslExtensionConfigurationProperties.getCrlFile())
-              handler.addSslHostConfig(sslHostConfig)
             }
           }
         }
