@@ -43,4 +43,7 @@ test {
 dependencies {
   spinnaker.group('test')
   testCompile spinnaker.dependency('groovy')
+
+  compile spinnaker.dependency('lombok')
+  compile spinnaker.dependency('frigga')
 }
