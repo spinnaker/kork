@@ -24,7 +24,7 @@ buildscript {
   }
 }
 
-group = "com.netflix.spinnaker.namer"
+group = "com.netflix.spinnaker.moniker"
 apply plugin: 'spinnaker.project'
 apply plugin: 'groovy'
 
