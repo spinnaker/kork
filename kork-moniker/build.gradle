@@ -29,6 +29,9 @@ group = "com.netflix.spinnaker.moniker"
 apply plugin: 'spinnaker.project'
 apply plugin: 'groovy'
 
+//groovy only for tests
+tasks.compileGroovy.enabled = false
+
 spinnaker {
   dependenciesVersion = "0.109.2"
 }
@@ -45,6 +48,6 @@ dependencies {
   spinnaker.group('test')
   testCompile spinnaker.dependency('groovy')
 
-  compile spinnaker.dependency('lombok')
+  compileOnly spinnaker.dependency('lombok')
   compile spinnaker.dependency('frigga')
 }
