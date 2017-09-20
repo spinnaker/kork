@@ -51,9 +51,15 @@ class AuthenticatedRequestFilter implements Filter {
   private static final String RFC822_NAME_ID = "1"
 
   private final boolean extractSpinnakerHeaders
+  private final boolean extractSpinnakerUserOriginHeader
+  private final boolean forceNewSpinnakerRequestId
 
-  public AuthenticatedRequestFilter(boolean extractSpinnakerHeaders = false) {
+  public AuthenticatedRequestFilter(boolean extractSpinnakerHeaders = false,
+                                    boolean extractSpinnakerUserOriginHeader = false,
+                                    boolean forceNewSpinnakerRequestId = false) {
     this.extractSpinnakerHeaders = extractSpinnakerHeaders
+    this.extractSpinnakerUserOriginHeader = extractSpinnakerUserOriginHeader
+    this.forceNewSpinnakerRequestId = forceNewSpinnakerRequestId
   }
 
   @Override
@@ -63,6 +69,8 @@ class AuthenticatedRequestFilter implements Filter {
   void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
     def spinnakerUser = null
     def spinnakerAccounts = null
+    def spinnakerUserOrigin = null
+    def spinnakerRequestId = null
 
     try {
       if (request.isSecure()) {
@@ -95,6 +103,14 @@ class AuthenticatedRequestFilter implements Filter {
       def httpServletRequest = (HttpServletRequest) request
       spinnakerUser = spinnakerUser ?: httpServletRequest.getHeader(SPINNAKER_USER)
       spinnakerAccounts = spinnakerAccounts ?: httpServletRequest.getHeader(SPINNAKER_ACCOUNTS)
+      spinnakerUserOrigin = httpServletRequest.getHeader(SPINNAKER_USER_ORIGIN)
+      spinnakerRequestId = httpServletRequest.getHeader(SPINNAKER_REQUEST_ID)
+    }
+    if (extractSpinnakerUserOriginHeader) {
+      spinnakerUserOrigin = "deck".equalsIgnoreCase(((HttpServletRequest) request).getHeader("X-RateLimit-App")) ? "deck" : "api"
+    }
+    if (forceNewSpinnakerRequestId) {
+      spinnakerRequestId = UUID.randomUUID().toString()
     }
 
     try {
@@ -103,6 +119,12 @@ class AuthenticatedRequestFilter implements Filter {
       }
       if (spinnakerAccounts) {
         MDC.put(SPINNAKER_ACCOUNTS, spinnakerAccounts)
+      }
+      if (spinnakerUserOrigin) {
+        MDC.put(SPINNAKER_USER_ORIGIN, spinnakerUserOrigin)
+      }
+      if (spinnakerRequestId) {
+        MDC.put(SPINNAKER_REQUEST_ID, spinnakerRequestId)
       }
 
       chain.doFilter(request, response)

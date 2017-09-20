@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 Netflix, Inc.
+ * Copyright 2017 Netflix, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,18 +14,13 @@
  * limitations under the License.
  */
 
-include 'kork-core', 'kork-cassandra', 'kork-jedis-test', 'kork-swagger', 'kork-security', 'kork-web', 'kork-hystrix', 'kork-stackdriver', 'kork-exceptions', 'kork-artifacts'
+package com.netflix.spinnaker.kork.web.exceptions;
 
-rootProject.name='kork'
+import java.util.Collections;
+import java.util.Map;
 
-def setBuildFile(project) {
-    project.buildFileName = "${project.name}.gradle"
-    project.children.each {
-        setBuildFile(it)
-    }
+public interface HasAdditionalAttributes {
+  default Map<String, Object> getAdditionalAttributes() {
+    return Collections.emptyMap();
+  }
 }
-
-rootProject.children.each {
-    setBuildFile it
-}
-
