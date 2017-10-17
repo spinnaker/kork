@@ -102,6 +102,12 @@ public class MetricsInterceptor extends HandlerInterceptorAdapter {
         .withTag("status", status.toString().charAt(0) + "xx")
         .withTag("statusCode", status.toString());
 
+      if (status == 429 && "0".equals(response.getHeader("X-RateLimit-Remaining"))) {
+        id.withTag("rateLimited", "true");
+      } else {
+        id.withTag("rateLimited", "false");
+      }
+
       Map variables = (Map) request.getAttribute(HandlerMapping.URI_TEMPLATE_VARIABLES_ATTRIBUTE);
       for (String pathVariable : pathVariablesToTag) {
         if (variables.containsKey(pathVariable)) {
