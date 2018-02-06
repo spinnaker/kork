@@ -1,3 +1,5 @@
 dependencies {
+  compile spinnaker.dependency('bootActuator')
+  compile spinnaker.dependency('spectatorApi')
   compile spinnaker.dependency('jedis')
 }
