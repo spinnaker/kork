@@ -22,6 +22,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.HashMap;
 import java.util.Map;
 
 @Data
@@ -42,6 +43,9 @@ public class Artifact {
   // Add extra, unknown data to the metadata map:
   @JsonAnySetter
   public void putMetadata(String key, Object value) {
+    if (metadata == null) {
+      metadata = new HashMap<>();
+    }
     metadata.put(key, value);
   }
 }
