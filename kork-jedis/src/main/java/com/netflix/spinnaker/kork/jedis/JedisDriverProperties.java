@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 Netflix, Inc.
+ * Copyright 2018 Netflix, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,31 +13,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package com.netflix.spinnaker.kork.jedis;
 
-include 'kork-core',
-  'kork-cassandra',
-  'kork-jedis-test',
-  'kork-swagger',
-  'kork-security',
-  'kork-web',
-  'kork-hystrix',
-  'kork-stackdriver',
-  'kork-exceptions',
-  'kork-artifacts',
-  'kork-jedis',
-  'kork-dynomite',
-  'kork-aws'
+import org.apache.commons.pool2.impl.GenericObjectPoolConfig;
 
-rootProject.name='kork'
+public class JedisDriverProperties {
 
-def setBuildFile(project) {
-    project.buildFileName = "${project.name}.gradle"
-    project.children.each {
-        setBuildFile(it)
-    }
+  /**
+   * The redis connection uri: (e.g. redis://localhost:6379)
+   */
+  public String connection;
+
+  /**
+   * Client connection timeout. (Not to be confused with command timeout).
+   */
+  public int timeoutMs = 2000;
+
+  /**
+   * Redis object pool configuration.
+   */
+  public GenericObjectPoolConfig poolConfig = new GenericObjectPoolConfig();
 }
-
-rootProject.children.each {
-    setBuildFile it
-}
-

@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 Netflix, Inc.
+ * Copyright 2018 Netflix, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,31 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package com.netflix.spinnaker.kork.jedis.exception;
 
-include 'kork-core',
-  'kork-cassandra',
-  'kork-jedis-test',
-  'kork-swagger',
-  'kork-security',
-  'kork-web',
-  'kork-hystrix',
-  'kork-stackdriver',
-  'kork-exceptions',
-  'kork-artifacts',
-  'kork-jedis',
-  'kork-dynomite',
-  'kork-aws'
+public class RedisClientNotFound extends RuntimeException {
 
-rootProject.name='kork'
-
-def setBuildFile(project) {
-    project.buildFileName = "${project.name}.gradle"
-    project.children.each {
-        setBuildFile(it)
-    }
+  public RedisClientNotFound(String message) {
+    super(message);
+  }
 }
-
-rootProject.children.each {
-    setBuildFile it
-}
-

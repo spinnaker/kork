@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 Netflix, Inc.
+ * Copyright 2018 Netflix, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,31 +13,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package com.netflix.spinnaker.kork.dynomite;
 
-include 'kork-core',
-  'kork-cassandra',
-  'kork-jedis-test',
-  'kork-swagger',
-  'kork-security',
-  'kork-web',
-  'kork-hystrix',
-  'kork-stackdriver',
-  'kork-exceptions',
-  'kork-artifacts',
-  'kork-jedis',
-  'kork-dynomite',
-  'kork-aws'
+import com.netflix.dyno.connectionpool.Host;
+import com.netflix.dyno.connectionpool.HostSupplier;
 
-rootProject.name='kork'
+import java.util.Collection;
+import java.util.List;
 
-def setBuildFile(project) {
-    project.buildFileName = "${project.name}.gradle"
-    project.children.each {
-        setBuildFile(it)
-    }
+public class StaticHostSupplier implements HostSupplier {
+
+  private final List<Host> hosts;
+
+  public StaticHostSupplier(List<Host> hosts) {
+    this.hosts = hosts;
+  }
+
+  @Override
+  public List<Host> getHosts() {
+    return hosts;
+  }
 }
-
-rootProject.children.each {
-    setBuildFile it
-}
-
