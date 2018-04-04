@@ -20,6 +20,13 @@ import java.util.function.Supplier;
 
 public class RetrySupport {
   public <T> T retry(Supplier<T> fn, int maxRetries, long retryBackoff, boolean exponential) {
+    return retry(fn, maxRetries, retryBackoff, exponential, 2.0);
+  }
+
+  public <T> T retry(Supplier<T> fn, int maxRetries, long retryBackoff, boolean exponential, double exponentialBase) {
+    if (exponentialBase <= 1.0) {
+      throw new IllegalStateException("exponentialBase must be greater than 1.0");
+    }
     int retries = 0;
     while (true) {
       try {
@@ -29,7 +36,7 @@ public class RetrySupport {
           throw e;
         }
 
-        long timeout = !exponential ? retryBackoff : (long) Math.pow(2, retries) * retryBackoff;
+        long timeout = !exponential ? retryBackoff : (long) Math.pow(exponentialBase, retries) * retryBackoff;
         sleep(timeout);
 
         retries++;
