@@ -51,7 +51,7 @@ public class JedisPoolFactory {
     int database = parseDatabase(redisConnection.getPath());
     String password = parsePassword(redisConnection.getUserInfo());
     GenericObjectPoolConfig objectPoolConfig = properties.poolConfig;
-    boolean isSSL = redisConnection.scheme.equals("rediss");
+    boolean isSSL = redisConnection.getScheme().equals("rediss");
 
     return new InstrumentedJedisPool(
       registry,
