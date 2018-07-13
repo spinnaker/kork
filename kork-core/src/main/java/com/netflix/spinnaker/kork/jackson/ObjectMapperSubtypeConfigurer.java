@@ -72,6 +72,7 @@ public class ObjectMapperSubtypeConfigurer {
           return null;
         }
 
+        log.info("Registering subtype of " + clazz.getSimpleName() + ": " + cls.getSimpleName());
         return new NamedType(cls, nameAnnotation.value());
       })
       .filter(Objects::nonNull)
