@@ -27,27 +27,27 @@ class ExepectedArtifactSpec extends Specification {
     Artifact.builder().type(input).build()
   }
 
-  @Shared nameFactory = {String input ->
+  @Shared nameFactory = { String input ->
     Artifact.builder().name(input).build()
   }
 
-  @Shared versionFactory = {String input ->
+  @Shared versionFactory = { String input ->
     Artifact.builder().version(input).build()
   }
 
-  @Shared locationFactory = {String input ->
+  @Shared locationFactory = { String input ->
     Artifact.builder().location(input).build()
   }
 
-  @Shared referenceFactory = {String input ->
+  @Shared referenceFactory = { String input ->
     Artifact.builder().reference(input).build()
   }
 
-  @Shared uuidFactory = {String input ->
+  @Shared uuidFactory = { String input ->
     Artifact.builder().uuid(input).build()
   }
 
-  @Shared provenanceFactory = {String input ->
+  @Shared provenanceFactory = { String input ->
     Artifact.builder().provenance(input).build()
   }
 
