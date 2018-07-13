@@ -84,6 +84,6 @@ public class ExpectedArtifact {
   }
 
   private boolean patternMatches(String us, String other) {
-    return Pattern.compile(us).asPredicate().test(other);
+    return Pattern.compile(us).matcher(other).matches();
   }
 }

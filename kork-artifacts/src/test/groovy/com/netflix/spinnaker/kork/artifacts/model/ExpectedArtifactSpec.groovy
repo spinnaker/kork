@@ -61,9 +61,9 @@ class ExepectedArtifactSpec extends Specification {
 
     where:
     expectedName | incomingName | result
-    'abc'        | 'abcde'      | true
+    'abc'        | 'abcde'      | false
     'abc.*'      | 'abcde'      | true
-    'bc.*'       | 'abcde'      | true
+    'bc.*'       | 'abcde'      | false
     '.*bc.*'     | 'abcde'      | true
     'abcde$'     | 'abcde'      | true
     '^abcde$'    | 'abcde'      | true
