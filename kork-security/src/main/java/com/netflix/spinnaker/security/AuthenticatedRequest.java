@@ -19,6 +19,7 @@ package com.netflix.spinnaker.security;
 import org.slf4j.MDC;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.util.CollectionUtils;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -49,32 +50,46 @@ public class AuthenticatedRequest {
    */
   public static <V> Callable<V> propagate(Callable<V> closure, boolean restoreOriginalContext, Object principal) {
     String spinnakerUser = getSpinnakerUser(principal).orElse(null);
+    String userOrigin = getSpinnakerUserOrigin().orElse(null);
     String executionId = getSpinnakerExecutionId().orElse(null);
-    if (spinnakerUser == null) {
-      return () -> {
-        MDC.remove(SPINNAKER_USER);
-        MDC.remove(SPINNAKER_ACCOUNTS);
-        MDC.remove(SPINNAKER_USER_ORIGIN);
-        MDC.remove(SPINNAKER_REQUEST_ID);
-        MDC.remove(SPINNAKER_EXECUTION_ID);
-        return closure.call();
-      };
-    }
-
+    String requestId = getSpinnakerRequestId().orElse(null);
     String spinnakerAccounts = getSpinnakerAccounts(principal).orElse(null);
 
     return () -> {
       String originalSpinnakerUser = MDC.get(SPINNAKER_USER);
+      String originalSpinnakerUserOrigin = MDC.get(SPINNAKER_USER_ORIGIN);
       String originalSpinnakerAccounts = MDC.get(SPINNAKER_ACCOUNTS);
       String originalSpinnakerRequestId = MDC.get(SPINNAKER_REQUEST_ID);
       String originalSpinnakerExecutionId = MDC.get(SPINNAKER_EXECUTION_ID);
       try {
-        MDC.put(SPINNAKER_USER, spinnakerUser);
+        if (spinnakerUser != null) {
+          MDC.put(SPINNAKER_USER, spinnakerUser);
+        } else {
+          MDC.remove(SPINNAKER_USER);
+        }
+
+        if (userOrigin != null) {
+          MDC.put(SPINNAKER_USER_ORIGIN, userOrigin);
+        } else {
+          MDC.remove(SPINNAKER_USER_ORIGIN);
+        }
+
         if (spinnakerAccounts != null) {
           MDC.put(SPINNAKER_ACCOUNTS, spinnakerAccounts);
+        } else {
+          MDC.remove(SPINNAKER_ACCOUNTS);
         }
+
         if (executionId != null) {
           MDC.put(SPINNAKER_EXECUTION_ID, executionId);
+        } else {
+          MDC.remove(SPINNAKER_EXECUTION_ID);
+        }
+
+        if (requestId != null) {
+          MDC.put(SPINNAKER_REQUEST_ID, requestId);
+        } else {
+          MDC.remove(SPINNAKER_REQUEST_ID);
         }
         return closure.call();
       } finally {
@@ -89,6 +104,10 @@ public class AuthenticatedRequest {
         if (restoreOriginalContext) {
           if (originalSpinnakerUser != null) {
             MDC.put(SPINNAKER_USER, originalSpinnakerUser);
+          }
+
+          if (originalSpinnakerUserOrigin != null) {
+            MDC.put(SPINNAKER_USER_ORIGIN, originalSpinnakerUserOrigin);
           }
 
           if (originalSpinnakerAccounts != null) {
@@ -138,7 +157,7 @@ public class AuthenticatedRequest {
   public static Optional<String> getSpinnakerAccounts(Object principal) {
     Object spinnakerAccounts = MDC.get(SPINNAKER_ACCOUNTS);
 
-    if (principal != null && principal instanceof User && !((User) principal).getAllowedAccounts().isEmpty()) {
+    if (principal instanceof User && !CollectionUtils.isEmpty(((User) principal).allowedAccounts)) {
       spinnakerAccounts = String.join(",", ((User) principal).getAllowedAccounts());
     }
 
