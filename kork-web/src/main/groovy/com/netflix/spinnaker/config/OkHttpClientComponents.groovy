@@ -28,24 +28,18 @@ import org.springframework.context.annotation.Configuration
 @Configuration
 @EnableConfigurationProperties(OkHttpClientConfigurationProperties)
 class OkHttpClientComponents {
-  private final Registry registry
-
-  public OkHttpClientComponents(Registry registry) {
-    this.registry = registry
-  }
-
   @Bean
   SpinnakerRequestInterceptor spinnakerRequestInterceptor(OkHttpClientConfigurationProperties okHttpClientConfigurationProperties) {
     return new SpinnakerRequestInterceptor(okHttpClientConfigurationProperties)
   }
 
   @Bean
-  OkHttpMetricsInterceptor okHttpMetricsInterceptor() {
+  OkHttpMetricsInterceptor okHttpMetricsInterceptor(Registry registry) {
     return new OkHttpMetricsInterceptor(registry)
   }
 
   @Bean
-  OkHttp3MetricsInterceptor okHttp3MetricsInterceptor() {
+  OkHttp3MetricsInterceptor okHttp3MetricsInterceptor(Registry registry) {
     return new OkHttp3MetricsInterceptor(registry)
   }
 }
