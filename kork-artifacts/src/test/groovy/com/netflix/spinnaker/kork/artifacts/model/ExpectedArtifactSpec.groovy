@@ -82,7 +82,13 @@ class ExepectedArtifactSpec extends Specification {
     !expectedArtifact.matches(factory(NO_MATCH_STRING))
 
     where:
-    factory << [typeFactory, nameFactory, versionFactory, locationFactory, referenceFactory]
+    factory << [
+      typeFactory,
+      nameFactory,
+      versionFactory,
+      locationFactory,
+      referenceFactory
+    ]
   }
 
   def "uuid and provenance do not need to match"() {
@@ -94,6 +100,9 @@ class ExepectedArtifactSpec extends Specification {
     expectedArtifact.matches(factory(NO_MATCH_STRING))
 
     where:
-    factory << [uuidFactory, provenanceFactory]
+    factory << [
+      uuidFactory,
+      provenanceFactory
+    ]
   }
 }

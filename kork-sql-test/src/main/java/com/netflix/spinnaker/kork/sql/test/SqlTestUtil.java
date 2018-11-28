@@ -27,13 +27,11 @@ import org.jooq.DSLContext;
 import org.jooq.impl.DataSourceConnectionProvider;
 import org.jooq.impl.DefaultConfiguration;
 import org.jooq.impl.DefaultDSLContext;
-
 import javax.sql.DataSource;
 import java.io.Closeable;
 import java.sql.SQLException;
 import java.time.Clock;
 import java.util.List;
-
 import static java.lang.String.format;
 import static org.jooq.SQLDialect.H2;
 import static org.jooq.conf.RenderNameStyle.AS_IS;
@@ -64,9 +62,7 @@ public class SqlTestUtil {
     Liquibase migrate;
     try {
       migrate = new Liquibase(
-        "db/changelog-master.yml",
-        new ClassLoaderResourceAccessor(),
-        DatabaseFactory.getInstance()
+        "db/changelog-master.yml", new ClassLoaderResourceAccessor(), DatabaseFactory.getInstance()
           .findCorrectDatabaseImplementation(new JdbcConnection(dataSource.getConnection()))
       );
     } catch (DatabaseException | SQLException e) {

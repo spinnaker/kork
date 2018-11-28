@@ -87,7 +87,6 @@ class GenericExceptionHandlersSpec extends Specification {
 
   @ResponseStatus(value = HttpStatus.BAD_REQUEST, reason = "My Other Reason!")
   interface I1 {
-
   }
 
   class E4 extends E3 implements I1 {

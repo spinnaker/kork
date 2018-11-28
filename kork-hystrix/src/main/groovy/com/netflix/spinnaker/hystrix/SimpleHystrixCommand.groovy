@@ -36,12 +36,12 @@ class SimpleHystrixCommand<T> extends HystrixCommand<T> {
   protected final Closure fallback
 
   public SimpleHystrixCommand(String groupKey,
-                              String commandKey,
-                              Closure work,
-                              Closure fallback = null) {
+  String commandKey,
+  Closure work,
+  Closure fallback = null) {
     super(HystrixCommand.Setter.withGroupKey(toGroupKey(groupKey))
-      .andCommandKey(HystrixCommandKey.Factory.asKey(commandKey))
-      .andCommandPropertiesDefaults(createHystrixCommandPropertiesSetter()))
+    .andCommandKey(HystrixCommandKey.Factory.asKey(commandKey))
+    .andCommandPropertiesDefaults(createHystrixCommandPropertiesSetter()))
     this.groupKey = groupKey
     this.commandKey = commandKey
     this.work = work

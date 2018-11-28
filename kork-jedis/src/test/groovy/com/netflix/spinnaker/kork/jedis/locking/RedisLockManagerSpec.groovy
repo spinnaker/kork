@@ -50,19 +50,17 @@ class RedisLockManagerSpec extends Specification {
   def heartbeatRateMillis = 30L
   def testLockMaxDurationMillis = 1000L
   def redisLockManager = new RedisLockManager(
-    "testOwner",
-    clock,
-    registry,
-    objectMapper,
-    redisClientDelegate,
-    Optional.of(heartbeatRateMillis),
-    Optional.of(testLockMaxDurationMillis)
+  "testOwner",
+  clock,
+  registry,
+  objectMapper,
+  redisClientDelegate,
+  Optional.of(heartbeatRateMillis),
+  Optional.of(testLockMaxDurationMillis)
   )
 
   def setup() {
-    jedisPool.resource.withCloseable {
-      it.flushDB()
-    }
+    jedisPool.resource.withCloseable { it.flushDB() }
   }
 
   def cleanupSpec() {
@@ -71,9 +69,7 @@ class RedisLockManagerSpec extends Specification {
 
   def "should acquire a simple lock and auto release"() {
     when:
-    def result = redisLockManager.acquireLock("veryImportantLock", testLockMaxDurationMillis, {
-      return "Run after lock is safely acquired."
-    } as Callable<String>)
+    def result = redisLockManager.acquireLock("veryImportantLock", testLockMaxDurationMillis, { return "Run after lock is safely acquired." } as Callable<String>)
 
     then:
     result.lockStatus == ACQUIRED
@@ -84,14 +80,12 @@ class RedisLockManagerSpec extends Specification {
   def "should store arbitrary data as attributes alongside the lock"() {
     given:
     def lockOptions = new LockOptions()
-      .withMaximumLockDuration(Duration.ofMillis(testLockMaxDurationMillis))
-      .withLockName("veryImportantLock")
-      .withAttributes(["key:value","key2:value2"])
+        .withMaximumLockDuration(Duration.ofMillis(testLockMaxDurationMillis))
+        .withLockName("veryImportantLock")
+        .withAttributes(["key:value", "key2:value2"])
 
     when:
-    def result = redisLockManager.acquireLock(lockOptions, {
-      return "Lock with data in attributes"
-    } as Callable<String>)
+    def result = redisLockManager.acquireLock(lockOptions, { return "Lock with data in attributes" } as Callable<String>)
 
     then:
     result.lock.attributes == "key:value;key2:value2"
@@ -100,16 +94,14 @@ class RedisLockManagerSpec extends Specification {
   def "should fail to acquire an already taken lock"() {
     given:
     def lockOptions = new LockOptions()
-      .withMaximumLockDuration(Duration.ofMillis(testLockMaxDurationMillis))
-      .withLockName("veryImportantLock")
+        .withMaximumLockDuration(Duration.ofMillis(testLockMaxDurationMillis))
+        .withLockName("veryImportantLock")
 
     and:
     redisLockManager.tryCreateLock(lockOptions)
 
     when:
-    def result = redisLockManager.acquireLock(lockOptions, {
-      return "attempting to acquire lock"
-    } as Callable<String>)
+    def result = redisLockManager.acquireLock(lockOptions, { return "attempting to acquire lock" } as Callable<String>)
 
     then:
     result.lockStatus == TAKEN
@@ -119,8 +111,8 @@ class RedisLockManagerSpec extends Specification {
   def "should acquire with heartbeat"() {
     given:
     def lockOptions = new LockOptions()
-      .withMaximumLockDuration(Duration.ofMillis(testLockMaxDurationMillis))
-      .withLockName("veryImportantLock")
+        .withMaximumLockDuration(Duration.ofMillis(testLockMaxDurationMillis))
+        .withLockName("veryImportantLock")
 
     when:
     def result = redisLockManager.acquireLock(lockOptions, {
@@ -148,9 +140,7 @@ class RedisLockManagerSpec extends Specification {
   def "should propagate exception on callback failure"() {
     given:
     def lockName = "veryImportantLock"
-    def onLockAcquiredCallback = {
-      throw new IllegalStateException("Failure")
-    }
+    def onLockAcquiredCallback = { throw new IllegalStateException("Failure") }
 
     when:
     redisLockManager.acquireLock(lockName, testLockMaxDurationMillis, onLockAcquiredCallback)
@@ -162,8 +152,8 @@ class RedisLockManagerSpec extends Specification {
   def "should release a lock"() {
     given:
     def lockOptions = new LockManager.LockOptions()
-      .withMaximumLockDuration(Duration.ofMillis(testLockMaxDurationMillis))
-      .withLockName("veryImportantLock")
+        .withMaximumLockDuration(Duration.ofMillis(testLockMaxDurationMillis))
+        .withLockName("veryImportantLock")
 
     and:
     def lock = redisLockManager.tryCreateLock(lockOptions)
@@ -189,8 +179,8 @@ class RedisLockManagerSpec extends Specification {
     given:
     def heartbeatRetriesOnFailure = new AtomicInteger(1)
     def lockOptions = new LockOptions()
-      .withMaximumLockDuration(Duration.ofMillis(testLockMaxDurationMillis))
-      .withLockName("veryImportantLock")
+        .withMaximumLockDuration(Duration.ofMillis(testLockMaxDurationMillis))
+        .withLockName("veryImportantLock")
 
     and:
     def lock = redisLockManager.tryCreateLock(lockOptions)

@@ -15,7 +15,7 @@ class TomcatContainerCustomizerUtil {
   private final SslExtensionConfigurationProperties sslExtensionConfigurationProperties
 
   TomcatContainerCustomizerUtil(OkHttpClientConfigurationProperties okHttpClientConfigurationProperties,
-                                SslExtensionConfigurationProperties sslExtensionConfigurationProperties) {
+  SslExtensionConfigurationProperties sslExtensionConfigurationProperties) {
     this.okHttpClientConfigurationProperties = okHttpClientConfigurationProperties
     this.sslExtensionConfigurationProperties = sslExtensionConfigurationProperties
   }

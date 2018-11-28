@@ -38,16 +38,16 @@ class AuthenticatedRequestFilter implements Filter {
   private static final String X509_CERTIFICATE = "javax.servlet.request.X509Certificate"
 
   /*
-    otherName                       [0]
-    rfc822Name                      [1]
-    dNSName                         [2]
-    x400Address                     [3]
-    directoryName                   [4]
-    ediPartyName                    [5]
-    uniformResourceIdentifier       [6]
-    iPAddress                       [7]
-    registeredID                    [8]
-  */
+   otherName                       [0]
+   rfc822Name                      [1]
+   dNSName                         [2]
+   x400Address                     [3]
+   directoryName                   [4]
+   ediPartyName                    [5]
+   uniformResourceIdentifier       [6]
+   iPAddress                       [7]
+   registeredID                    [8]
+   */
   private static final String RFC822_NAME_ID = "1"
 
   private final boolean extractSpinnakerHeaders
@@ -55,8 +55,8 @@ class AuthenticatedRequestFilter implements Filter {
   private final boolean forceNewSpinnakerRequestId
 
   public AuthenticatedRequestFilter(boolean extractSpinnakerHeaders = false,
-                                    boolean extractSpinnakerUserOriginHeader = false,
-                                    boolean forceNewSpinnakerRequestId = false) {
+  boolean extractSpinnakerUserOriginHeader = false,
+  boolean forceNewSpinnakerRequestId = false) {
     this.extractSpinnakerHeaders = extractSpinnakerHeaders
     this.extractSpinnakerUserOriginHeader = extractSpinnakerUserOriginHeader
     this.forceNewSpinnakerRequestId = forceNewSpinnakerRequestId

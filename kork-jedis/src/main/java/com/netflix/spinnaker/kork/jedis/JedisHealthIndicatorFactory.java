@@ -21,7 +21,6 @@ import org.springframework.boot.actuate.health.Health;
 import org.springframework.boot.actuate.health.HealthIndicator;
 import redis.clients.jedis.Jedis;
 import redis.clients.util.Pool;
-
 import java.lang.reflect.Field;
 
 @SuppressWarnings("unchecked")
@@ -58,7 +57,8 @@ public class JedisHealthIndicatorFactory {
         } catch (Exception ex) {
           health = Health.down(ex);
         } finally {
-          if (jedis != null) jedis.close();
+          if (jedis != null)
+            jedis.close();
         }
         health.withDetail("maxIdle", internal.getMaxIdle());
         health.withDetail("minIdle", internal.getMinIdle());

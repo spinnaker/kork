@@ -20,7 +20,6 @@ import com.netflix.dyno.jedis.DynoJedisClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.BeanCreationException;
-
 import java.util.Optional;
 
 public class DynomiteClientFactory {
@@ -41,12 +40,12 @@ public class DynomiteClientFactory {
   }
 
   public DynoJedisClient build() {
-    DynoJedisClient.Builder builder = new DynoJedisClient.Builder()
-      .withApplicationName(properties.applicationName)
+    DynoJedisClient.Builder builder = new DynoJedisClient.Builder().withApplicationName(properties.applicationName)
       .withDynomiteClusterName(properties.clusterName);
 
     if (properties.connectionPool == null || !"{}".equals(properties.connectionPool.getHashtag())) {
-      // I don't really want to make the assumption all of our services will use hashtags, but they probably will...
+      // I don't really want to make the assumption all of our services will use hashtags, but they
+      // probably will...
       log.warn("Hashtag value has not been set. This will likely lead to inconsistent operations.");
     }
 
@@ -55,15 +54,13 @@ public class DynomiteClientFactory {
       builder.withDiscoveryClient(discovery.get());
     } else {
       if (properties.hosts.isEmpty()) {
-       throw new BeanCreationException("Dynomite hosts must be set if discovery info not provided");
+        throw new BeanCreationException("Dynomite hosts must be set if discovery info not provided");
       }
-      properties.connectionPool
-        .withTokenSupplier(new StaticTokenMapSupplier(properties.getDynoHostTokens()))
-        .setLocalDataCenter(properties.localDatacenter)
-        .setLocalRack(properties.localRack);
+      properties.connectionPool.withTokenSupplier(
+        new StaticTokenMapSupplier(properties.getDynoHostTokens())).setLocalDataCenter(
+          properties.localDatacenter).setLocalRack(properties.localRack);
 
-      builder
-        .withHostSupplier(new StaticHostSupplier(properties.getDynoHosts()));
+      builder.withHostSupplier(new StaticHostSupplier(properties.getDynoHosts()));
     }
 
     builder.withCPConfig(properties.connectionPool);

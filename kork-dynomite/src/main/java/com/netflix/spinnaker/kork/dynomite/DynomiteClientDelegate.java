@@ -23,7 +23,6 @@ import com.netflix.spinnaker.kork.jedis.RedisClientDelegate;
 import com.netflix.spinnaker.kork.jedis.RedisScanResult;
 import redis.clients.jedis.*;
 import redis.clients.jedis.exceptions.JedisException;
-
 import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -82,7 +81,7 @@ public class DynomiteClientDelegate implements RedisClientDelegate {
     DynoJedisPipeline p = client.pipelined();
     try {
       f.accept(p);
-    } catch (DynoException |JedisException e) {
+    } catch (DynoException | JedisException e) {
       try {
         p.close();
       } catch (Exception ne) {
@@ -97,7 +96,7 @@ public class DynomiteClientDelegate implements RedisClientDelegate {
     DynoJedisPipeline p = client.pipelined();
     try {
       return f.apply(p);
-    } catch (DynoException|JedisException e) {
+    } catch (DynoException | JedisException e) {
       try {
         p.close();
       } catch (Exception ne) {
@@ -132,7 +131,9 @@ public class DynomiteClientDelegate implements RedisClientDelegate {
   }
 
   @Override
-  public boolean supportsTransactions() { return false; }
+  public boolean supportsTransactions() {
+    return false;
+  }
 
   @Override
   public void withTransaction(Consumer<Transaction> f) {

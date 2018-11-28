@@ -17,7 +17,6 @@
 package com.netflix.spectator.stackdriver;
 
 import com.netflix.spectator.api.Measurement;
-
 import com.google.api.services.monitoring.v3.Monitoring;
 import com.google.api.services.monitoring.v3.MonitoringScopes;
 import com.google.api.client.googleapis.auth.oauth2.GoogleCredential;
@@ -25,13 +24,10 @@ import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
 import com.google.api.client.http.HttpTransport;
 import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.jackson2.JacksonFactory;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import java.io.FileInputStream;
 import java.io.IOException;
-
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.Collections;
@@ -71,7 +67,8 @@ public class ConfigParams {
   /**
    * Overridable for testing only.
    */
-  protected Function<String, String> determineProjectName = defaultName -> new MonitoredResourceBuilder().determineProjectName(defaultName);
+  protected Function<String, String> determineProjectName = defaultName -> new MonitoredResourceBuilder()
+    .determineProjectName(defaultName);
 
   /**
    * Optional.
@@ -96,8 +93,7 @@ public class ConfigParams {
 
     private String validateString(String value, String purpose) {
       if (value == null || value.isEmpty()) {
-          throw new IllegalStateException(
-              "The " + purpose + " has not been specified.");
+        throw new IllegalStateException("The " + purpose + " has not been specified.");
       }
       return value;
     }
@@ -105,8 +101,7 @@ public class ConfigParams {
     /**
      * Ensure the configuration parameters are complete and valid.
      *
-     * If some required parameters are not yet explicitly set then this
-     * may initialize them.
+     * If some required parameters are not yet explicitly set then this may initialize them.
      */
     public ConfigParams build() {
       ConfigParams result = new ConfigParams();
@@ -114,8 +109,7 @@ public class ConfigParams {
       String actualProjectName = determineProjectName.apply(projectName);
       result.projectName = validateString(actualProjectName, "stackdriver projectName");
       result.applicationName = validateString(applicationName, "applicationName");
-      result.customTypeNamespace
-          = validateString(customTypeNamespace, "stackdriver customTypeNamespace");
+      result.customTypeNamespace = validateString(customTypeNamespace, "stackdriver customTypeNamespace");
 
       result.counterStartTime = counterStartTime;
       result.measurementFilter = measurementFilter;
@@ -125,33 +119,30 @@ public class ConfigParams {
       result.descriptorCache = descriptorCache;
 
       if (result.instanceId == null || result.instanceId.isEmpty()) {
-          UUID uuid = UUID.randomUUID();
-          byte[] uuidBytes = new byte[16];
-          addLong(uuidBytes, 0, uuid.getLeastSignificantBits());
-          addLong(uuidBytes, 8, uuid.getMostSignificantBits());
-          result.instanceId
-              = java.util.Base64.getEncoder().encodeToString(uuidBytes);
+        UUID uuid = UUID.randomUUID();
+        byte[] uuidBytes = new byte[16];
+        addLong(uuidBytes, 0, uuid.getLeastSignificantBits());
+        addLong(uuidBytes, 8, uuid.getMostSignificantBits());
+        result.instanceId = java.util.Base64.getEncoder().encodeToString(uuidBytes);
       }
 
       if (result.monitoring == null) {
         try {
           HttpTransport transport = GoogleNetHttpTransport.newTrustedTransport();
           JsonFactory jsonFactory = JacksonFactory.getDefaultInstance();
-          GoogleCredential credential = loadCredential(transport, jsonFactory,
-                                                       credentialsPath);
+          GoogleCredential credential = loadCredential(transport, jsonFactory, credentialsPath);
           String version = getClass().getPackage().getImplementationVersion();
           if (version == null) {
             version = "Unknown";
           }
-                  
-          result.monitoring
-              = new Monitoring.Builder(transport, jsonFactory, credential)
-                    .setApplicationName("Spinnaker/" + version)
-                    .build();
+
+          result.monitoring = new Monitoring.Builder(transport, jsonFactory, credential).setApplicationName(
+            "Spinnaker/" + version
+          ).build();
         } catch (IOException | java.security.GeneralSecurityException e) {
-            final Logger log = LoggerFactory.getLogger("StackdriverWriter");
-            log.error("Caught exception initializing client: " + e);
-            throw new IllegalStateException(e);
+          final Logger log = LoggerFactory.getLogger("StackdriverWriter");
+          log.error("Caught exception initializing client: " + e);
+          throw new IllegalStateException(e);
         }
       }
 
@@ -174,20 +165,19 @@ public class ConfigParams {
     /**
      * The Stackdriver namespace containing Custom Metric Descriptor types.
      *
-     * This is intended to group a family of metric types together for a
-     * particular system. (e.g. "spinnaker")
+     * This is intended to group a family of metric types together for a particular system. (e.g.
+     * "spinnaker")
      */
-     public Builder setCustomTypeNamespace(String name) {
-       customTypeNamespace = name;
-       return this;
-     }
+    public Builder setCustomTypeNamespace(String name) {
+      customTypeNamespace = name;
+      return this;
+    }
 
     /**
      * Sets the Google project name for Stackdriver to manage metrics under.
      *
-     * This is a Google Cloud Platform project owned by the user deploying
-     * the system using Spectator and used by Stackdriver to catalog our data
-     * (e.g. "my-unique-project").
+     * This is a Google Cloud Platform project owned by the user deploying the system using Spectator
+     * and used by Stackdriver to catalog our data (e.g. "my-unique-project").
      */
     public Builder setProjectName(String name) {
       projectName = name;
@@ -207,9 +197,8 @@ public class ConfigParams {
     /**
      * Sets the application name that we are associating these metrics with.
      *
-     * It distinguishes similar metrics within a system that are coming from
-     * different services.
-     * (e.g. "clouddriver")
+     * It distinguishes similar metrics within a system that are coming from different services. (e.g.
+     * "clouddriver")
      */
     public Builder setApplicationName(String name) {
       applicationName = name;
@@ -227,8 +216,7 @@ public class ConfigParams {
     }
 
     /**
-     * Sets the Spectator MeasurementFilter determining which metrics
-     * to store in Stackdriver.
+     * Sets the Spectator MeasurementFilter determining which metrics to store in Stackdriver.
      */
     public Builder setMeasurementFilter(Predicate<Measurement> filter) {
       measurementFilter = filter;
@@ -236,8 +224,7 @@ public class ConfigParams {
     }
 
     /**
-     * Overrides the normal Stackdriver Monitoring client to use when
-     * interacting with Stackdriver.
+     * Overrides the normal Stackdriver Monitoring client to use when interacting with Stackdriver.
      */
     public Builder setStackdriverStub(Monitoring stub) {
       monitoring = stub;
@@ -253,8 +240,7 @@ public class ConfigParams {
     }
 
     /**
-     * Specifies the starting time interval for CUMULATIVE Stackdriver
-     * metric descriptor types.
+     * Specifies the starting time interval for CUMULATIVE Stackdriver metric descriptor types.
      */
     public Builder setCounterStartTime(long millis) {
       counterStartTime = millis;
@@ -266,34 +252,33 @@ public class ConfigParams {
      */
     private void addLong(byte[] buffer, int offset, long value) {
       for (int i = 0; i < 8; ++i) {
-         buffer[i + offset] = (byte) (value >> (8 * i) & 0xff);
+        buffer[i + offset] = (byte) (value >> (8 * i) & 0xff);
       }
     }
 
     /**
-     * Helper function for the validator that reads our credentials for
-     * talking to Stackdriver.
+     * Helper function for the validator that reads our credentials for talking to Stackdriver.
      */
-    private static GoogleCredential loadCredential(
-          HttpTransport transport, JsonFactory factory, String credentialsPath)
-          throws IOException {
+    private static GoogleCredential loadCredential(HttpTransport transport, JsonFactory factory, String credentialsPath)
+      throws IOException {
       final Logger log = LoggerFactory.getLogger("StackdriverWriter");
 
       GoogleCredential credential;
       if (credentialsPath != null && !credentialsPath.isEmpty()) {
         FileInputStream stream = new FileInputStream(credentialsPath);
         try {
-          credential = GoogleCredential.fromStream(stream, transport, factory)
-                      .createScoped(
-                           Collections.singleton(MonitoringScopes.MONITORING));
+          credential = GoogleCredential.fromStream(stream, transport, factory).createScoped(
+            Collections.singleton(MonitoringScopes.MONITORING)
+          );
           log.info("Loaded credentials from from {}", credentialsPath);
         } finally {
           stream.close();
         }
       } else {
-        log.info("spectator.stackdriver.monitoring.enabled without"
-                 + " spectator.stackdriver.credentialsPath. "
-                 + " Using default application credentials.");
+        log.info(
+          "spectator.stackdriver.monitoring.enabled without" + " spectator.stackdriver.credentialsPath. "
+            + " Using default application credentials."
+        );
         credential = GoogleCredential.getApplicationDefault();
       }
       return credential;
@@ -304,7 +289,7 @@ public class ConfigParams {
    * The Stackdriver namespace containing Custom Metric Descriptor types.
    */
   public String getCustomTypeNamespace() {
-     return customTypeNamespace;
+    return customTypeNamespace;
   }
 
   /**
@@ -339,20 +324,20 @@ public class ConfigParams {
    * The Stackdriver Monitoring client stub.
    */
   public Monitoring getStackdriverStub() {
-      return monitoring;
+    return monitoring;
   }
 
   /**
    * The MetricDescriptorCache.
    */
   public MetricDescriptorCache getDescriptorCache() {
-      return descriptorCache;
+    return descriptorCache;
   }
 
   /**
    * The TimeInterval start time for CUMULATIVE metric descriptor types.
    */
   public long getCounterStartTime() {
-      return counterStartTime;
+    return counterStartTime;
   }
 };

@@ -23,27 +23,23 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-
 import java.util.*;
-
 import static com.netflix.spinnaker.kork.jedis.RedisClientConfiguration.Driver.REDIS;
 
 /**
- * Offers a standardized Spring configuration for a named redis clients, as well as primary and previous connections.
- * This class should not be imported, but instead use JedisClientConfiguration or DynomiteClientConfiguration.
+ * Offers a standardized Spring configuration for a named redis clients, as well as primary and
+ * previous connections. This class should not be imported, but instead use JedisClientConfiguration
+ * or DynomiteClientConfiguration.
  *
  * While using this configuration, all clients are exposed through RedisClientSelector.
  *
- * This configuration also supports old-style Redis Spring configuration, as long as they wrap their Redis connection
- * pools with a RedisClientDelegate. Typically speaking, these older configuration formats should give their client
- * delegate the name "default".
+ * This configuration also supports old-style Redis Spring configuration, as long as they wrap their
+ * Redis connection pools with a RedisClientDelegate. Typically speaking, these older configuration
+ * formats should give their client delegate the name "default".
  */
 @Configuration
-@EnableConfigurationProperties({
-  RedisClientConfiguration.ClientConfigurationWrapper.class,
-  RedisClientConfiguration.RedisDriverConfiguration.class,
-  RedisClientConfiguration.DualClientConfiguration.class
-})
+@EnableConfigurationProperties({RedisClientConfiguration.ClientConfigurationWrapper.class,
+  RedisClientConfiguration.RedisDriverConfiguration.class, RedisClientConfiguration.DualClientConfiguration.class})
 public class RedisClientConfiguration {
 
   @Autowired
@@ -56,22 +52,20 @@ public class RedisClientConfiguration {
 
     redisClientConfigurations.clients.forEach((name, config) -> {
       if (config.primary != null) {
-        clients
-          .add(getClientFactoryForDriver(config.primary.driver)
-            .build(
-              RedisClientSelector.getName(true, name),
-              config.primary.config
-            )
-          );
+        clients.add(
+          getClientFactoryForDriver(config.primary.driver).build(
+            RedisClientSelector.getName(true, name),
+            config.primary.config
+          )
+        );
       }
       if (config.previous != null) {
-        clients
-          .add(getClientFactoryForDriver(config.previous.driver)
-            .build(
-              RedisClientSelector.getName(false, name),
-              config.previous.config
-            )
-          );
+        clients.add(
+          getClientFactoryForDriver(config.previous.driver).build(
+            RedisClientSelector.getName(false, name),
+            config.previous.config
+          )
+        );
       }
     });
     otherRedisClientDelegates.ifPresent(clients::addAll);
@@ -97,8 +91,10 @@ public class RedisClientConfiguration {
     if (clients.stream().noneMatch(c -> name.equals(c.name()))) {
       Map<String, Object> properties = new HashMap<>();
 
-      // Pre-kork redis configuration days, Redis used alternative config structure. This wee block will map the
-      // connection information from the deprecated format to the new format _if_ the old format values are present and
+      // Pre-kork redis configuration days, Redis used alternative config structure. This wee block will
+      // map the
+      // connection information from the deprecated format to the new format _if_ the old format values
+      // are present and
       // new format values are missing
       if (connection == ConnectionCompatibility.PRIMARY) {
         Optional.ofNullable(rootConfig.connection).map(v -> {
@@ -131,22 +127,17 @@ public class RedisClientConfiguration {
   }
 
   @Bean
-  public RedisClientSelector redisClientSelector(
-    @Qualifier("namedRedisClients") List<RedisClientDelegate> redisClientDelegates
-  ) {
+  public RedisClientSelector redisClientSelector(@Qualifier("namedRedisClients") List<RedisClientDelegate> redisClientDelegates) {
     return new RedisClientSelector(redisClientDelegates);
   }
 
   private RedisClientDelegateFactory<?> getClientFactoryForDriver(Driver driver) {
-    return clientDelegateFactories.stream()
-      .filter(it -> it.supports(driver))
-      .findFirst()
-      .orElseThrow(() -> new RedisClientFactoryNotFound("Could not find factory for driver: " + driver.name()));
-  }
+    return clientDelegateFactories.stream().filter(it -> it.supports(driver)).findFirst().orElseThrow(
+      () -> new RedisClientFactoryNotFound("Could not find factory for driver: " + driver.name()));
+      }
 
-  private enum ConnectionCompatibility {
-    PRIMARY("connection"),
-    PREVIOUS("connectionPrevious");
+      private enum ConnectionCompatibility {
+        PRIMARY("connection"), PREVIOUS("connectionPrevious");
 
     private final String value;
 
@@ -156,8 +147,7 @@ public class RedisClientConfiguration {
   }
 
   public enum Driver {
-    REDIS("redis"),
-    DYNOMITE("dynomite");
+    REDIS("redis"), DYNOMITE("dynomite");
 
     private final String value;
 

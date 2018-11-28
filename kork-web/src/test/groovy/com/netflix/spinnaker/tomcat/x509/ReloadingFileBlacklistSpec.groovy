@@ -98,6 +98,5 @@ class ReloadingFileBlacklistSpec extends Specification {
       getSerialNumber() >> serial
       getIssuerX500Principal() >> issuer
     }
-
   }
 }

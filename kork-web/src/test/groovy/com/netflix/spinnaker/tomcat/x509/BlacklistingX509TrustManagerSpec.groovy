@@ -93,6 +93,5 @@ class BlacklistingX509TrustManagerSpec extends Specification {
       getSerialNumber() >> serial
       getIssuerX500Principal() >> issuer
     }
-
   }
 }

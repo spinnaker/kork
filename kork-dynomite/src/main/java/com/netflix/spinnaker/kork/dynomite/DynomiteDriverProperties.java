@@ -18,11 +18,9 @@ package com.netflix.spinnaker.kork.dynomite;
 import com.netflix.dyno.connectionpool.Host;
 import com.netflix.dyno.connectionpool.impl.ConnectionPoolConfigurationImpl;
 import com.netflix.dyno.connectionpool.impl.lb.HostToken;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
-
 import static com.netflix.dyno.connectionpool.Host.DEFAULT_PORT;
 import static com.netflix.dyno.connectionpool.Host.Status;
 
@@ -43,9 +41,9 @@ public class DynomiteDriverProperties {
   public ConnectionPoolConfigurationImpl connectionPool;
 
   public List<Host> getDynoHosts() {
-    return hosts.stream()
-      .map(it -> new Host(it.hostname, it.ipAddress, it.port, it.rack, it.datacenter, it.status, it.hashtag))
-      .collect(Collectors.toList());
+    return hosts.stream().map(
+      it -> new Host(it.hostname, it.ipAddress, it.port, it.rack, it.datacenter, it.status, it.hashtag)
+    ).collect(Collectors.toList());
   }
 
   public List<HostToken> getDynoHostTokens() {

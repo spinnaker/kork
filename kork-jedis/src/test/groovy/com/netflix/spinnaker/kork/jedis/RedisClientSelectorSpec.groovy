@@ -22,14 +22,13 @@ class RedisClientSelectorSpec extends Specification {
 
   def "should return client by name"() {
     given:
-    def primaryClient = Mock(RedisClientDelegate) {
-      name() >> "primaryFoo"
-    }
-    def previousClient = Mock(RedisClientDelegate) {
-      name() >> "previousFoo"
-    }
+    def primaryClient = Mock(RedisClientDelegate) { name() >> "primaryFoo" }
+    def previousClient = Mock(RedisClientDelegate) { name() >> "previousFoo" }
 
-    def subject = new RedisClientSelector([primaryClient, previousClient])
+    def subject = new RedisClientSelector([
+      primaryClient,
+      previousClient
+    ])
 
     expect:
     subject.primary("foo") == primaryClient
@@ -38,14 +37,13 @@ class RedisClientSelectorSpec extends Specification {
 
   def "should throw exception if primary client cannot be found"() {
     given:
-    def primaryClient = Mock(RedisClientDelegate) {
-      name() >> "primaryFoo"
-    }
-    def previousClient = Mock(RedisClientDelegate) {
-      name() >> "previousFoo"
-    }
+    def primaryClient = Mock(RedisClientDelegate) { name() >> "primaryFoo" }
+    def previousClient = Mock(RedisClientDelegate) { name() >> "previousFoo" }
 
-    def subject = new RedisClientSelector([primaryClient, previousClient])
+    def subject = new RedisClientSelector([
+      primaryClient,
+      previousClient
+    ])
 
     when:
     subject.primary("bar")
@@ -56,14 +54,13 @@ class RedisClientSelectorSpec extends Specification {
 
   def "should fallback to default if available"() {
     given:
-    def defaultPrimaryClient = Mock(RedisClientDelegate) {
-      name() >> "primaryDefault"
-    }
-    def defaultPreviousClient = Mock(RedisClientDelegate) {
-      name() >> "previousDefault"
-    }
+    def defaultPrimaryClient = Mock(RedisClientDelegate) { name() >> "primaryDefault" }
+    def defaultPreviousClient = Mock(RedisClientDelegate) { name() >> "previousDefault" }
 
-    def subject = new RedisClientSelector([defaultPrimaryClient, defaultPreviousClient])
+    def subject = new RedisClientSelector([
+      defaultPrimaryClient,
+      defaultPreviousClient
+    ])
 
     expect:
     subject.primary("foo") == defaultPrimaryClient

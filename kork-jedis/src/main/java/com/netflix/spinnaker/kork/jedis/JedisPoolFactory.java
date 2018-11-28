@@ -24,7 +24,6 @@ import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.Protocol;
 import redis.clients.util.Pool;
-
 import java.net.URI;
 import java.util.Optional;
 
@@ -57,8 +56,7 @@ public class JedisPoolFactory {
     return new InstrumentedJedisPool(
       registry,
       // Pool name should always be "null", as setting this is incompat with some SaaS Redis offerings
-      new JedisPool(poolConfig, host, port, properties.timeoutMs, password, database, null, isSSL),
-      name
+      new JedisPool(poolConfig, host, port, properties.timeoutMs, password, database, null, isSSL), name
     );
   }
 

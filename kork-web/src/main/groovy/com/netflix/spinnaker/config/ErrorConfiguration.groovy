@@ -32,20 +32,20 @@ class ErrorConfiguration {
     final DefaultErrorAttributes defaultErrorAttributes = new DefaultErrorAttributes()
     return new ErrorAttributes() {
 
-      @Override
-      Map<String, Object> getErrorAttributes(RequestAttributes attrs, boolean includeStackTrace) {
-        Map<String, Object> errorAttributes = defaultErrorAttributes.getErrorAttributes(attrs, includeStackTrace)
-        // By default, Spring echoes back the user's requested path. This opens up a potential XSS vulnerability where a
-        // user, for example, requests "GET /<script>alert('Hi')</script> HTTP/1.1".
-        errorAttributes.remove("path")
-        return errorAttributes
-      }
+          @Override
+          Map<String, Object> getErrorAttributes(RequestAttributes attrs, boolean includeStackTrace) {
+            Map<String, Object> errorAttributes = defaultErrorAttributes.getErrorAttributes(attrs, includeStackTrace)
+            // By default, Spring echoes back the user's requested path. This opens up a potential XSS vulnerability where a
+            // user, for example, requests "GET /<script>alert('Hi')</script> HTTP/1.1".
+            errorAttributes.remove("path")
+            return errorAttributes
+          }
 
-      @Override
-      Throwable getError(RequestAttributes requestAttributes) {
-        return defaultErrorAttributes.getError(requestAttributes)
-      }
-    }
+          @Override
+          Throwable getError(RequestAttributes requestAttributes) {
+            return defaultErrorAttributes.getError(requestAttributes)
+          }
+        }
   }
 
   @Bean

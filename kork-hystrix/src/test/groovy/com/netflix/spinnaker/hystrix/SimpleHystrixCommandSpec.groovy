@@ -45,9 +45,7 @@ class SimpleHystrixCommandSpec extends Specification {
     Closure fallback = null
 
     public String run() {
-      new SimpleHystrixCommand<String>("example", "run", {
-        throw new IllegalStateException()
-      }, fallback).execute()
+      new SimpleHystrixCommand<String>("example", "run", { throw new IllegalStateException() }, fallback).execute()
     }
   }
 }

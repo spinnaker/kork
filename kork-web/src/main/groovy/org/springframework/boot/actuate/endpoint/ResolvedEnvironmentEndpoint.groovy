@@ -63,9 +63,7 @@ class ResolvedEnvironmentEndpoint extends AbstractEndpoint<Map<String, Object>> 
 
     sources.each {
       if (it instanceof EnumerablePropertySource) {
-        ((EnumerablePropertySource) it).propertyNames.each {
-          result.add(it)
-        }
+        ((EnumerablePropertySource) it).propertyNames.each { result.add(it) }
       }
     }
 

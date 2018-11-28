@@ -17,7 +17,6 @@
 package com.netflix.spinnaker.kork.aws;
 
 import com.amazonaws.*;
-
 import java.util.Optional;
 
 public class AwsMetricsSupport {
@@ -31,14 +30,13 @@ public class AwsMetricsSupport {
       targetAccountId = ase.getHttpHeaders().get("targetAccountId");
     }
 
-    return new String[] {
-      "requestType", originalRequest.getClass().getSimpleName(),
-      "statusCode", Integer.toString(ase.getStatusCode()),
-      "errorCode", Optional.ofNullable(ase.getErrorCode()).orElse(DEFAULT_UNKNOWN),
-      "serviceName", Optional.ofNullable(ase.getServiceName()).orElse(DEFAULT_UNKNOWN),
-      "errorType", Optional.ofNullable(ase.getErrorType()).orElse(AmazonServiceException.ErrorType.Unknown).name(),
-      "accountId", Optional.ofNullable(targetAccountId).orElse(DEFAULT_UNKNOWN)
-    };
+    return new String[] {"requestType", originalRequest.getClass().getSimpleName(), "statusCode", Integer.toString(
+      ase.getStatusCode()
+    ), "errorCode", Optional.ofNullable(ase.getErrorCode()).orElse(DEFAULT_UNKNOWN), "serviceName", Optional.ofNullable(
+      ase.getServiceName()
+    ).orElse(DEFAULT_UNKNOWN), "errorType", Optional.ofNullable(ase.getErrorType()).orElse(
+      AmazonServiceException.ErrorType.Unknown
+    ).name(), "accountId", Optional.ofNullable(targetAccountId).orElse(DEFAULT_UNKNOWN)};
   }
 
   static AmazonServiceException amazonServiceException(Exception exception) {

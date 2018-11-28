@@ -17,24 +17,19 @@
 package com.netflix.spectator.stackdriver;
 
 import com.google.api.services.monitoring.v3.model.*;
-
 import com.netflix.spectator.api.Clock;
 import com.netflix.spectator.api.DefaultRegistry;
 import com.netflix.spectator.api.Id;
 import com.netflix.spectator.api.Meter;
 import com.netflix.spectator.api.Measurement;
-
 import com.google.api.services.monitoring.v3.Monitoring;
-
 import java.io.IOException;
-
 import java.util.function.Predicate;
 import java.util.Arrays;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.Mockito;
@@ -49,7 +44,6 @@ import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -61,32 +55,30 @@ public class MetricDescriptorCacheTest {
   static class ReturnExecuteDescriptorArg implements Answer {
     private Monitoring.Projects.MetricDescriptors.Create mockCreateMethod;
 
-    public ReturnExecuteDescriptorArg(
-            Monitoring.Projects.MetricDescriptors.Create mockCreateMethod) {
+    public ReturnExecuteDescriptorArg(Monitoring.Projects.MetricDescriptors.Create mockCreateMethod) {
       this.mockCreateMethod = mockCreateMethod;
     }
 
     public Object answer(InvocationOnMock invocation) {
       try {
-        MetricDescriptor descArg
-                = (MetricDescriptor) invocation.getArguments()[1];
+        MetricDescriptor descArg = (MetricDescriptor) invocation.getArguments()[1];
         when(mockCreateMethod.execute()).thenReturn(descArg);
         return mockCreateMethod;
       } catch (IOException ioex) {
-        return null;  // Not Reached
+        return null; // Not Reached
       }
     }
   };
 
   private long millis = 12345L;
   private Clock clock = new Clock() {
-      public long wallTime() {
-          return millis;
-      }
+    public long wallTime() {
+      return millis;
+    }
 
-      public long monotonicTime() {
-          return millis;
-      }
+    public long monotonicTime() {
+      return millis;
+    }
   };
   DefaultRegistry registry = new DefaultRegistry(clock);
 
@@ -106,9 +98,12 @@ public class MetricDescriptorCacheTest {
     }
   };
 
-  @Mock Monitoring monitoringApi;
-  @Mock Monitoring.Projects projectsApi;
-  @Mock Monitoring.Projects.MetricDescriptors descriptorsApi;
+  @Mock
+  Monitoring monitoringApi;
+  @Mock
+  Monitoring.Projects projectsApi;
+  @Mock
+  Monitoring.Projects.MetricDescriptors descriptorsApi;
 
   ConfigParams.Builder config;
 
@@ -119,8 +114,7 @@ public class MetricDescriptorCacheTest {
     return meter.measure().iterator().next();
   }
 
-  private MetricDescriptor makeDescriptor(
-        Id id, List<String> tagNames, String kind) {
+  private MetricDescriptor makeDescriptor(Id id, List<String> tagNames, String kind) {
     MetricDescriptor descriptor = new MetricDescriptor();
     descriptor.setDisplayName(id.name());
     descriptor.setType(cache.idToDescriptorType(id));
@@ -156,13 +150,9 @@ public class MetricDescriptorCacheTest {
     when(monitoringApi.projects()).thenReturn(projectsApi);
     when(projectsApi.metricDescriptors()).thenReturn(descriptorsApi);
 
-    config = new ConfigParams.Builder()
-        .setDetermineProjectName(name -> name)
-        .setStackdriverStub(monitoringApi)
-        .setCustomTypeNamespace("TESTNAMESPACE")
-        .setProjectName(projectName)
-        .setApplicationName(applicationName)
-        .setMeasurementFilter(allowAll);
+    config = new ConfigParams.Builder().setDetermineProjectName(name -> name).setStackdriverStub(monitoringApi)
+      .setCustomTypeNamespace("TESTNAMESPACE").setProjectName(projectName).setApplicationName(applicationName)
+      .setMeasurementFilter(allowAll);
 
     cache = new MetricDescriptorCache(config.build());
     List<String> testTags = Arrays.asList("tagA", "tagB");
@@ -173,8 +163,9 @@ public class MetricDescriptorCacheTest {
   @Test
   public void descriptorTypeAreCompliant() {
     Assert.assertEquals(
-        "custom.googleapis.com/TESTNAMESPACE/" + applicationName + "/idA",
-        cache.idToDescriptorType(idA));
+      "custom.googleapis.com/TESTNAMESPACE/" + applicationName + "/idA",
+      cache.idToDescriptorType(idA)
+    );
   }
 
   @Test
@@ -187,18 +178,20 @@ public class MetricDescriptorCacheTest {
     List<String> updatedTags = Arrays.asList("tagA", "tagB", label);
     MetricDescriptor updatedDescriptor = makeDescriptor(idA, updatedTags, "GAUGE");
 
-    Monitoring.Projects.MetricDescriptors.Get mockGetMethod
-        = Mockito.mock(Monitoring.Projects.MetricDescriptors.Get.class);
-    Monitoring.Projects.MetricDescriptors.Delete mockDeleteMethod
-        = Mockito.mock(Monitoring.Projects.MetricDescriptors.Delete.class);
-    Monitoring.Projects.MetricDescriptors.Create mockCreateMethod
-        = Mockito.mock(Monitoring.Projects.MetricDescriptors.Create.class);
+    Monitoring.Projects.MetricDescriptors.Get mockGetMethod = Mockito.mock(
+      Monitoring.Projects.MetricDescriptors.Get.class
+    );
+    Monitoring.Projects.MetricDescriptors.Delete mockDeleteMethod = Mockito.mock(
+      Monitoring.Projects.MetricDescriptors.Delete.class
+    );
+    Monitoring.Projects.MetricDescriptors.Create mockCreateMethod = Mockito.mock(
+      Monitoring.Projects.MetricDescriptors.Create.class
+    );
 
     String descriptorName = "projects/test-project/metricDescriptors/" + type;
     when(descriptorsApi.get(eq(descriptorName))).thenReturn(mockGetMethod);
     when(descriptorsApi.delete(eq(descriptorName))).thenReturn(mockDeleteMethod);
-    when(descriptorsApi.create(eq("projects/test-project"), eq(updatedDescriptor)))
-         .thenReturn(mockCreateMethod);
+    when(descriptorsApi.create(eq("projects/test-project"), eq(updatedDescriptor))).thenReturn(mockCreateMethod);
 
     when(mockGetMethod.execute()).thenReturn(origDescriptor);
     when(mockCreateMethod.execute()).thenReturn(updatedDescriptor);
@@ -219,18 +212,20 @@ public class MetricDescriptorCacheTest {
     List<String> updatedTags = Arrays.asList("tagA", "tagB", label);
     MetricDescriptor updatedDescriptor = makeDescriptor(idA, updatedTags, "GAUGE");
 
-    Monitoring.Projects.MetricDescriptors.Get mockGetMethod
-        = Mockito.mock(Monitoring.Projects.MetricDescriptors.Get.class);
-    Monitoring.Projects.MetricDescriptors.Delete mockDeleteMethod
-        = Mockito.mock(Monitoring.Projects.MetricDescriptors.Delete.class);
-    Monitoring.Projects.MetricDescriptors.Create mockCreateMethod
-        = Mockito.mock(Monitoring.Projects.MetricDescriptors.Create.class);
+    Monitoring.Projects.MetricDescriptors.Get mockGetMethod = Mockito.mock(
+      Monitoring.Projects.MetricDescriptors.Get.class
+    );
+    Monitoring.Projects.MetricDescriptors.Delete mockDeleteMethod = Mockito.mock(
+      Monitoring.Projects.MetricDescriptors.Delete.class
+    );
+    Monitoring.Projects.MetricDescriptors.Create mockCreateMethod = Mockito.mock(
+      Monitoring.Projects.MetricDescriptors.Create.class
+    );
 
     String descriptorName = "projects/test-project/metricDescriptors/" + type;
     when(descriptorsApi.get(eq(descriptorName))).thenReturn(mockGetMethod);
     when(descriptorsApi.delete(eq(descriptorName))).thenReturn(mockDeleteMethod);
-    when(descriptorsApi.create(eq("projects/test-project"), eq(updatedDescriptor)))
-         .thenReturn(mockCreateMethod);
+    when(descriptorsApi.create(eq("projects/test-project"), eq(updatedDescriptor))).thenReturn(mockCreateMethod);
 
     when(mockGetMethod.execute()).thenReturn(origDescriptor);
     when(mockDeleteMethod.execute()).thenThrow(new IOException("Not Found"));
@@ -252,18 +247,20 @@ public class MetricDescriptorCacheTest {
     List<String> updatedTags = Arrays.asList("tagA", "tagB", label);
     MetricDescriptor updatedDescriptor = makeDescriptor(idA, updatedTags, "GAUGE");
 
-    Monitoring.Projects.MetricDescriptors.Get mockGetMethod
-        = Mockito.mock(Monitoring.Projects.MetricDescriptors.Get.class);
-    Monitoring.Projects.MetricDescriptors.Delete mockDeleteMethod
-        = Mockito.mock(Monitoring.Projects.MetricDescriptors.Delete.class);
-    Monitoring.Projects.MetricDescriptors.Create mockCreateMethod
-        = Mockito.mock(Monitoring.Projects.MetricDescriptors.Create.class);
+    Monitoring.Projects.MetricDescriptors.Get mockGetMethod = Mockito.mock(
+      Monitoring.Projects.MetricDescriptors.Get.class
+    );
+    Monitoring.Projects.MetricDescriptors.Delete mockDeleteMethod = Mockito.mock(
+      Monitoring.Projects.MetricDescriptors.Delete.class
+    );
+    Monitoring.Projects.MetricDescriptors.Create mockCreateMethod = Mockito.mock(
+      Monitoring.Projects.MetricDescriptors.Create.class
+    );
 
     String descriptorName = "projects/test-project/metricDescriptors/" + type;
     when(descriptorsApi.get(eq(descriptorName))).thenReturn(mockGetMethod);
     when(descriptorsApi.delete(eq(descriptorName))).thenReturn(mockDeleteMethod);
-    when(descriptorsApi.create(eq("projects/test-project"), eq(updatedDescriptor)))
-         .thenReturn(mockCreateMethod);
+    when(descriptorsApi.create(eq("projects/test-project"), eq(updatedDescriptor))).thenReturn(mockCreateMethod);
 
     when(mockGetMethod.execute()).thenReturn(origDescriptor);
     when(mockCreateMethod.execute()).thenThrow(new IOException("Not Found"));
@@ -282,12 +279,15 @@ public class MetricDescriptorCacheTest {
     MetricDescriptor origDescriptor = makeDescriptor(idA, origTags, "GAUGE");
     String type = origDescriptor.getType();
 
-    Monitoring.Projects.MetricDescriptors.Get mockGetMethod
-        = Mockito.mock(Monitoring.Projects.MetricDescriptors.Get.class);
-    Monitoring.Projects.MetricDescriptors.Delete mockDeleteMethod
-        = Mockito.mock(Monitoring.Projects.MetricDescriptors.Delete.class);
-    Monitoring.Projects.MetricDescriptors.Create mockCreateMethod
-        = Mockito.mock(Monitoring.Projects.MetricDescriptors.Create.class);
+    Monitoring.Projects.MetricDescriptors.Get mockGetMethod = Mockito.mock(
+      Monitoring.Projects.MetricDescriptors.Get.class
+    );
+    Monitoring.Projects.MetricDescriptors.Delete mockDeleteMethod = Mockito.mock(
+      Monitoring.Projects.MetricDescriptors.Delete.class
+    );
+    Monitoring.Projects.MetricDescriptors.Create mockCreateMethod = Mockito.mock(
+      Monitoring.Projects.MetricDescriptors.Create.class
+    );
 
     String descriptorName = "projects/test-project/metricDescriptors/" + type;
     when(descriptorsApi.get(eq(descriptorName))).thenReturn(mockGetMethod);

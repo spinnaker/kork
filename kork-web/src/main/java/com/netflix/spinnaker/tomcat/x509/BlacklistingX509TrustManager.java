@@ -39,7 +39,9 @@ public class BlacklistingX509TrustManager implements X509TrustManager {
     if (x509Certificates != null) {
       for (X509Certificate cert : x509Certificates) {
         if (blacklist.isBlacklisted(cert)) {
-          throw new CertificateRevokedException(new Date(), CRLReason.UNSPECIFIED, cert.getIssuerX500Principal(), Collections.emptyMap());
+          throw new CertificateRevokedException(
+            new Date(), CRLReason.UNSPECIFIED, cert.getIssuerX500Principal(), Collections.emptyMap()
+          );
         }
       }
     }

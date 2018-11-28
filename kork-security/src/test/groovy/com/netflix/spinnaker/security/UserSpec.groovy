@@ -22,54 +22,54 @@ class UserSpec extends Specification {
 
   def "should not reflect changes to the mutable user in the immutable user"() {
     setup:
-      def accounts = ["abc"]
-      def mutableUser = new User(email: "email", allowedAccounts: accounts)
-      def immutableUser = mutableUser.asImmutable()
+    def accounts = ["abc"]
+    def mutableUser = new User(email: "email", allowedAccounts: accounts)
+    def immutableUser = mutableUser.asImmutable()
 
     expect:
-      mutableUser.email == "email"
-      mutableUser.allowedAccounts == ["abc"]
-      immutableUser.email == "email"
-      immutableUser.username == "email"
-      immutableUser.allowedAccounts == ["abc"]
+    mutableUser.email == "email"
+    mutableUser.allowedAccounts == ["abc"]
+    immutableUser.email == "email"
+    immutableUser.username == "email"
+    immutableUser.allowedAccounts == ["abc"]
 
     when:
-      mutableUser.email = "batman"
-      accounts.add("def")
+    mutableUser.email = "batman"
+    accounts.add("def")
 
     then:
-      mutableUser.email == "batman"
-      mutableUser.allowedAccounts == ["abc", "def"]
-      immutableUser.email == "email"
-      immutableUser.allowedAccounts == ["abc"]
+    mutableUser.email == "batman"
+    mutableUser.allowedAccounts == ["abc", "def"]
+    immutableUser.email == "email"
+    immutableUser.allowedAccounts == ["abc"]
 
     when:
-      mutableUser.allowedAccounts = ["xyz"]
+    mutableUser.allowedAccounts = ["xyz"]
 
     then:
-      mutableUser.allowedAccounts == ["xyz"]
-      immutableUser.allowedAccounts == ["abc"]
+    mutableUser.allowedAccounts == ["xyz"]
+    immutableUser.allowedAccounts == ["abc"]
   }
 
   def "should fallback to email if no username is set"() {
     setup:
-      def user = new User(email: "email")
+    def user = new User(email: "email")
 
     expect:
-      user.email == "email"
-      user.username == "email"
+    user.email == "email"
+    user.username == "email"
 
     when:
-      user.username = "username"
+    user.username = "username"
 
     then:
-      user.username == "username"
+    user.username == "username"
   }
 
   def "should filter out empty roles"() {
     expect:
-      new User(roles: [""]).getAuthorities().isEmpty()
-      new User(roles: ["", "bar"]).getAuthorities()*.getAuthority() == ["bar"]
-      new User(roles: ["foo", "", "bar"]).getAuthorities()*.getAuthority() == ["foo", "bar"]
+    new User(roles: [""]).getAuthorities().isEmpty()
+    new User(roles: ["", "bar"]).getAuthorities()*.getAuthority() == ["bar"]
+    new User(roles: ["foo", "", "bar"]).getAuthorities()*.getAuthority() == ["foo", "bar"]
   }
 }

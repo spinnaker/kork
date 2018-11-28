@@ -28,6 +28,7 @@ import java.util.concurrent.atomic.AtomicReference;
  */
 public interface RefreshableLockManager extends LockManager {
   HeartbeatResponse heartbeat(final HeartbeatLockRequest heartbeatLockRequest);
+
   void queueHeartbeat(final HeartbeatLockRequest heartbeatLockRequest);
 
   class HeartbeatLockRequest {
@@ -81,26 +82,21 @@ public interface RefreshableLockManager extends LockManager {
 
     @Override
     public String toString() {
-      return "HeartbeatLockRequest{" +
-        "lock=" + lock +
-        ", retriesOnFailure=" + retriesOnFailure +
-        ", heartbeatDuration=" + heartbeatDuration +
-        ", startedAt=" + startedAt +
-        ", clock=" + clock +
-        ", reuseLockVersion=" + reuseLockVersion +
-        '}';
+      return "HeartbeatLockRequest{" + "lock=" + lock + ", retriesOnFailure=" + retriesOnFailure
+        + ", heartbeatDuration=" + heartbeatDuration + ", startedAt=" + startedAt + ", clock=" + clock
+        + ", reuseLockVersion=" + reuseLockVersion + '}';
     }
 
     @Override
     public boolean equals(Object o) {
-      if (this == o) return true;
-      if (o == null || getClass() != o.getClass()) return false;
+      if (this == o)
+        return true;
+      if (o == null || getClass() != o.getClass())
+        return false;
       HeartbeatLockRequest that = (HeartbeatLockRequest) o;
-      return Objects.equals(lock, that.lock) &&
-        Objects.equals(retriesOnFailure, that.retriesOnFailure) &&
-        Objects.equals(heartbeatDuration, that.heartbeatDuration) &&
-        Objects.equals(startedAt, that.startedAt) &&
-        Objects.equals(clock, that.clock);
+      return Objects.equals(lock, that.lock) && Objects.equals(retriesOnFailure, that.retriesOnFailure) && Objects
+        .equals(heartbeatDuration, that.heartbeatDuration) && Objects.equals(startedAt, that.startedAt) && Objects
+          .equals(clock, that.clock);
     }
 
     @Override
@@ -132,11 +128,12 @@ public interface RefreshableLockManager extends LockManager {
 
     @Override
     public boolean equals(Object o) {
-      if (this == o) return true;
-      if (o == null || getClass() != o.getClass()) return false;
+      if (this == o)
+        return true;
+      if (o == null || getClass() != o.getClass())
+        return false;
       HeartbeatResponse that = (HeartbeatResponse) o;
-      return Objects.equals(lock, that.lock) &&
-        lockHeartbeatStatus == that.lockHeartbeatStatus;
+      return Objects.equals(lock, that.lock) && lockHeartbeatStatus == that.lockHeartbeatStatus;
     }
 
     @Override
@@ -160,9 +157,6 @@ public interface RefreshableLockManager extends LockManager {
   }
 
   enum LockHeartbeatStatus {
-    SUCCESS,
-    EXPIRED,
-    ERROR,
-    MAX_HEARTBEAT_REACHED
+    SUCCESS, EXPIRED, ERROR, MAX_HEARTBEAT_REACHED
   }
 }

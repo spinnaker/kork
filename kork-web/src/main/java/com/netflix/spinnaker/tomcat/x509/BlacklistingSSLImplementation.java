@@ -23,12 +23,12 @@ import org.apache.tomcat.util.net.jsse.JSSEImplementation;
 /**
  * An SSLImplementation that enforces a blacklist of client certificates.
  *
- * To enable the blacklist behavior, use the {{AbstractEndpoint}} {{crlFile}} property
- * following the naming convention {{blacklist:/path/to/blacklist/file}}
+ * To enable the blacklist behavior, use the {{AbstractEndpoint}} {{crlFile}} property following the
+ * naming convention {{blacklist:/path/to/blacklist/file}}
  *
- * The format of the blacklist file is one entry per line conforming to
- * {{issuer X500 name:::blacklisted certificate serial number}}
- * Blank lines and lines that begin with {{#}} are ignored.
+ * The format of the blacklist file is one entry per line conforming to {{issuer X500
+ * name:::blacklisted certificate serial number}} Blank lines and lines that begin with {{#}} are
+ * ignored.
  *
  * The Blacklist file is refreshed periodically, so it can be updated in place to pick up newly
  * revoked certificates.

@@ -25,10 +25,8 @@ import com.netflix.spinnaker.kork.jackson.ObjectMapperSubtypeConfigurer.ClassSub
 import com.netflix.spinnaker.kork.jackson.ObjectMapperSubtypeConfigurer.StringSubtypeLocator;
 import org.junit.Before;
 import org.junit.Test;
-
 import java.util.ArrayList;
 import java.util.List;
-
 import static org.junit.Assert.assertEquals;
 
 public class ObjectMapperSubtypeConfigurerTest {
@@ -75,13 +73,21 @@ public class ObjectMapperSubtypeConfigurerTest {
   }
 }
 
+
 @JsonTypeInfo(use = Id.NAME, include = As.PROPERTY, property = "kind")
-abstract class RootType {}
+abstract class RootType {
+}
+
 
 @JsonTypeName("child")
-class ChildType extends RootType {}
+class ChildType extends RootType {
+}
+
 
 @JsonTypeInfo(use = Id.NAME, include = As.PROPERTY, property = "kind")
-class UndefinedRootType {}
+class UndefinedRootType {
+}
 
-class UndefinedType extends UndefinedRootType {}
+
+class UndefinedType extends UndefinedRootType {
+}

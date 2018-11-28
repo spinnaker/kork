@@ -45,5 +45,4 @@ class PubSubUtilsSpec extends Specification {
     ])
     0 * _
   }
-
 }

@@ -42,7 +42,11 @@ public class ValidationException extends InvalidRequestException implements HasA
     this.errors = errors;
   }
 
-  public ValidationException(String message, Throwable cause, boolean enableSuppression, boolean writableStackTrace, Collection errors) {
+  public ValidationException(String message,
+                             Throwable cause,
+                             boolean enableSuppression,
+                             boolean writableStackTrace,
+                             Collection errors) {
     super(message, cause, enableSuppression, writableStackTrace);
     this.errors = errors;
   }

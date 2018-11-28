@@ -20,13 +20,11 @@ import org.slf4j.MDC;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.util.CollectionUtils;
-
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.Callable;
-
 import static java.lang.String.format;
 
 public class AuthenticatedRequest {
@@ -102,7 +100,8 @@ public class AuthenticatedRequest {
           // force clear to avoid the potential for a memory leak if log4j is being used
           Class log4jMDC = Class.forName("org.apache.log4j.MDC");
           log4jMDC.getDeclaredMethod("clear").invoke(null);
-        } catch (Exception ignored) { }
+        } catch (Exception ignored) {
+        }
 
         if (restoreOriginalContext) {
           if (originalSpinnakerUser != null) {
@@ -174,22 +173,20 @@ public class AuthenticatedRequest {
   /**
    * Returns or creates a spinnaker request ID.
    *
-   * If a request ID already exists, it will be propagated without change.
-   * If a request ID does not already exist:
+   * If a request ID already exists, it will be propagated without change. If a request ID does not
+   * already exist:
    *
-   * 1. If an execution ID exists, it will create a hierarchical request ID
-   *    using the execution ID, followed by a UUID.
-   * 2. If an execution ID does not exist, it will create a simple UUID request id.
+   * 1. If an execution ID exists, it will create a hierarchical request ID using the execution ID,
+   * followed by a UUID. 2. If an execution ID does not exist, it will create a simple UUID request
+   * id.
    */
   public static Optional<String> getSpinnakerRequestId() {
     return Optional.of(
-      Optional
-        .ofNullable(MDC.get(SPINNAKER_REQUEST_ID))
-        .orElse(
-          getSpinnakerExecutionId()
-            .map(id -> format("%s:%s", id, UUID.randomUUID().toString()))
-            .orElse(UUID.randomUUID().toString())
+      Optional.ofNullable(MDC.get(SPINNAKER_REQUEST_ID)).orElse(
+        getSpinnakerExecutionId().map(id -> format("%s:%s", id, UUID.randomUUID().toString())).orElse(
+          UUID.randomUUID().toString()
         )
+      )
     );
   }
 
@@ -201,9 +198,7 @@ public class AuthenticatedRequest {
    * @return the Spring Security principal or null if there is no authority.
    */
   private static Object principal() {
-    return Optional
-      .ofNullable(SecurityContextHolder.getContext().getAuthentication())
-      .map(Authentication::getPrincipal)
+    return Optional.ofNullable(SecurityContextHolder.getContext().getAuthentication()).map(Authentication::getPrincipal)
       .orElse(null);
   }
 }

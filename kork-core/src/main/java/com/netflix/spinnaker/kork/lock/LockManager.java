@@ -20,7 +20,6 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import org.apache.http.util.Asserts;
-
 import javax.annotation.Nonnull;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
@@ -103,16 +102,13 @@ public interface LockManager {
   }
 
   enum LockStatus {
-    ACQUIRED,
-    TAKEN,
-    ERROR,
-    EXPIRED
+    ACQUIRED, TAKEN, ERROR, EXPIRED
   }
 
   interface LockReleaseStatus {
     String SUCCESS = "SUCCESS";
-    String SUCCESS_GONE = "SUCCESS_GONE"; //lock no longer exists
-    String FAILED_NOT_OWNER = "FAILED_NOT_OWNER"; //found lock but belongs to someone else
+    String SUCCESS_GONE = "SUCCESS_GONE"; // lock no longer exists
+    String FAILED_NOT_OWNER = "FAILED_NOT_OWNER"; // found lock but belongs to someone else
   }
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -124,7 +120,7 @@ public interface LockManager {
     private final long failureIntervalMillis;
     private final long version;
     private final long ownerSystemTimestamp;
-    private final String attributes; //arbitrary string to store data along side the lock
+    private final String attributes; // arbitrary string to store data along side the lock
 
     @JsonCreator
     public Lock(@JsonProperty("name") String name,
@@ -184,27 +180,24 @@ public interface LockManager {
 
     @Override
     public String toString() {
-      return "Lock{" +
-          "name='" + name + '\'' +
-          ", ownerName='" + ownerName + '\'' +
-          ", leaseDurationMillis=" + leaseDurationMillis +
-          ", successIntervalMillis=" + successIntervalMillis +
-          ", failureIntervalMillis=" + failureIntervalMillis +
-          ", version=" + version +
-          ", ownerSystemTimestamp=" + ownerSystemTimestamp +
-          ", attributes='" + attributes + '\'' +
-          '}';
+      return "Lock{" + "name='" + name + '\'' + ", ownerName='" + ownerName + '\'' + ", leaseDurationMillis="
+        + leaseDurationMillis + ", successIntervalMillis=" + successIntervalMillis + ", failureIntervalMillis="
+        + failureIntervalMillis + ", version=" + version + ", ownerSystemTimestamp=" + ownerSystemTimestamp
+        + ", attributes='" + attributes + '\'' + '}';
     }
 
     @Override
     public boolean equals(Object o) {
       // Two locks are identical if the lock name, owner and version match.
-      if (this == o) return true;
-      if (o == null || getClass() != o.getClass()) return false;
+      if (this == o)
+        return true;
+      if (o == null || getClass() != o.getClass())
+        return false;
       Lock lock = (Lock) o;
-      return Objects.equals(name, lock.name) &&
-        Objects.equals(ownerName, lock.ownerName) &&
-        Objects.equals(version, lock.version);
+      return Objects.equals(name, lock.name) && Objects.equals(ownerName, lock.ownerName) && Objects.equals(
+        version,
+        lock.version
+      );
     }
 
     @Override
@@ -294,8 +287,7 @@ public interface LockManager {
     }
 
     public void validateInputs() {
-      Asserts.check(this.lockName.matches("^[a-zA-Z0-9.-]+$"),
-        "Lock name must be alphanumeric, may contain dots");
+      Asserts.check(this.lockName.matches("^[a-zA-Z0-9.-]+$"), "Lock name must be alphanumeric, may contain dots");
 
       Objects.requireNonNull(this.lockName, "Lock name must be provided");
       Objects.requireNonNull(this.maximumLockDuration, "Lock max duration must be provided");
@@ -307,12 +299,8 @@ public interface LockManager {
 
     @Override
     public String toString() {
-      return "LockOptions{" +
-        "lockName='" + lockName + '\'' +
-        ", maximumLockDuration=" + maximumLockDuration +
-        ", version=" + version +
-        ", attributes=" + attributes +
-        '}';
+      return "LockOptions{" + "lockName='" + lockName + '\'' + ", maximumLockDuration=" + maximumLockDuration
+        + ", version=" + version + ", attributes=" + attributes + '}';
     }
   }
 

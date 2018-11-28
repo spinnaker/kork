@@ -40,14 +40,14 @@ class SelectableServiceSpec extends Specification {
   def "should lookup service by application or executionType"() {
     given:
     def selectableService = new SelectableService(
-      [
-        new ByApplicationServiceSelector(mortService, 10, ["applicationPattern": ".*spindemo.*"]),
-        new ByExecutionTypeServiceSelector(oortService, 5, ["executionTypes": [0: "orchestration"]]),
-        new ByOriginServiceSelector(instanceService, 20, ["origin": "deck", "executionTypes": [0: "orchestration"]]),
-        new ByAuthenticatedUserServiceSelector(bakeryService, 25, ["users": [0: "user1@email.com", 1: ".*user2.*"]]),
-        new DefaultServiceSelector(katoService, 1, [:])
-      ]
-    )
+        [
+          new ByApplicationServiceSelector(mortService, 10, ["applicationPattern": ".*spindemo.*"]),
+          new ByExecutionTypeServiceSelector(oortService, 5, ["executionTypes": [0: "orchestration"]]),
+          new ByOriginServiceSelector(instanceService, 20, ["origin": "deck", "executionTypes": [0: "orchestration"]]),
+          new ByAuthenticatedUserServiceSelector(bakeryService, 25, ["users": [0: "user1@email.com", 1: ".*user2.*"]]),
+          new DefaultServiceSelector(katoService, 1, [:])
+        ]
+        )
 
     when:
     def service = selectableService.getService(criteria)

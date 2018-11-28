@@ -32,7 +32,6 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.*;
-
 import javax.annotation.PreDestroy;
 import java.util.Map;
 import java.util.Objects;
@@ -48,8 +47,10 @@ public class EurekaComponents {
   }
 
   @Bean
-  @Deprecated //prefer to use EurekaClient interface rather than directly depending on DiscoveryClient
-  public DiscoveryClient discoveryClient(ApplicationInfoManager applicationInfoManager, EurekaClientConfig eurekaClientConfig, DiscoveryClient.DiscoveryClientOptionalArgs optionalArgs) {
+  @Deprecated // prefer to use EurekaClient interface rather than directly depending on DiscoveryClient
+  public DiscoveryClient discoveryClient(ApplicationInfoManager applicationInfoManager,
+                                         EurekaClientConfig eurekaClientConfig,
+                                         DiscoveryClient.DiscoveryClientOptionalArgs optionalArgs) {
     return new DiscoveryClient(applicationInfoManager, eurekaClientConfig, optionalArgs);
   }
 
@@ -90,12 +91,16 @@ public class EurekaComponents {
   }
 
   @Bean
-  EurekaStatusSubscriber eurekaStatusSubscriber(EventBus eventBus, DiscoveryClient discoveryClient, ApplicationEventPublisher publisher) {
+  EurekaStatusSubscriber eurekaStatusSubscriber(EventBus eventBus,
+                                                DiscoveryClient discoveryClient,
+                                                ApplicationEventPublisher publisher) {
     return new EurekaStatusSubscriber(publisher, eventBus, discoveryClient);
   }
 
   @Bean
-  HealthCheckHandler healthCheckHandler(ApplicationInfoManager applicationInfoManager, HealthAggregator healthAggregator, Map<String, HealthIndicator> healthIndicators) {
+  HealthCheckHandler healthCheckHandler(ApplicationInfoManager applicationInfoManager,
+                                        HealthAggregator healthAggregator,
+                                        Map<String, HealthIndicator> healthIndicators) {
     return new BootHealthCheckHandler(applicationInfoManager, healthAggregator, healthIndicators);
   }
 
@@ -116,12 +121,12 @@ public class EurekaComponents {
     private final ApplicationEventPublisher publisher;
     private final EventBus eventBus;
 
-    public EurekaStatusSubscriber(ApplicationEventPublisher publisher, EventBus eventBus, DiscoveryClient discoveryClient) {
+    public EurekaStatusSubscriber(ApplicationEventPublisher publisher,
+                                  EventBus eventBus,
+                                  DiscoveryClient discoveryClient) {
       this.publisher = Objects.requireNonNull(publisher, "publisher");
       this.eventBus = Objects.requireNonNull(eventBus, "eventBus");
-      publish(new StatusChangeEvent(
-        InstanceInfo.InstanceStatus.UNKNOWN,
-        discoveryClient.getInstanceRemoteStatus()));
+      publish(new StatusChangeEvent(InstanceInfo.InstanceStatus.UNKNOWN, discoveryClient.getInstanceRemoteStatus()));
       try {
         eventBus.registerSubscriber(this);
       } catch (InvalidSubscriberException ise) {

@@ -27,11 +27,9 @@ import com.netflix.spinnaker.kork.jedis.RedisClientDelegateFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.BeanCreationException;
-
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.util.*;
-
 import static com.netflix.spinnaker.kork.jedis.RedisClientConfiguration.Driver.DYNOMITE;
 import static java.lang.String.format;
 
@@ -56,17 +54,13 @@ public class DynomiteClientDelegateFactory implements RedisClientDelegateFactory
   public DynomiteClientDelegate build(String name, Map<String, Object> properties) {
     DynomiteDriverProperties props = convertSpringProperties(properties);
     return new DynomiteClientDelegate(
-      name,
-      new DynomiteClientFactory()
-        .properties(props)
-        .discoveryClient(discoveryClient)
-        .build()
+      name, new DynomiteClientFactory().properties(props).discoveryClient(discoveryClient).build()
     );
   }
 
   /**
-   * Spring config parsing is v. dumb. It will start making any iterable a map after a certain
-   * depth, so this method massages the data into something we can actually use.
+   * Spring config parsing is v. dumb. It will start making any iterable a map after a certain depth,
+   * so this method massages the data into something we can actually use.
    */
   @SuppressWarnings("unchecked")
   private DynomiteDriverProperties convertSpringProperties(Map<String, Object> properties) {
@@ -88,7 +82,8 @@ public class DynomiteClientDelegateFactory implements RedisClientDelegateFactory
     return mapper.convertValue(props, DynomiteDriverProperties.class);
   }
 
-  private static class ConnectionPoolConfigurationImplDeserializer extends JsonDeserializer<ConnectionPoolConfigurationImpl> {
+  private static class ConnectionPoolConfigurationImplDeserializer extends
+    JsonDeserializer<ConnectionPoolConfigurationImpl> {
 
     private final String name;
 
@@ -98,27 +93,27 @@ public class DynomiteClientDelegateFactory implements RedisClientDelegateFactory
 
     @SuppressWarnings("unchecked")
     @Override
-    public ConnectionPoolConfigurationImpl deserialize(JsonParser p,
-                                                       DeserializationContext ctxt) throws IOException, IllegalMappingMethodAccess {
+    public ConnectionPoolConfigurationImpl deserialize(JsonParser p, DeserializationContext ctxt) throws IOException,
+      IllegalMappingMethodAccess {
       ConnectionPoolConfigurationImpl result = new ConnectionPoolConfigurationImpl(name);
 
       Map<String, Object> raw = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
       raw.putAll(ctxt.readValue(p, Map.class));
 
-      Arrays.stream(ConnectionPoolConfigurationImpl.class.getDeclaredMethods())
-        .filter(it -> it.getName().startsWith("set"))
-        .forEach(method -> {
-          String fieldName = method.getName().substring(3);
-          Object value = raw.get(fieldName);
-          if (value != null) {
-            try {
-              method.setAccessible(true);
-              method.invoke(result, value);
-            } catch (IllegalAccessException|InvocationTargetException e) {
-              throw new IllegalMappingMethodAccess(format("Could not invoke %s", method.getName()), e);
-            }
+      Arrays.stream(ConnectionPoolConfigurationImpl.class.getDeclaredMethods()).filter(
+        it -> it.getName().startsWith("set")
+      ).forEach(method -> {
+        String fieldName = method.getName().substring(3);
+        Object value = raw.get(fieldName);
+        if (value != null) {
+          try {
+            method.setAccessible(true);
+            method.invoke(result, value);
+          } catch (IllegalAccessException | InvocationTargetException e) {
+            throw new IllegalMappingMethodAccess(format("Could not invoke %s", method.getName()), e);
           }
-        });
+        }
+      });
 
       return result;
     }

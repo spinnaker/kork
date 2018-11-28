@@ -20,7 +20,6 @@ import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ImmutableSet;
-
 import javax.security.auth.x500.X500Principal;
 import java.io.File;
 import java.math.BigInteger;
@@ -56,12 +55,15 @@ public class ReloadingFileBlacklist implements Blacklist {
 
     @Override
     public boolean equals(Object o) {
-      if (this == o) return true;
-      if (o == null || getClass() != o.getClass()) return false;
+      if (this == o)
+        return true;
+      if (o == null || getClass() != o.getClass())
+        return false;
 
       Entry entry = (Entry) o;
 
-      if (!issuer.equals(entry.issuer)) return false;
+      if (!issuer.equals(entry.issuer))
+        return false;
       return serial.equals(entry.serial);
     }
 
@@ -79,24 +81,22 @@ public class ReloadingFileBlacklist implements Blacklist {
 
   public ReloadingFileBlacklist(String blacklistFile, long reloadInterval, TimeUnit unit) {
     this.blacklistFile = blacklistFile;
-    this.blacklist = CacheBuilder
-      .newBuilder()
-      .expireAfterAccess(reloadInterval, unit)
-      .build(new CacheLoader<String, Set<Entry>>() {
+    this.blacklist = CacheBuilder.newBuilder().expireAfterAccess(reloadInterval, unit).build(
+      new CacheLoader<String, Set<Entry>>() {
         @Override
         public Set<Entry> load(String key) throws Exception {
           File f = new File(key);
           if (!f.exists()) {
             return Collections.emptySet();
           }
-          return ImmutableSet.copyOf(Files.readAllLines(f.toPath())
-            .stream()
-            .map(String::trim)
-            .filter(line -> !(line.isEmpty() || line.startsWith("#")))
-            .map(Entry::fromString)
-            .collect(Collectors.toSet()));
+          return ImmutableSet.copyOf(
+            Files.readAllLines(f.toPath()).stream().map(String::trim).filter(
+              line -> !(line.isEmpty() || line.startsWith("#"))
+            ).map(Entry::fromString).collect(Collectors.toSet())
+          );
         }
-      });
+      }
+    );
   }
 
   public ReloadingFileBlacklist(String blacklistFile) {

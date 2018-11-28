@@ -24,7 +24,6 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
-
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -36,8 +35,8 @@ public class JedisClientConfiguration {
   /**
    * Backwards compatibility with pre-kork redis config.
    *
-   * Services can override this pool config to provide their own default pool config.
-   * Individual clients can also override their own pool config.
+   * Services can override this pool config to provide their own default pool config. Individual
+   * clients can also override their own pool config.
    */
   @Bean
   @ConditionalOnMissingBean(GenericObjectPoolConfig.class)
@@ -48,16 +47,15 @@ public class JedisClientConfiguration {
 
   @Bean
   public JedisClientDelegateFactory jedisClientDelegateFactory(Registry registry,
-                                                        ObjectMapper objectMapper,
-                                                        GenericObjectPoolConfig redisPoolConfig) {
+                                                               ObjectMapper objectMapper,
+                                                               GenericObjectPoolConfig redisPoolConfig) {
     return new JedisClientDelegateFactory(registry, objectMapper, redisPoolConfig);
   }
 
   @Bean
   public List<HealthIndicator> jedisClientHealthIndicators(List<RedisClientDelegate> redisClientDelegates) {
-    return redisClientDelegates.stream()
-      .filter(it -> it instanceof JedisClientDelegate)
-      .map(it -> JedisHealthIndicatorFactory.build((JedisClientDelegate) it))
-      .collect(Collectors.toList());
+    return redisClientDelegates.stream().filter(it -> it instanceof JedisClientDelegate).map(
+      it -> JedisHealthIndicatorFactory.build((JedisClientDelegate) it)
+    ).collect(Collectors.toList());
   }
 }

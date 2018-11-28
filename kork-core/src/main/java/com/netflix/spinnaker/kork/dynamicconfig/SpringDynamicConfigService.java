@@ -17,12 +17,10 @@ package com.netflix.spinnaker.kork.dynamicconfig;
 
 import org.springframework.context.EnvironmentAware;
 import org.springframework.core.env.Environment;
-
 import javax.annotation.Nonnull;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.function.Supplier;
-
 import static java.lang.String.format;
 
 /**
@@ -53,13 +51,17 @@ public class SpringDynamicConfigService implements DynamicConfigService, Environ
     if (environment == null) {
       return defaultValue;
     }
-    Boolean value = chainedFlagSupplier(new LinkedList<>(Arrays.asList(
-      booleanSupplier(flagName, "region", criteria.region),
-      booleanSupplier(flagName, "account", criteria.account),
-      booleanSupplier(flagName, "cloudProvider", criteria.cloudProvider),
-      booleanSupplier(flagName, "application", criteria.application),
-      () -> environment.getProperty(flagPropertyName(flagName), Boolean.class)
-    )));
+    Boolean value = chainedFlagSupplier(
+      new LinkedList<>(
+        Arrays.asList(
+          booleanSupplier(flagName, "region", criteria.region),
+          booleanSupplier(flagName, "account", criteria.account),
+          booleanSupplier(flagName, "cloudProvider", criteria.cloudProvider),
+          booleanSupplier(flagName, "application", criteria.application),
+          () -> environment.getProperty(flagPropertyName(flagName), Boolean.class)
+        )
+      )
+    );
     return (value == null) ? defaultValue : value;
   }
 
@@ -72,7 +74,8 @@ public class SpringDynamicConfigService implements DynamicConfigService, Environ
   }
 
   private Supplier<Boolean> booleanSupplier(String configName, String criteriaName, String criteria) {
-    return () -> (configName == null) ? null : environment.getProperty(format("%s.%s.%s", configName, criteriaName, criteria), Boolean.class);
+    return () -> (configName == null) ? null
+      : environment.getProperty(format("%s.%s.%s", configName, criteriaName, criteria), Boolean.class);
   }
 
   @Override

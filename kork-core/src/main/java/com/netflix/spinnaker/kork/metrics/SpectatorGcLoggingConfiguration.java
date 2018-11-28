@@ -26,10 +26,10 @@ public class SpectatorGcLoggingConfiguration {
   private boolean loggingEnabled = true;
 
   public boolean isLoggingEnabled() {
-      return loggingEnabled;
-    }
+    return loggingEnabled;
+  }
 
   public void setLoggingEnabled(boolean loggingEnabled) {
-      this.loggingEnabled = loggingEnabled;
-    }
+    this.loggingEnabled = loggingEnabled;
+  }
 }

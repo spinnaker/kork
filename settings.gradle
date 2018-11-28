@@ -15,32 +15,28 @@
  */
 
 include 'kork-core',
-  'kork-jedis-test',
-  'kork-swagger',
-  'kork-security',
-  'kork-web',
-  'kork-hystrix',
-  'kork-stackdriver',
-  'kork-exceptions',
-  'kork-artifacts',
-  'kork-jedis',
-  'kork-dynomite',
-  'kork-aws',
-  'kork-sql',
-  'kork-sql-test',
-  'kork-test',
-  'kork-telemetry'
+    'kork-jedis-test',
+    'kork-swagger',
+    'kork-security',
+    'kork-web',
+    'kork-hystrix',
+    'kork-stackdriver',
+    'kork-exceptions',
+    'kork-artifacts',
+    'kork-jedis',
+    'kork-dynomite',
+    'kork-aws',
+    'kork-sql',
+    'kork-sql-test',
+    'kork-test',
+    'kork-telemetry'
 
 rootProject.name='kork'
 
 def setBuildFile(project) {
-    project.buildFileName = "${project.name}.gradle"
-    project.children.each {
-        setBuildFile(it)
-    }
+  project.buildFileName = "${project.name}.gradle"
+  project.children.each { setBuildFile(it) }
 }
 
-rootProject.children.each {
-    setBuildFile it
-}
+rootProject.children.each { setBuildFile it }
 

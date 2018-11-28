@@ -24,7 +24,6 @@ import com.netflix.dyno.connectionpool.impl.ConnectionPoolConfigurationImpl;
 import com.netflix.dyno.connectionpool.impl.lb.HostToken;
 import com.netflix.dyno.jedis.DynoJedisClient;
 import org.apache.commons.lang3.StringUtils;
-
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
@@ -59,19 +58,13 @@ public class LocalRedisDynomiteClient {
       }
     };
 
-    this.dynoJedisClient = new DynoJedisClient.Builder()
-      .withDynomiteClusterName("local")
-      .withApplicationName(String.valueOf(port))
-      .withHostSupplier(localHostSupplier)
-      .withCPConfig(
-        new ConnectionPoolConfigurationImpl(String.valueOf(port))
-          .setCompressionStrategy(ConnectionPoolConfiguration.CompressionStrategy.NONE)
-          .setLocalRack(rack)
-          .withHashtag("{}")
-          .withHostSupplier(localHostSupplier)
-          .withTokenSupplier(tokenMapSupplier)
-      )
-      .build();
+    this.dynoJedisClient = new DynoJedisClient.Builder().withDynomiteClusterName("local").withApplicationName(
+      String.valueOf(port)
+    ).withHostSupplier(localHostSupplier).withCPConfig(
+      new ConnectionPoolConfigurationImpl(String.valueOf(port)).setCompressionStrategy(
+        ConnectionPoolConfiguration.CompressionStrategy.NONE
+      ).setLocalRack(rack).withHashtag("{}").withHostSupplier(localHostSupplier).withTokenSupplier(tokenMapSupplier)
+    ).build();
   }
 
   public DynoJedisClient getClient() {

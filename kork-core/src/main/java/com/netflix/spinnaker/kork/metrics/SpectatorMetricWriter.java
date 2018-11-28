@@ -22,7 +22,6 @@ import com.netflix.spectator.api.Registry;
 import org.springframework.boot.actuate.metrics.Metric;
 import org.springframework.boot.actuate.metrics.writer.Delta;
 import org.springframework.boot.actuate.metrics.writer.MetricWriter;
-
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.TimeUnit;
@@ -86,8 +85,8 @@ public class SpectatorMetricWriter implements MetricWriter {
   }
 
   private AtomicLong getCounterStorage(Id id) {
-    final AtomicLong newCounter= new AtomicLong(0);
-    final AtomicLong existingCounter= counters.putIfAbsent(id, newCounter);
+    final AtomicLong newCounter = new AtomicLong(0);
+    final AtomicLong existingCounter = counters.putIfAbsent(id, newCounter);
     if (existingCounter == null) {
       return newCounter;
     }

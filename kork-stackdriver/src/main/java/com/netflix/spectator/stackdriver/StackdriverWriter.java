@@ -25,10 +25,8 @@ import com.google.api.services.monitoring.v3.model.Point;
 import com.google.api.services.monitoring.v3.model.TimeInterval;
 import com.google.api.services.monitoring.v3.model.TimeSeries;
 import com.google.api.services.monitoring.v3.model.TypedValue;
-
 import com.google.api.client.http.HttpResponseException;
 import com.google.common.collect.Lists;
-
 import com.netflix.spectator.api.Clock;
 import com.netflix.spectator.api.DefaultRegistry;
 import com.netflix.spectator.api.Id;
@@ -36,10 +34,8 @@ import com.netflix.spectator.api.Meter;
 import com.netflix.spectator.api.Measurement;
 import com.netflix.spectator.api.Registry;
 import com.netflix.spectator.api.Tag;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.function.Predicate;
@@ -58,17 +54,16 @@ import java.util.regex.Pattern;
 /**
  * Adapter from Spectator Meters to Stackdriver Time Series Metrics.
  *
- * This class is not thread safe, but is assumed to be called from a
- * single thread.
+ * This class is not thread safe, but is assumed to be called from a single thread.
  *
- * Places that are not thread safe include the management of
- * the custom descriptor cache and the use of java.text.DataFormat,
- * which is stated to not be thread-safe.
+ * Places that are not thread safe include the management of the custom descriptor cache and the use
+ * of java.text.DataFormat, which is stated to not be thread-safe.
  */
 public class StackdriverWriter {
-   // Capture groups are time series index and actual label name.
-   final private static Pattern INVALID_LABEL_REGEX = Pattern.compile(
-     "timeSeries\\[(\\d+?)\\]\\.metric\\.labels\\[\\d+?\\] had an invalid value of \\W*(\\w+)");
+  // Capture groups are time series index and actual label name.
+  final private static Pattern INVALID_LABEL_REGEX = Pattern.compile(
+    "timeSeries\\[(\\d+?)\\]\\.metric\\.labels\\[\\d+?\\] had an invalid value of \\W*(\\w+)"
+  );
 
   /**
    * This is the Spectator Id used for the timer measuring writeRegistry calls.
@@ -81,8 +76,7 @@ public class StackdriverWriter {
   private static final int MAX_TS_PER_REQUEST = 200;
 
   /**
-   * Spectator doesnt have a public concrete Id class so we'll use the
-   * default registry as a factory.
+   * Spectator doesnt have a public concrete Id class so we'll use the default registry as a factory.
    *
    * We need to generate IDs for synthetic measurements (e.g. Timers).
    */
@@ -96,9 +90,9 @@ public class StackdriverWriter {
   /**
    * TimeSeries data in Stackdriver API takes a date string, not a timestamp.
    *
-   * We are using a literal 'Z' here rather than the time format Z because
-   * Stackdriver doesnt recognize the format that Java produces. So instead
-   * we'll report in UTC and have it convert our time into GMT for reporting.
+   * We are using a literal 'Z' here rather than the time format Z because Stackdriver doesnt
+   * recognize the format that Java produces. So instead we'll report in UTC and have it convert our
+   * time into GMT for reporting.
    */
   private final SimpleDateFormat rfc3339;
 
@@ -123,8 +117,8 @@ public class StackdriverWriter {
   private final String applicationName;
 
   /**
-   * A unique id that distinguishes our data from other replicas with the same
-   * applicationName (in the same project).
+   * A unique id that distinguishes our data from other replicas with the same applicationName (in the
+   * same project).
    */
   private String instanceId;
 
@@ -153,8 +147,7 @@ public class StackdriverWriter {
   /**
    * Constructs a writer instance.
    *
-   * @param configParams
-   *   The configuration parameters.
+   * @param configParams The configuration parameters.
    */
   @SuppressWarnings("PMD.BooleanInversion")
   public StackdriverWriter(ConfigParams configParams) {
@@ -171,8 +164,7 @@ public class StackdriverWriter {
     Date startDate = new Date(configParams.getCounterStartTime());
     counterStartTimeRfc3339 = rfc3339.format(startDate);
 
-    log.info("Constructing StackdriverWriter {}={}",
-             MetricDescriptorCache.INSTANCE_LABEL, instanceId);
+    log.info("Constructing StackdriverWriter {}={}", MetricDescriptorCache.INSTANCE_LABEL, instanceId);
   }
 
   /**
@@ -180,8 +172,7 @@ public class StackdriverWriter {
    *
    * @see #findProblematicTimeSeriesElement
    */
-  private void handleTimeSeriesResponseException(
-       HttpResponseException rex, String msg, List<TimeSeries> nextN) {
+  private void handleTimeSeriesResponseException(HttpResponseException rex, String msg, List<TimeSeries> nextN) {
     Matcher matcher = INVALID_LABEL_REGEX.matcher(rex.getContent());
     TimeSeries ts = null;
     String label = null;
@@ -189,15 +180,13 @@ public class StackdriverWriter {
       int tsIndex = Integer.parseInt(matcher.group(1));
       ts = nextN.get(tsIndex);
       label = matcher.group(2);
-      log.error("{}:  time series element: {}",
-                rex.getMessage(), ts.toString());
+      log.error("{}:  time series element: {}", rex.getMessage(), ts.toString());
       cache.addLabel(ts.getMetric().getType(), label);
       try {
         log.info("Retrying individual time series element");
         CreateTimeSeriesRequest tsRequest = new CreateTimeSeriesRequest();
         tsRequest.setTimeSeries(nextN.subList(tsIndex, tsIndex + 1));
-        service.projects().timeSeries().create(projectResourceName, tsRequest)
-            .execute();
+        service.projects().timeSeries().create(projectResourceName, tsRequest).execute();
       } catch (IOException ioex) {
         log.error("Retry failed with " + ioex);
       }
@@ -209,19 +198,17 @@ public class StackdriverWriter {
   /**
    * Convert a Spectator metric Meter into a Stackdriver TimeSeries entry.
    *
-   * @param descriptorType
-   *   The Stackdriver MetricDescriptorType name for the measurement.
+   * @param descriptorType The Stackdriver MetricDescriptorType name for the measurement.
    *
-   * @param measurement
-   *   The Spectator Measurement to encode.
+   * @param measurement The Spectator Measurement to encode.
    *
-   * @return
-   *   The Stackdriver TimeSeries equivalent for the measurement.
+   * @return The Stackdriver TimeSeries equivalent for the measurement.
    */
-  public TimeSeries measurementToTimeSeries(
-        String descriptorType, Registry registry, Meter meter, Measurement measurement) {
-    Map<String, String> labels
-        = cache.tagsToTimeSeriesLabels(descriptorType, measurement.id().tags());
+  public TimeSeries measurementToTimeSeries(String descriptorType,
+                                            Registry registry,
+                                            Meter meter,
+                                            Measurement measurement) {
+    Map<String, String> labels = cache.tagsToTimeSeriesLabels(descriptorType, measurement.id().tags());
 
     long millis = measurement.timestamp();
     double value = measurement.value();
@@ -259,13 +246,10 @@ public class StackdriverWriter {
   /**
    * Generate an Id for the derived timer measurements.
    *
-   * @param id
-   *   The original Measurement id
+   * @param id The original Measurement id
    *
-   * @return
-   *   A copy of the original but without the 'statistic' tag, and the
-   *   name will be decorated with "__count" or "__totalTime" depending on the
-   *   value of the original statistic tag.
+   * @return A copy of the original but without the 'statistic' tag, and the name will be decorated
+   *         with "__count" or "__totalTime" depending on the value of the original statistic tag.
    */
   Id deriveBaseTimerId(Id id) {
     String suffix = null;
@@ -277,16 +261,15 @@ public class StackdriverWriter {
         } else if (tag.value().equals("count")) {
           suffix = "count";
         } else {
-          throw new IllegalStateException(
-                       "Unexpected statistic=" + tag.value());
+          throw new IllegalStateException("Unexpected statistic=" + tag.value());
         }
         continue;
       }
       tags.add(tag);
     }
     if (suffix == null) {
-        // Didnt have statistic, so return original.
-        return id;
+      // Didnt have statistic, so return original.
+      return id;
     }
 
     return ID_FACTORY.createId(id.name() + "__" + suffix).withTags(tags);
@@ -298,33 +281,28 @@ public class StackdriverWriter {
   private Map<Id, Id> timerBaseIds = new HashMap<Id, Id>();
 
   /**
-   * Transform timer measurements from a composite with count/totalTime tags
-   * to a pair of specialized measurements without the "statistic" tag.
+   * Transform timer measurements from a composite with count/totalTime tags to a pair of specialized
+   * measurements without the "statistic" tag.
    *
-   * This is so we can have different units for the measurement
-   * MetricDescriptor to note that the totalTime is in nanoseconds.
+   * This is so we can have different units for the measurement MetricDescriptor to note that the
+   * totalTime is in nanoseconds.
    *
-   * @param measurements
-   *   The list of measurements to transform come from a Timer meter.
+   * @param measurements The list of measurements to transform come from a Timer meter.
    *
-   * @return
-   *   A list of measurements, probably the same as the original size, where
-   *   each of the elements corresponds to an original element but does not
-   *   have the "statistic" label. Where the original was "count", the new
-   *   id name will have a "__count" suffix and "__totalTime" for the
-   *   "totalTime" statistic. The base name will be the same as the original.
+   * @return A list of measurements, probably the same as the original size, where each of the
+   *         elements corresponds to an original element but does not have the "statistic" label.
+   *         Where the original was "count", the new id name will have a "__count" suffix and
+   *         "__totalTime" for the "totalTime" statistic. The base name will be the same as the
+   *         original.
    */
-  private Iterable<Measurement> transformTimerMeasurements(
-      Iterable<Measurement> measurements) {
+  private Iterable<Measurement> transformTimerMeasurements(Iterable<Measurement> measurements) {
     ArrayList<Measurement> result = new ArrayList<Measurement>();
     for (Measurement measurement : measurements) {
       if (!measurementFilter.test(measurement)) {
         continue;
       }
-      Id id = timerBaseIds.computeIfAbsent(
-                  measurement.id(), k -> deriveBaseTimerId(k));
-      result.add(
-         new Measurement(id, measurement.timestamp(), measurement.value()));
+      Id id = timerBaseIds.computeIfAbsent(measurement.id(), k -> deriveBaseTimerId(k));
+      result.add(new Measurement(id, measurement.timestamp(), measurement.value()));
     }
     return result;
   }
@@ -332,14 +310,13 @@ public class StackdriverWriter {
   /**
    * Add a TimeSeries for each appropriate meter measurement.
    */
-  void addMeterToTimeSeries(
-        Registry registry, Meter meter, List<TimeSeries> tsList) {
+  void addMeterToTimeSeries(Registry registry, Meter meter, List<TimeSeries> tsList) {
     Iterable<Measurement> measurements = meter.measure();
     boolean applyFilter = true;
 
     if (cache.meterIsTimer(registry, meter)) {
-       measurements = transformTimerMeasurements(measurements);
-       applyFilter = false;
+      measurements = transformTimerMeasurements(measurements);
+      applyFilter = false;
     }
     for (Measurement measurement : measurements) {
       if (applyFilter && !measurementFilter.test(measurement)) {
@@ -373,9 +350,9 @@ public class StackdriverWriter {
     // because it isnt updated until we finish.
     Id writeId = registry.createId(WRITE_TIMER_NAME);
     registry.timer(writeId).record(new Runnable() {
-        public void run() {
-            writeRegistryHelper(registry);
-        }
+      public void run() {
+        writeRegistryHelper(registry);
+      }
     });
   }
 
@@ -386,18 +363,16 @@ public class StackdriverWriter {
    */
   MonitoredResource determineMonitoredResource() {
     if (monitoredResource == null) {
-      String project
-          = projectResourceName.substring(projectResourceName.indexOf('/') + 1);
+      String project = projectResourceName.substring(projectResourceName.indexOf('/') + 1);
       try {
-          monitoredResource = new MonitoredResourceBuilder()
-              .setStackdriverProject(project)
-              .build();
-          if (monitoredResource.getType().equals("global")) {
-            cache.addExtraTimeSeriesLabel(
-              MetricDescriptorCache.INSTANCE_LABEL, instanceId);
-          }
-          log.info("Using monitoredResource={} with extraTimeSeriesLabels={}",
-                   monitoredResource, cache.getExtraTimeSeriesLabels());
+        monitoredResource = new MonitoredResourceBuilder().setStackdriverProject(project).build();
+        if (monitoredResource.getType().equals("global")) {
+          cache.addExtraTimeSeriesLabel(MetricDescriptorCache.INSTANCE_LABEL, instanceId);
+        }
+        log.info(
+          "Using monitoredResource={} with extraTimeSeriesLabels={}",
+          monitoredResource,
+          cache.getExtraTimeSeriesLabels());
       } catch (IOException ioex) {
         log.error("Unable to determine monitoredResource at this time.", ioex);
       }
@@ -416,8 +391,8 @@ public class StackdriverWriter {
     }
     List<TimeSeries> tsList = registryToTimeSeries(registry);
     if (tsList.isEmpty()) {
-       log.debug("No metric data points.");
-       return;
+      log.debug("No metric data points.");
+      return;
     }
 
     CreateTimeSeriesRequest tsRequest = new CreateTimeSeriesRequest();
@@ -436,8 +411,7 @@ public class StackdriverWriter {
       }
       tsRequest.setTimeSeries(nextN);
       try {
-        service.projects().timeSeries().create(projectResourceName, tsRequest)
-               .execute();
+        service.projects().timeSeries().create(projectResourceName, tsRequest).execute();
       } catch (HttpResponseException rex) {
         handleTimeSeriesResponseException(rex, "creating time series", nextN);
         failed += nextN.size();

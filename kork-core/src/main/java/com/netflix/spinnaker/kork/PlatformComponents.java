@@ -25,12 +25,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 
 @Configuration
-@Import({
-  ArchaiusConfiguration.class,
-  TransientConfigConfiguration.class,
-  EurekaComponents.class,
-  SpectatorConfiguration.class,
-  AwsComponents.class
-})
+@Import({ArchaiusConfiguration.class, TransientConfigConfiguration.class, EurekaComponents.class,
+  SpectatorConfiguration.class, AwsComponents.class})
 public class PlatformComponents {
 }

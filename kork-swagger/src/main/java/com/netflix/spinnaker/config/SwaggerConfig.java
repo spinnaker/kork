@@ -28,10 +28,8 @@ import springfox.documentation.spring.web.paths.AbstractPathProvider;
 import springfox.documentation.spring.web.plugins.Docket;
 import springfox.documentation.swagger2.annotations.EnableSwagger2;
 import com.google.common.base.Predicate;
-
 import java.util.List;
 import java.util.stream.Collectors;
-
 import static com.google.common.base.Predicates.or;
 
 @EnableSwagger2
@@ -48,31 +46,16 @@ public class SwaggerConfig {
 
   @Bean
   public Docket gateApi() {
-    return new Docket(DocumentationType.SWAGGER_2)
-      .pathProvider(new BasePathProvider(basePath, documentationPath))
-      .select()
-      .apis(RequestHandlerSelectors.any())
-      .paths(paths())
-      .build()
-      .apiInfo(apiInfo());
+    return new Docket(DocumentationType.SWAGGER_2).pathProvider(new BasePathProvider(basePath, documentationPath))
+      .select().apis(RequestHandlerSelectors.any()).paths(paths()).build().apiInfo(apiInfo());
   }
 
   private Predicate<String> paths() {
-    return or(
-      patterns.stream().map(PathSelectors::regex).collect(Collectors.toList())
-    );
+    return or(patterns.stream().map(PathSelectors::regex).collect(Collectors.toList()));
   }
 
   private ApiInfo apiInfo() {
-    return new ApiInfo(
-      title,
-      description,
-      null,
-      null,
-      contact,
-      null,
-      null
-    );
+    return new ApiInfo(title, description, null, null, contact, null, null);
   }
 
   public void setTitle(String title) {
@@ -95,13 +78,21 @@ public class SwaggerConfig {
     this.patterns = patterns;
   }
 
-  public void setBasePath(String basePath) { this.basePath = basePath; }
+  public void setBasePath(String basePath) {
+    this.basePath = basePath;
+  }
 
-  public String getBasePath() { return basePath; }
+  public String getBasePath() {
+    return basePath;
+  }
 
-  public void setDocumentationPath(String documentationPath) { this.documentationPath = documentationPath; }
+  public void setDocumentationPath(String documentationPath) {
+    this.documentationPath = documentationPath;
+  }
 
-  public String getDocumentationPath() { return documentationPath; }
+  public String getDocumentationPath() {
+    return documentationPath;
+  }
 
   public class BasePathProvider extends AbstractPathProvider {
     private String basePath;

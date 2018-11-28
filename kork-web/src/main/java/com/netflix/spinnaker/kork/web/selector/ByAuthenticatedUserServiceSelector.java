@@ -32,9 +32,7 @@ public class ByAuthenticatedUserServiceSelector implements ServiceSelector {
     this.service = service;
     this.priority = priority;
 
-    Collection<String> users = new HashSet(
-      ((Map<String, String>) config.get("users")).values()
-    );
+    Collection<String> users = new HashSet(((Map<String, String>) config.get("users")).values());
     this.userPatterns = users.stream().map(Pattern::compile).collect(Collectors.toList());
   }
 
@@ -54,8 +52,8 @@ public class ByAuthenticatedUserServiceSelector implements ServiceSelector {
       return false;
     }
 
-    return userPatterns
-      .stream()
-      .anyMatch(userPattern -> userPattern.matcher(criteria.getAuthenticatedUser()).matches());
+    return userPatterns.stream().anyMatch(
+      userPattern -> userPattern.matcher(criteria.getAuthenticatedUser()).matches()
+    );
   }
 }

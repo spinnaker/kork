@@ -65,7 +65,10 @@ class MetricsInterceptorSpec extends Specification {
     def registry = new StubRegistry()
     def handler = new HandlerMethod(new Example(), Example.getMethod("get"))
     def interceptor = Spy(MetricsInterceptor, constructorArgs: [
-      registry, metric, variablesToTag, null
+      registry,
+      metric,
+      variablesToTag,
+      null
     ]) {
       1 * getNanoTime() >> { return endTime }
     }
@@ -74,15 +77,15 @@ class MetricsInterceptorSpec extends Specification {
     interceptor.afterCompletion(request, response, handler, exception)
 
     then:
-    registry.id.tags().collectEntries { [it.key(), it.value()] } == expectedTags
+    registry.id.tags().collectEntries { [it.key(), it.value()]} == expectedTags
     registry.timer.totalTime() == (endTime - startTime)
     registry.timer.count() == 1
 
     where:
     exception                  | variablesToTag | expectedTags
-    null                       | []             | [success: "true", statusCode: "200", status: "2xx", "method": "get", controller: "Example"]
-    new NullPointerException() | []             | [success: "false", statusCode: "500", status: "5xx", "method": "get", controller: "Example", cause: "NullPointerException"]
-    null                       | ["account"]    | [success: "true", statusCode: "200", status: "2xx", "method": "get", controller: "Example", "account": "test"]
+    null                       | []| [success: "true", statusCode: "200", status: "2xx", "method": "get", controller: "Example"]
+    new NullPointerException() | []| [success: "false", statusCode: "500", status: "5xx", "method": "get", controller: "Example", cause: "NullPointerException"]
+    null                       | ["account"]| [success: "true", statusCode: "200", status: "2xx", "method": "get", controller: "Example", "account": "test"]
 
     templateVariables = ["account": "test", "empty": "empty"]
     startTime = 0L
@@ -94,7 +97,9 @@ class MetricsInterceptorSpec extends Specification {
   def "should skip excluded controllers"() {
     given:
     def handler = new HandlerMethod(new Example(), Example.getMethod("get"))
-    def interceptor = new MetricsInterceptor(null, null, null, [handler.bean.class.simpleName])
+    def interceptor = new MetricsInterceptor(null, null, null, [
+      handler.bean.class.simpleName
+    ])
 
     expect:
     interceptor.afterCompletion(null, null, handler, null)

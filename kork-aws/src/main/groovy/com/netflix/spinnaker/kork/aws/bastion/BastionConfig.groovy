@@ -30,7 +30,7 @@ class BastionConfig {
   @Bean
   AWSCredentialsProvider bastionCredentialsProvider(BastionProperties bastionConfiguration) {
     def provider = new BastionCredentialsProvider(bastionConfiguration.user, bastionConfiguration.host, bastionConfiguration.port, bastionConfiguration.proxyCluster,
-      bastionConfiguration.proxyRegion, bastionConfiguration.accountIamRole)
+        bastionConfiguration.proxyRegion, bastionConfiguration.accountIamRole)
 
     provider.refresh()
 

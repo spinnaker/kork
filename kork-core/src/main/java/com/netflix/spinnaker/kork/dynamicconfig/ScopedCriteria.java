@@ -61,11 +61,7 @@ public class ScopedCriteria {
 
   @Override
   public String toString() {
-    return "ScopedCriteria{" +
-      "region='" + region + '\'' +
-      ", account='" + account + '\'' +
-      ", cloudProvider='" + cloudProvider + '\'' +
-      ", application='" + application + '\'' +
-      '}';
+    return "ScopedCriteria{" + "region='" + region + '\'' + ", account='" + account + '\'' + ", cloudProvider='"
+      + cloudProvider + '\'' + ", application='" + application + '\'' + '}';
   }
 }

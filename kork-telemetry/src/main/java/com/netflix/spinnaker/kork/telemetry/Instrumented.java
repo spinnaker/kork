@@ -22,9 +22,8 @@ import java.lang.annotation.*;
 @Retention(RetentionPolicy.RUNTIME)
 public @interface Instrumented {
   /**
-   * If set, this value will be used as an override to the metric name that would normally
-   * be generated automatically. This can be useful for when there may be metric name
-   * collisions.
+   * If set, this value will be used as an override to the metric name that would normally be
+   * generated automatically. This can be useful for when there may be metric name collisions.
    *
    * @return Optional metric name override
    */

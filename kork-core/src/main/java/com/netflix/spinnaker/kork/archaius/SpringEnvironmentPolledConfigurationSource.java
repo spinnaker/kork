@@ -20,7 +20,6 @@ import com.netflix.config.PollResult;
 import com.netflix.config.PolledConfigurationSource;
 import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.core.env.EnumerablePropertySource;
-
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;

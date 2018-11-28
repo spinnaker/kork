@@ -23,7 +23,6 @@ import com.netflix.spectator.api.Spectator;
 import com.netflix.spectator.controllers.MetricsController;
 import com.netflix.spectator.gc.GcLogger;
 import com.netflix.spectator.jvm.Jmx;
-
 import org.springframework.boot.actuate.metrics.writer.CompositeMetricWriter;
 import org.springframework.boot.actuate.metrics.writer.MetricWriter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
@@ -34,7 +33,6 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
-
 import javax.annotation.PreDestroy;
 import java.util.List;
 
@@ -69,7 +67,8 @@ public class SpectatorConfiguration {
   }
 
   @Bean
-  RegistryInitializer registryInitializer(Registry registry, SpectatorGcLoggingConfiguration spectatorConfigurationProperties) {
+  RegistryInitializer registryInitializer(Registry registry,
+                                          SpectatorGcLoggingConfiguration spectatorConfigurationProperties) {
     return new RegistryInitializer(registry, spectatorConfigurationProperties.isLoggingEnabled());
   }
 

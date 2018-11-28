@@ -70,14 +70,12 @@ class BastionCredentialsProvider implements AWSCredentialsProvider {
 
   private AWSCredentials getRemoteCredentials() {
     SimpleDateFormat format = new SimpleDateFormat(
-      "yyyy-MM-dd'T'HH:mm:ss'Z'", Locale.US);
+        "yyyy-MM-dd'T'HH:mm:ss'Z'", Locale.US);
     def engine = new SshDslEngine(new SshOptions(defaultPassword: '', trustUnknownHosts: true, jschProperties: [(SshDslEngine.SSH_PREFERRED_AUTHENTICATIONS): 'publickey']))
     engine.jsch.setIdentityRepository(identityRepository)
     def command = "oq-ssh -r ${proxyRegion} ${proxyCluster},0 'curl -s http://169.254.169.254/latest/meta-data/iam/security-credentials/${iamRole}'".toString()
     CommandOutput output
-    engine.remoteSession("${user}@${host}:${port}") {
-      output = exec command: command
-    }
+    engine.remoteSession("${user}@${host}:${port}") { output = exec command: command }
     def jsonText = output.output.substring(output.output.indexOf('{'))
     def json = slurper.parseText(jsonText) as Map
     expiration = format.parse(json.Expiration as String)

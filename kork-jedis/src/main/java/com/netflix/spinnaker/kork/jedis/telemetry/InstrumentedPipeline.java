@@ -22,14 +22,12 @@ import redis.clients.jedis.*;
 import redis.clients.jedis.params.geo.GeoRadiusParam;
 import redis.clients.jedis.params.sortedset.ZAddParams;
 import redis.clients.jedis.params.sortedset.ZIncrByParams;
-
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.Callable;
-
 import static com.netflix.spinnaker.kork.jedis.telemetry.TelemetryHelper.*;
 
 public class InstrumentedPipeline extends Pipeline {
@@ -57,8 +55,8 @@ public class InstrumentedPipeline extends Pipeline {
   }
 
   private <T> T internalInstrumented(String command, Optional<Long> payloadSize, Callable<T> action) {
-    payloadSize.ifPresent(size ->
-      PercentileDistributionSummary.get(registry, payloadSizeId(registry, poolName, command, true)).record(size)
+    payloadSize.ifPresent(
+      size -> PercentileDistributionSummary.get(registry, payloadSizeId(registry, poolName, command, true)).record(size)
     );
     try {
       return PercentileTimer.get(registry, timerId(registry, poolName, command, true)).record(() -> {
@@ -81,8 +79,8 @@ public class InstrumentedPipeline extends Pipeline {
   }
 
   private void internalInstrumented(String command, Optional<Long> payloadSize, Runnable action) {
-    payloadSize.ifPresent(size ->
-      PercentileDistributionSummary.get(registry, payloadSizeId(registry, poolName, command, true)).record(size)
+    payloadSize.ifPresent(
+      size -> PercentileDistributionSummary.get(registry, payloadSizeId(registry, poolName, command, true)).record(size)
     );
     try {
       PercentileTimer.get(registry, timerId(registry, poolName, command, true)).record(() -> {
@@ -689,7 +687,11 @@ public class InstrumentedPipeline extends Pipeline {
   @Override
   public Response<Object> eval(byte[] script, byte[] keyCount, byte[]... params) {
     String command = "eval";
-    return instrumented(command, payloadSize(script) + payloadSize(params), () -> delegated.eval(script, keyCount, params));
+    return instrumented(
+      command,
+      payloadSize(script) + payloadSize(params),
+      () -> delegated.eval(script, keyCount, params)
+    );
   }
 
   @Override
@@ -701,7 +703,11 @@ public class InstrumentedPipeline extends Pipeline {
   @Override
   public Response<Object> eval(byte[] script, int keyCount, byte[]... params) {
     String command = "eval";
-    return instrumented(command, payloadSize(script) + payloadSize(params), () -> delegated.eval(script, keyCount, params));
+    return instrumented(
+      command,
+      payloadSize(script) + payloadSize(params),
+      () -> delegated.eval(script, keyCount, params)
+    );
   }
 
   @Override
@@ -1265,7 +1271,7 @@ public class InstrumentedPipeline extends Pipeline {
   @Override
   public Response<Long> rpush(String key, String... string) {
     String command = "rpush";
-    return instrumented(command,payloadSize(string),  () -> delegated.rpush(key, string));
+    return instrumented(command, payloadSize(string), () -> delegated.rpush(key, string));
   }
 
   @Override
@@ -1349,7 +1355,7 @@ public class InstrumentedPipeline extends Pipeline {
   @Override
   public Response<Long> setnx(String key, String value) {
     String command = "setnx";
-    return instrumented(command,payloadSize(value),  () -> delegated.setnx(key, value));
+    return instrumented(command, payloadSize(value), () -> delegated.setnx(key, value));
   }
 
   @Override
@@ -2383,25 +2389,43 @@ public class InstrumentedPipeline extends Pipeline {
   }
 
   @Override
-  public Response<List<GeoRadiusResponse>> georadius(byte[] key, double longitude, double latitude, double radius, GeoUnit unit) {
+  public Response<List<GeoRadiusResponse>> georadius(byte[] key,
+                                                     double longitude,
+                                                     double latitude,
+                                                     double radius,
+                                                     GeoUnit unit) {
     String command = "georadius";
     return instrumented(command, () -> delegated.georadius(key, longitude, latitude, radius, unit));
   }
 
   @Override
-  public Response<List<GeoRadiusResponse>> georadius(byte[] key, double longitude, double latitude, double radius, GeoUnit unit, GeoRadiusParam param) {
+  public Response<List<GeoRadiusResponse>> georadius(byte[] key,
+                                                     double longitude,
+                                                     double latitude,
+                                                     double radius,
+                                                     GeoUnit unit,
+                                                     GeoRadiusParam param) {
     String command = "georadius";
     return instrumented(command, () -> delegated.georadius(key, longitude, latitude, radius, unit, param));
   }
 
   @Override
-  public Response<List<GeoRadiusResponse>> georadius(String key, double longitude, double latitude, double radius, GeoUnit unit) {
+  public Response<List<GeoRadiusResponse>> georadius(String key,
+                                                     double longitude,
+                                                     double latitude,
+                                                     double radius,
+                                                     GeoUnit unit) {
     String command = "georadius";
     return instrumented(command, () -> delegated.georadius(key, longitude, latitude, radius, unit));
   }
 
   @Override
-  public Response<List<GeoRadiusResponse>> georadius(String key, double longitude, double latitude, double radius, GeoUnit unit, GeoRadiusParam param) {
+  public Response<List<GeoRadiusResponse>> georadius(String key,
+                                                     double longitude,
+                                                     double latitude,
+                                                     double radius,
+                                                     GeoUnit unit,
+                                                     GeoRadiusParam param) {
     String command = "georadius";
     return instrumented(command, () -> delegated.georadius(key, longitude, latitude, radius, unit, param));
   }
@@ -2413,7 +2437,11 @@ public class InstrumentedPipeline extends Pipeline {
   }
 
   @Override
-  public Response<List<GeoRadiusResponse>> georadiusByMember(byte[] key, byte[] member, double radius, GeoUnit unit, GeoRadiusParam param) {
+  public Response<List<GeoRadiusResponse>> georadiusByMember(byte[] key,
+                                                             byte[] member,
+                                                             double radius,
+                                                             GeoUnit unit,
+                                                             GeoRadiusParam param) {
     String command = "georadiusByMember";
     return instrumented(command, () -> delegated.georadiusByMember(key, member, radius, unit, param));
   }
@@ -2425,7 +2453,11 @@ public class InstrumentedPipeline extends Pipeline {
   }
 
   @Override
-  public Response<List<GeoRadiusResponse>> georadiusByMember(String key, String member, double radius, GeoUnit unit, GeoRadiusParam param) {
+  public Response<List<GeoRadiusResponse>> georadiusByMember(String key,
+                                                             String member,
+                                                             double radius,
+                                                             GeoUnit unit,
+                                                             GeoRadiusParam param) {
     String command = "georadiusByMember";
     return instrumented(command, () -> delegated.georadiusByMember(key, member, radius, unit, param));
   }

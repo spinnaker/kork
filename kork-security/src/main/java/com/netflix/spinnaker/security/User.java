@@ -24,7 +24,6 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.util.StringUtils;
-
 import static java.util.Collections.unmodifiableCollection;
 import static java.util.Collections.unmodifiableList;
 import static java.util.stream.Collectors.toList;
@@ -46,18 +45,15 @@ public class User implements UserDetails {
 
   @Override
   public List<? extends GrantedAuthority> getAuthorities() {
-    return roles
-      .stream()
-      .filter(StringUtils::hasText)
-      .map(SimpleGrantedAuthority::new)
-      .collect(toList());
+    return roles.stream().filter(StringUtils::hasText).map(SimpleGrantedAuthority::new).collect(toList());
   }
 
   /**
    * Not used
    **/
   @JsonIgnore
-  @Override public String getPassword() {
+  @Override
+  public String getPassword() {
     return "";
   }
 
@@ -115,16 +111,24 @@ public class User implements UserDetails {
   }
 
   @Override
-  public boolean isAccountNonExpired() { return true; }
+  public boolean isAccountNonExpired() {
+    return true;
+  }
 
   @Override
-  public boolean isAccountNonLocked() { return true; }
+  public boolean isAccountNonLocked() {
+    return true;
+  }
 
   @Override
-  public boolean isCredentialsNonExpired() { return true; }
+  public boolean isCredentialsNonExpired() {
+    return true;
+  }
 
   @Override
-  public boolean isEnabled() { return true; }
+  public boolean isEnabled() {
+    return true;
+  }
 
   private final class ImmutableUser extends User {
     ImmutableUser() {
@@ -136,23 +140,28 @@ public class User implements UserDetails {
       this.allowedAccounts = unmodifiableList(new ArrayList<>(User.this.allowedAccounts));
     }
 
-    @Override public void setEmail(String email) {
+    @Override
+    public void setEmail(String email) {
       throw new UnsupportedOperationException();
     }
 
-    @Override public void setUsername(String username) {
+    @Override
+    public void setUsername(String username) {
       throw new UnsupportedOperationException();
     }
 
-    @Override public void setFirstName(String firstName) {
+    @Override
+    public void setFirstName(String firstName) {
       throw new UnsupportedOperationException();
     }
 
-    @Override public void setLastName(String lastName) {
+    @Override
+    public void setLastName(String lastName) {
       throw new UnsupportedOperationException();
     }
 
-    @Override public void setRoles(Collection<String> roles) {
+    @Override
+    public void setRoles(Collection<String> roles) {
       throw new UnsupportedOperationException();
     }
 
@@ -161,7 +170,8 @@ public class User implements UserDetails {
       throw new UnsupportedOperationException();
     }
 
-    @Override public User asImmutable() {
+    @Override
+    public User asImmutable() {
       return this;
     }
   }

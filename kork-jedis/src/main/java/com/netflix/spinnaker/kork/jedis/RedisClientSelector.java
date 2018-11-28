@@ -18,7 +18,6 @@ package com.netflix.spinnaker.kork.jedis;
 import com.netflix.spinnaker.kork.jedis.exception.RedisClientNotFound;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import java.util.List;
 import java.util.Optional;
 
@@ -48,10 +47,11 @@ public class RedisClientSelector {
   }
 
   public RedisClientDelegate primary(String name, boolean fallbackToDefault) {
-    return select(name, true, fallbackToDefault)
-      .orElseThrow(() ->
-        new RedisClientNotFound("Could not find primary Redis client by name '" + name + "' and no default configured")
-      );
+    return select(name, true, fallbackToDefault).orElseThrow(
+      () -> new RedisClientNotFound(
+        "Could not find primary Redis client by name '" + name + "' and no default configured"
+      )
+    );
   }
 
   public Optional<RedisClientDelegate> previous(String name, boolean fallbackToDefault) {
@@ -65,9 +65,7 @@ public class RedisClientSelector {
 
     if (!client.isPresent() && fallbackToDefault) {
       String defaultName = getName(primary, DEFAULT);
-      client = clients.stream()
-        .filter(it -> defaultName.equals(it.name()))
-        .findFirst();
+      client = clients.stream().filter(it -> defaultName.equals(it.name())).findFirst();
     }
 
     return client;

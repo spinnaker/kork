@@ -49,5 +49,4 @@ class SpringDynamicConfigServiceSpec extends Specification {
     "myfeature" | new Builder().withRegion("us-west-2")         || false
     "myfeature" | new Builder().withRegion("us-east-1")         || true
   }
-
 }

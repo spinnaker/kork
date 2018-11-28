@@ -40,11 +40,11 @@ class HystrixSpectatorPublisherCommand implements HystrixMetricsPublisherCommand
   private final String metricType
 
   public HystrixSpectatorPublisherCommand(HystrixCommandKey commandKey,
-                                          HystrixCommandGroupKey commandGroupKey,
-                                          HystrixCommandMetrics metrics,
-                                          HystrixCircuitBreaker circuitBreaker,
-                                          HystrixCommandProperties properties,
-                                          Registry metricRegistry) {
+  HystrixCommandGroupKey commandGroupKey,
+  HystrixCommandMetrics metrics,
+  HystrixCircuitBreaker circuitBreaker,
+  HystrixCommandProperties properties,
+  Registry metricRegistry) {
     this.key = commandKey
     this.commandGroupKey = commandGroupKey
     this.metrics = metrics
@@ -58,18 +58,18 @@ class HystrixSpectatorPublisherCommand implements HystrixMetricsPublisherCommand
   @Override
   public void initialize() {
     metricRegistry.gauge(createMetricName("isCircuitBreakerOpen"), circuitBreaker, new ToDoubleFunction() {
-      @Override
-      double applyAsDouble(Object ref) {
-        return ((HystrixCircuitBreaker) ref).isOpen() ? 1 : 0
-      }
-    })
+          @Override
+          double applyAsDouble(Object ref) {
+            return ((HystrixCircuitBreaker) ref).isOpen() ? 1 : 0
+          }
+        })
 
     metricRegistry.gauge(createMetricName("currentTime"), metrics, new ToDoubleFunction() {
-      @Override
-      double applyAsDouble(Object ref) {
-        return System.currentTimeMillis()
-      }
-    })
+          @Override
+          double applyAsDouble(Object ref) {
+            return System.currentTimeMillis()
+          }
+        })
 
     // cumulative counts
     createCumulativeCountForEvent("countCollapsedRequests", HystrixRollingNumberEvent.COLLAPSED)
@@ -177,35 +177,35 @@ class HystrixSpectatorPublisherCommand implements HystrixMetricsPublisherCommand
 
   void createGuageForMetrics(Id id, Closure<Double> closure) {
     metricRegistry.gauge(id, metrics, new ToDoubleFunction() {
-      @Override
-      double applyAsDouble(Object ref) {
-        return closure.call(ref)
-      }
-    })
+          @Override
+          double applyAsDouble(Object ref) {
+            return closure.call(ref)
+          }
+        })
   }
 
   protected Id createMetricName(String name) {
     return metricRegistry
-      .createId("hystrix.${name}" as String)
-      .withTag("metricGroup", metricGroup)
-      .withTag("metricType", metricType)
+        .createId("hystrix.${name}" as String)
+        .withTag("metricGroup", metricGroup)
+        .withTag("metricType", metricType)
   }
 
   protected void createCumulativeCountForEvent(String name, final HystrixRollingNumberEvent event) {
     metricRegistry.gauge(createMetricName(name), event, new ToDoubleFunction() {
-      @Override
-      double applyAsDouble(Object ref) {
-        return metrics.getCumulativeCount((HystrixRollingNumberEvent) event)
-      }
-    })
+          @Override
+          double applyAsDouble(Object ref) {
+            return metrics.getCumulativeCount((HystrixRollingNumberEvent) event)
+          }
+        })
   }
 
   protected void createRollingCountForEvent(String name, final HystrixRollingNumberEvent event) {
     metricRegistry.gauge(createMetricName(name), event, new ToDoubleFunction() {
-      @Override
-      double applyAsDouble(Object ref) {
-        return metrics.getRollingCount((HystrixRollingNumberEvent) event)
-      }
-    })
+          @Override
+          double applyAsDouble(Object ref) {
+            return metrics.getRollingCount((HystrixRollingNumberEvent) event)
+          }
+        })
   }
 }

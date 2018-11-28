@@ -40,17 +40,17 @@ class HystrixSpectatorPublisher extends HystrixMetricsPublisher {
 
   @Override
   HystrixMetricsPublisherCommand getMetricsPublisherForCommand(HystrixCommandKey commandKey,
-                                                               HystrixCommandGroupKey commandGroupKey,
-                                                               HystrixCommandMetrics metrics,
-                                                               HystrixCircuitBreaker circuitBreaker,
-                                                               HystrixCommandProperties properties) {
+      HystrixCommandGroupKey commandGroupKey,
+      HystrixCommandMetrics metrics,
+      HystrixCircuitBreaker circuitBreaker,
+      HystrixCommandProperties properties) {
     return new HystrixSpectatorPublisherCommand(commandKey, commandGroupKey, metrics, circuitBreaker, properties, registry)
   }
 
   @Override
   HystrixMetricsPublisherThreadPool getMetricsPublisherForThreadPool(HystrixThreadPoolKey threadPoolKey,
-                                                                     HystrixThreadPoolMetrics metrics,
-                                                                     HystrixThreadPoolProperties properties) {
+      HystrixThreadPoolMetrics metrics,
+      HystrixThreadPoolProperties properties) {
     return new HystrixSpectatorPublisherThreadPool(threadPoolKey, metrics, properties, registry)
   }
 }

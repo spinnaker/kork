@@ -39,7 +39,7 @@ class TomcatConfiguration {
 
   @Bean
   TomcatContainerCustomizerUtil tomcatContainerCustomizerUtil(OkHttpClientConfigurationProperties okHttpClientConfigurationProperties,
-                                                              SslExtensionConfigurationProperties sslExtensionConfigurationProperties) {
+      SslExtensionConfigurationProperties sslExtensionConfigurationProperties) {
     return new TomcatContainerCustomizerUtil(okHttpClientConfigurationProperties, sslExtensionConfigurationProperties)
   }
   /**
@@ -50,7 +50,7 @@ class TomcatConfiguration {
   @Bean
   @ConditionalOnExpression('${server.ssl.enabled:false}')
   EmbeddedServletContainerCustomizer containerCustomizer(TomcatContainerCustomizerUtil tomcatContainerCustomizerUtil,
-                                                         TomcatConfigurationProperties tomcatConfigurationProperties) throws Exception {
+      TomcatConfigurationProperties tomcatConfigurationProperties) throws Exception {
     System.setProperty("jdk.tls.rejectClientInitiatedRenegotiation", "true")
     System.setProperty("jdk.tls.ephemeralDHKeySize", "2048")
 
@@ -58,11 +58,11 @@ class TomcatConfiguration {
       TomcatEmbeddedServletContainerFactory tomcat = (TomcatEmbeddedServletContainerFactory) container
       //this will only handle the case where SSL is enabled on the main tomcat connector
       tomcat.addConnectorCustomizers(new TomcatConnectorCustomizer() {
-        @Override
-        void customize(Connector connector) {
-          tomcatContainerCustomizerUtil.applySSLSettings(connector)
-        }
-      })
+            @Override
+            void customize(Connector connector) {
+              tomcatContainerCustomizerUtil.applySSLSettings(connector)
+            }
+          })
 
       if (tomcatConfigurationProperties.getLegacyServerPort()> 0) {
         log.info("Creating legacy connector on port ${tomcatConfigurationProperties.getLegacyServerPort()}")

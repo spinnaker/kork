@@ -18,7 +18,6 @@ package com.netflix.spinnaker.kork.eureka;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.context.properties.NestedConfigurationProperty;
-
 import java.util.Objects;
 
 @ConfigurationProperties("eureka")

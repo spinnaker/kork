@@ -22,7 +22,6 @@ import com.netflix.spectator.api.histogram.PercentileDistributionSummary;
 import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.servlet.HandlerMapping;
 import org.springframework.web.servlet.handler.HandlerInterceptorAdapter;
-
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.util.Collection;
@@ -30,20 +29,17 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
-
 import static java.lang.String.format;
 
 /**
- * An interceptor that logs Controller metrics to an underlying {@link com.netflix.spectator.api.Registry}.
+ * An interceptor that logs Controller metrics to an underlying
+ * {@link com.netflix.spectator.api.Registry}.
  * <p>
  * A `timer` will be created for each request with the following tags:
  * <p>
- * - controller name
- * - controller method
- * - status (2xx, 4xx, 5xx, etc.)
- * - statusCode (200, 404, 500, etc.)
- * - success (true/false depending on whether the request resulted in an exception)
- * - cause (if success == false, the name of the raised exception)
+ * - controller name - controller method - status (2xx, 4xx, 5xx, etc.) - statusCode (200, 404, 500,
+ * etc.) - success (true/false depending on whether the request resulted in an exception) - cause
+ * (if success == false, the name of the raised exception)
  */
 public class MetricsInterceptor extends HandlerInterceptorAdapter {
   static final String TIMER_ATTRIBUTE = "Metrics_startTime";
@@ -55,16 +51,15 @@ public class MetricsInterceptor extends HandlerInterceptorAdapter {
   private final Set<String> controllersToExclude = new HashSet<String>();
 
   /**
-   * @param registry             Underlying metrics registry
-   * @param metricName           Metric name
-   * @param pathVariablesToTag   Variables from the request uri that should be added as metric tags
+   * @param registry Underlying metrics registry
+   * @param metricName Metric name
+   * @param pathVariablesToTag Variables from the request uri that should be added as metric tags
    * @param controllersToExclude Controller names that should be excluded from metrics
    */
   public MetricsInterceptor(Registry registry,
                             String metricName,
                             Collection<String> pathVariablesToTag,
-                            Collection<String> controllersToExclude
-  ) {
+                            Collection<String> controllersToExclude) {
     this.registry = registry;
     this.metricName = metricName;
     this.contentLengthMetricName = format("%s.contentLength", metricName);
@@ -83,10 +78,8 @@ public class MetricsInterceptor extends HandlerInterceptorAdapter {
   }
 
   @Override
-  public void afterCompletion(HttpServletRequest request,
-                              HttpServletResponse response,
-                              Object handler,
-                              Exception ex) throws Exception {
+  public void afterCompletion(HttpServletRequest request, HttpServletResponse response, Object handler, Exception ex)
+    throws Exception {
     if (handler instanceof HandlerMethod) {
       HandlerMethod handlerMethod = (HandlerMethod) handler;
 
@@ -101,11 +94,10 @@ public class MetricsInterceptor extends HandlerInterceptorAdapter {
         status = 500;
       }
 
-      Id id = registry.createId(metricName)
-        .withTag("controller", controller)
-        .withTag("method", handlerMethod.getMethod().getName())
-        .withTag("status", status.toString().charAt(0) + "xx")
-        .withTag("statusCode", status.toString());
+      Id id = registry.createId(metricName).withTag("controller", controller).withTag(
+        "method",
+        handlerMethod.getMethod().getName()
+      ).withTag("status", status.toString().charAt(0) + "xx").withTag("statusCode", status.toString());
 
       Map variables = (Map) request.getAttribute(HandlerMapping.URI_TEMPLATE_VARIABLES_ATTRIBUTE);
       for (String pathVariable : pathVariablesToTag) {
@@ -120,14 +112,10 @@ public class MetricsInterceptor extends HandlerInterceptorAdapter {
         id = id.withTag("success", "true");
       }
 
-      registry.timer(id).record(
-        getNanoTime() - ((Long) request.getAttribute(TIMER_ATTRIBUTE)), TimeUnit.NANOSECONDS
-      );
+      registry.timer(id).record(getNanoTime() - ((Long) request.getAttribute(TIMER_ATTRIBUTE)), TimeUnit.NANOSECONDS);
 
-      PercentileDistributionSummary.get(
-        registry,
-        registry.createId(contentLengthMetricName).withTags(id.tags())
-      ).record(request.getContentLengthLong());
+      PercentileDistributionSummary.get(registry, registry.createId(contentLengthMetricName).withTags(id.tags()))
+        .record(request.getContentLengthLong());
     }
   }
 

@@ -16,7 +16,6 @@
 package com.netflix.spinnaker.kork.jedis;
 
 import redis.clients.jedis.*;
-
 import java.util.function.Consumer;
 import java.util.function.Function;
 

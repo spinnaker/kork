@@ -17,7 +17,6 @@ package com.netflix.spinnaker.kork.jedis;
 
 import redis.clients.jedis.*;
 import redis.clients.util.Pool;
-
 import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -126,7 +125,9 @@ public class JedisClientDelegate implements RedisClientDelegate {
   }
 
   @Override
-  public boolean supportsTransactions() { return true; }
+  public boolean supportsTransactions() {
+    return true;
+  }
 
   @Override
   public void withTransaction(Consumer<Transaction> f) {

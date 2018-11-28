@@ -17,7 +17,6 @@
 package com.netflix.spinnaker.kork.web.selector;
 
 import org.springframework.util.Assert;
-
 import java.util.List;
 
 public class SelectableService {
@@ -30,13 +29,9 @@ public class SelectableService {
   public Object getService(Criteria criteria) {
     Assert.notNull(criteria);
 
-    return serviceSelectors
-      .stream()
-      .filter(it -> it.supports(criteria))
-      .sorted((a,b) -> b.getPriority() - a.getPriority())
-      .findFirst()
-      .map(ServiceSelector::getService)
-      .orElse(serviceSelectors.get(0).getService());
+    return serviceSelectors.stream().filter(it -> it.supports(criteria)).sorted(
+      (a, b) -> b.getPriority() - a.getPriority()
+    ).findFirst().map(ServiceSelector::getService).orElse(serviceSelectors.get(0).getService());
   }
 
   public static class Criteria {

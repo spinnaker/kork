@@ -24,20 +24,15 @@ import redis.clients.jedis.params.sortedset.ZAddParams;
 import redis.clients.jedis.params.sortedset.ZIncrByParams;
 import redis.clients.util.Pool;
 import redis.clients.util.Slowlog;
-
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.Callable;
-
 import static com.netflix.spinnaker.kork.jedis.telemetry.TelemetryHelper.*;
 
 /**
- * Instruments:
- * - Timer for each command
- * - Distribution summary for all payload sizes
- * - Error rates
+ * Instruments: - Timer for each command - Distribution summary for all payload sizes - Error rates
  */
 public class InstrumentedJedis extends Jedis {
 
@@ -68,8 +63,10 @@ public class InstrumentedJedis extends Jedis {
   }
 
   private <T> T internalInstrumented(String command, Optional<Long> payloadSize, Callable<T> action) {
-    payloadSize.ifPresent(size ->
-      PercentileDistributionSummary.get(registry, payloadSizeId(registry, poolName, command, false)).record(size)
+    payloadSize.ifPresent(
+      size -> PercentileDistributionSummary.get(registry, payloadSizeId(registry, poolName, command, false)).record(
+        size
+      )
     );
     try {
       return PercentileTimer.get(registry, timerId(registry, poolName, command, false)).record(() -> {
@@ -92,8 +89,10 @@ public class InstrumentedJedis extends Jedis {
   }
 
   private void internalInstrumented(String command, Optional<Long> payloadSize, Runnable action) {
-    payloadSize.ifPresent(size ->
-      PercentileDistributionSummary.get(registry, payloadSizeId(registry, poolName, command, false)).record(size)
+    payloadSize.ifPresent(
+      size -> PercentileDistributionSummary.get(registry, payloadSizeId(registry, poolName, command, false)).record(
+        size
+      )
     );
     try {
       PercentileTimer.get(registry, timerId(registry, poolName, command, false)).record(() -> {
@@ -963,7 +962,11 @@ public class InstrumentedJedis extends Jedis {
   @Override
   public Object eval(String script, int keyCount, String... params) {
     String command = "eval";
-    return instrumented(command, payloadSize(script) + payloadSize(params), () -> delegated.eval(script, keyCount, params));
+    return instrumented(
+      command,
+      payloadSize(script) + payloadSize(params),
+      () -> delegated.eval(script, keyCount, params)
+    );
   }
 
   @Override
@@ -1550,7 +1553,12 @@ public class InstrumentedJedis extends Jedis {
   }
 
   @Override
-  public List<GeoRadiusResponse> georadius(String key, double longitude, double latitude, double radius, GeoUnit unit, GeoRadiusParam param) {
+  public List<GeoRadiusResponse> georadius(String key,
+                                           double longitude,
+                                           double latitude,
+                                           double radius,
+                                           GeoUnit unit,
+                                           GeoRadiusParam param) {
     String command = "georadius";
     return instrumented(command, () -> delegated.georadius(key, longitude, latitude, radius, unit, param));
   }
@@ -1562,7 +1570,11 @@ public class InstrumentedJedis extends Jedis {
   }
 
   @Override
-  public List<GeoRadiusResponse> georadiusByMember(String key, String member, double radius, GeoUnit unit, GeoRadiusParam param) {
+  public List<GeoRadiusResponse> georadiusByMember(String key,
+                                                   String member,
+                                                   double radius,
+                                                   GeoUnit unit,
+                                                   GeoRadiusParam param) {
     String command = "georadiusByMember";
     return instrumented(command, () -> delegated.georadiusByMember(key, member, radius, unit, param));
   }
@@ -2635,13 +2647,21 @@ public class InstrumentedJedis extends Jedis {
   @Override
   public Object eval(byte[] script, byte[] keyCount, byte[]... params) {
     String command = "eval";
-    return instrumented(command, payloadSize(script) + payloadSize(params), () -> delegated.eval(script, keyCount, params));
+    return instrumented(
+      command,
+      payloadSize(script) + payloadSize(params),
+      () -> delegated.eval(script, keyCount, params)
+    );
   }
 
   @Override
   public Object eval(byte[] script, int keyCount, byte[]... params) {
     String command = "eval";
-    return instrumented(command, payloadSize(script) + payloadSize(params), () -> delegated.eval(script, keyCount, params));
+    return instrumented(
+      command,
+      payloadSize(script) + payloadSize(params),
+      () -> delegated.eval(script, keyCount, params)
+    );
   }
 
   @Override
@@ -2977,7 +2997,12 @@ public class InstrumentedJedis extends Jedis {
   }
 
   @Override
-  public List<GeoRadiusResponse> georadius(byte[] key, double longitude, double latitude, double radius, GeoUnit unit, GeoRadiusParam param) {
+  public List<GeoRadiusResponse> georadius(byte[] key,
+                                           double longitude,
+                                           double latitude,
+                                           double radius,
+                                           GeoUnit unit,
+                                           GeoRadiusParam param) {
     String command = "georadius";
     return instrumented(command, () -> delegated.georadius(key, longitude, latitude, radius, unit, param));
   }
@@ -2989,7 +3014,11 @@ public class InstrumentedJedis extends Jedis {
   }
 
   @Override
-  public List<GeoRadiusResponse> georadiusByMember(byte[] key, byte[] member, double radius, GeoUnit unit, GeoRadiusParam param) {
+  public List<GeoRadiusResponse> georadiusByMember(byte[] key,
+                                                   byte[] member,
+                                                   double radius,
+                                                   GeoUnit unit,
+                                                   GeoRadiusParam param) {
     String command = "georadiusByMember";
     return instrumented(command, () -> delegated.georadiusByMember(key, member, radius, unit, param));
   }

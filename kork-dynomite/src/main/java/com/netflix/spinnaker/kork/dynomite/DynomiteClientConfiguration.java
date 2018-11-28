@@ -21,7 +21,6 @@ import com.netflix.spinnaker.kork.jedis.RedisClientConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
-
 import java.util.Optional;
 
 @Configuration

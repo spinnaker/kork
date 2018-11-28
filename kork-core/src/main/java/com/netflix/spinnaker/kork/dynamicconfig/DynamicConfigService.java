@@ -25,7 +25,10 @@ public interface DynamicConfigService {
 
   <T> T getConfig(@Nonnull Class<T> configType, @Nonnull String configName, @Nonnull T defaultValue);
 
-  default <T> T getConfig(@Nonnull Class<T> configType, @Nonnull String configName, @Nonnull T defaultValue, @Nonnull Supplier<Boolean> predicate) {
+  default <T> T getConfig(@Nonnull Class<T> configType,
+                          @Nonnull String configName,
+                          @Nonnull T defaultValue,
+                          @Nonnull Supplier<Boolean> predicate) {
     if (predicate.get()) {
       return getConfig(configType, configName, defaultValue);
     }

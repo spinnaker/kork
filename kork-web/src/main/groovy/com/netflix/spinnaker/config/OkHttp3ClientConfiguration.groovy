@@ -45,7 +45,7 @@ class OkHttp3ClientConfiguration {
 
   @Autowired
   public OkHttp3ClientConfiguration(OkHttpClientConfigurationProperties okHttpClientConfigurationProperties,
-                                    OkHttp3MetricsInterceptor okHttp3MetricsInterceptor) {
+  OkHttp3MetricsInterceptor okHttp3MetricsInterceptor) {
     this.okHttpClientConfigurationProperties = okHttpClientConfigurationProperties
     this.okHttp3MetricsInterceptor = okHttp3MetricsInterceptor
   }
@@ -55,14 +55,14 @@ class OkHttp3ClientConfiguration {
    */
   OkHttpClient.Builder create() {
     OkHttpClient.Builder okHttpClientBuilder = new OkHttpClient.Builder()
-      .connectTimeout(okHttpClientConfigurationProperties.connectTimeoutMs, TimeUnit.MILLISECONDS)
-      .readTimeout(okHttpClientConfigurationProperties.readTimeoutMs, TimeUnit.MILLISECONDS)
-      .retryOnConnectionFailure(okHttpClientConfigurationProperties.retryOnConnectionFailure)
-      .connectionPool(new ConnectionPool(
+        .connectTimeout(okHttpClientConfigurationProperties.connectTimeoutMs, TimeUnit.MILLISECONDS)
+        .readTimeout(okHttpClientConfigurationProperties.readTimeoutMs, TimeUnit.MILLISECONDS)
+        .retryOnConnectionFailure(okHttpClientConfigurationProperties.retryOnConnectionFailure)
+        .connectionPool(new ConnectionPool(
         okHttpClientConfigurationProperties.connectionPool.maxIdleConnections,
         okHttpClientConfigurationProperties.connectionPool.keepAliveDurationMs,
         TimeUnit.MILLISECONDS))
-      .addInterceptor(okHttp3MetricsInterceptor)
+        .addInterceptor(okHttp3MetricsInterceptor)
 
     if (!okHttpClientConfigurationProperties.keyStore && !okHttpClientConfigurationProperties.trustStore) {
       return okHttpClientBuilder
@@ -103,10 +103,12 @@ class OkHttp3ClientConfiguration {
     def tlsVersions = (okHttpClientConfigurationProperties.tlsVersions ?: ConnectionSpec.MODERN_TLS.tlsVersions()*.javaName) as String[]
 
     def connectionSpec = new ConnectionSpec.Builder(ConnectionSpec.MODERN_TLS)
-      .cipherSuites(cipherSuites)
-      .tlsVersions(tlsVersions)
-      .build()
+        .cipherSuites(cipherSuites)
+        .tlsVersions(tlsVersions)
+        .build()
 
-    return okHttpClientBuilder.connectionSpecs([connectionSpec, ConnectionSpec.CLEARTEXT] as List<ConnectionSpec>)
+    return okHttpClientBuilder.connectionSpecs([
+      connectionSpec,
+      ConnectionSpec.CLEARTEXT] as List<ConnectionSpec>)
   }
 }
