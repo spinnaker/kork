@@ -31,8 +31,9 @@ import java.util.Map;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@JsonIgnoreProperties("kind")
 public class Artifact {
+  @JsonProperty("kind")
+  private String kind;
   @JsonProperty("type")
   private String type;
   @JsonProperty("name")
