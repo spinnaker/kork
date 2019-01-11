@@ -31,11 +31,12 @@ import java.util.Map;
  *
  * Format for Encrypted Secrets:
  *
- * encrypted:<engine-identifier>!<param-name_1>:<secret-param_1>!..!<param-name_n>:<secret-param_n>
+ * encrypted:<engine-identifier>!<param-name_1>:<param-value_1>!..!<param-name_n>:<param-value_n>
  *
  * Note: Valid param-names match the regex: `[a-zA-Z0-9]+`
  * Note: secret-params may contain ':'
  * Note: `encrypted` cannot be a param-name
+ * Note: There must be at least one <param-name>:<param-value> pair
  * Named parameters are used to allow for adding additional options in the future.
  */
 
@@ -69,12 +70,15 @@ public class EncryptedSecret {
 
   protected void update(String secretConfig) {
     String[] keyValues = secretConfig.split("!");
+    if (keyValues.length < 2) {
+      throw new InvalidSecretFormatException("Invalid encrypted secret format, must have at least one parameter");
+    }
     for (int i=0; i < keyValues.length; i++) {
       String[] keyV = keyValues[i].split(":", 2);
       if (keyV.length != 2) {
-        throw new InvalidSecretFormatException("Invalid encrypted secret format");
+        throw new InvalidSecretFormatException("Invalid encrypted secret format, keys and values must be delimited by ':'");
       }
-      if (i == 0){
+      if (i == 0) {
         this.engineIdentifier = keyV[1];
       } else {
         this.params.put(keyV[0], keyV[1]);

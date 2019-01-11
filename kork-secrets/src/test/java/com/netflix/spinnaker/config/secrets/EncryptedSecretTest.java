@@ -81,9 +81,17 @@ public class EncryptedSecretTest {
   @Test
   public void updateThrowsInvalidSecretFormatException() {
     exceptionRule.expect(InvalidSecretFormatException.class);
-    exceptionRule.expectMessage("Invalid encrypted secret format");
+    exceptionRule.expectMessage("Invalid encrypted secret format, must have at least one parameter");
     EncryptedSecret encryptedSecret = new EncryptedSecret();
-    encryptedSecret.update("blah");
+    encryptedSecret.update("encrypted:s3");
+  }
+
+  @Test
+  public void updateThrowsInvalidSecretFormatExceptionNoKeyValuePairs() {
+    exceptionRule.expect(InvalidSecretFormatException.class);
+    exceptionRule.expectMessage("Invalid encrypted secret format, keys and values must be delimited by ':'");
+    EncryptedSecret encryptedSecret = new EncryptedSecret();
+    encryptedSecret.update("encrypted:s3!foobar");
   }
 
 }
