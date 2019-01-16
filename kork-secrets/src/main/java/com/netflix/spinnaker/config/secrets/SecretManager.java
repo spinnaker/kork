@@ -22,12 +22,17 @@ import org.springframework.stereotype.Component;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.file.Path;
 
 @Component
 public class SecretManager {
 
+  final private SecretEngineRegistry secretEngineRegistry;
+
   @Autowired
-  private SecretEngineRegistry secretEngineRegistry;
+  SecretManager(SecretEngineRegistry secretEngineRegistry) {
+    this.secretEngineRegistry = secretEngineRegistry;
+  }
 
   /**
    * Decrypt will deserialize the configValue into an EncryptedSecret object and decrypted based on the
@@ -38,12 +43,13 @@ public class SecretManager {
    */
   public String decrypt(String configValue) {
     EncryptedSecret encryptedSecret = EncryptedSecret.parse(configValue);
-    if (encryptedSecret == null) { return configValue; }
+    if (encryptedSecret == null) {
+      return configValue;
+    }
 
     SecretEngine secretEngine = secretEngineRegistry.getEngine(encryptedSecret.getEngineIdentifier());
     if (secretEngine == null) {
       throw new InvalidSecretFormatException("Secret Engine does not exist: " + encryptedSecret.getEngineIdentifier());
-
     } else {
       secretEngine.validate(encryptedSecret);
       return secretEngine.decrypt(encryptedSecret);
@@ -65,23 +71,22 @@ public class SecretManager {
    * @param filePathOrEncrypted
    * @return path to temporary file that contains decrypted contents
    */
-  public String decryptFile(String filePathOrEncrypted) {
+  public Path decryptFile(String filePathOrEncrypted) {
     if (!EncryptedSecret.isEncryptedSecret(filePathOrEncrypted)) {
-      return filePathOrEncrypted;
+      return null;
     }
 
     EncryptedSecret encryptedSecret = EncryptedSecret.parse(filePathOrEncrypted);
     SecretEngine secretEngine = secretEngineRegistry.getEngine(encryptedSecret.getEngineIdentifier());
     if (secretEngine == null) {
       throw new InvalidSecretFormatException("Secret Engine does not exist: " + encryptedSecret.getEngineIdentifier());
-
     } else {
       secretEngine.validate(encryptedSecret);
       return decryptedFilePath(secretEngine, encryptedSecret);
     }
   }
 
-  protected String decryptedFilePath(SecretEngine secretEngine, EncryptedSecret encryptedSecret) {
+  protected Path decryptedFilePath(SecretEngine secretEngine, EncryptedSecret encryptedSecret) {
     String plainText = secretEngine.decrypt(encryptedSecret);
     try {
       File tempFile = File.createTempFile(secretEngine.identifier() + '-', ".secret");
@@ -89,14 +94,14 @@ public class SecretManager {
         fileWriter.write(plainText);
       }
       tempFile.deleteOnExit();
-      return tempFile.getAbsolutePath();
+      return tempFile.toPath();
     } catch (IOException e) {
-      throw new SecretDecryptionException();
+      throw new SecretDecryptionException(e.getMessage());
     }
   }
 
-  void setSecretEngineRegistry(SecretEngineRegistry secretEngineRegistry) {
-    this.secretEngineRegistry = secretEngineRegistry;
-  }
+  //void setSecretEngineRegistry(SecretEngineRegistry secretEngineRegistry) {
+  //  this.secretEngineRegistry = secretEngineRegistry;
+  //}
 
 }
