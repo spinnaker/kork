@@ -25,7 +25,7 @@ import org.springframework.stereotype.Component;
  * Used for testing.
  */
 @Component
-public class NopSecretEngine implements SecretEngine {
+public class NoopSecretEngine implements SecretEngine {
   private final static String IDENTIFIER = "nop";
   private final static String PARAM_VALUE = "v";
 
