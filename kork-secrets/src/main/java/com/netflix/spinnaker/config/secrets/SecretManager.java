@@ -85,28 +85,17 @@ public class SecretManager {
    * @return path to temporary file that contains decrypted contents or null if param not encrypted
    */
   public Path decryptAsFile(String filePathOrEncrypted) {
-    EncryptedSecret encryptedSecret = EncryptedSecret.parse(filePathOrEncrypted);
-    if (encryptedSecret == null) {
-      return null;
-    }
-
     Path decryptedFile = getCachedSecretFile(filePathOrEncrypted);
     if (decryptedFile != null) {
       return decryptedFile;
     }
 
-    SecretEngine secretEngine = secretEngineRegistry.getEngine(encryptedSecret.getEngineIdentifier());
-    if (secretEngine == null) {
-      throw new InvalidSecretFormatException("Secret Engine does not exist: " + encryptedSecret.getEngineIdentifier());
-    }
-    secretEngine.validate(encryptedSecret);
-
-    String decryptedContents = getCachedSecret(filePathOrEncrypted);
+    String decryptedContents = decrypt(filePathOrEncrypted);
     if (decryptedContents == null) {
-      decryptedContents = secretEngine.decrypt(encryptedSecret);
+      return null;
     }
 
-    decryptedFile = decryptedFilePath(secretEngine.identifier() + '-', decryptedContents);
+    decryptedFile = decryptedFilePath("tmp", decryptedContents);
     cacheSecretFile(filePathOrEncrypted, decryptedFile);
 
     return decryptedFile;
