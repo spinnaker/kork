@@ -60,11 +60,11 @@ public class SecretManager {
     SecretEngine secretEngine = secretEngineRegistry.getEngine(encryptedSecret.getEngineIdentifier());
     if (secretEngine == null) {
       throw new InvalidSecretFormatException("Secret Engine does not exist: " + encryptedSecret.getEngineIdentifier());
-    } else {
-      secretEngine.validate(encryptedSecret);
-      clearText = secretEngine.decrypt(encryptedSecret);
-      cacheSecret(configValue, clearText);
     }
+
+    secretEngine.validate(encryptedSecret);
+    clearText = secretEngine.decrypt(encryptedSecret);
+    cacheSecret(configValue, clearText);
 
     return clearText;
   }
