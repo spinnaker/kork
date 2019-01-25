@@ -86,7 +86,7 @@ public class SecretManagerTest {
     String secretConfig = "encrypted:s3!paramName:paramValue";
     when(secretEngine.decrypt(any())).thenReturn("test");
     Path path = secretManager.decryptAsFile(secretConfig);
-    assertTrue(path.toAbsolutePath().toString().matches(".*s3.*.secret$"));
+    assertTrue(path.toAbsolutePath().toString().matches(".*.secret$"));
     BufferedReader reader = new BufferedReader(new FileReader(path.toFile()));
     assertEquals("test", reader.readLine());
     reader.close();
@@ -113,6 +113,7 @@ public class SecretManagerTest {
   public void decryptFileNoDiskSpaceMock() throws SecretDecryptionException {
     SecretManager spy = spy(new SecretManager(secretEngineRegistry));
     doThrow(SecretDecryptionException.class).when(spy).decryptedFilePath(any(), any());
+    doReturn("contents").when(spy).decrypt(any());
     doCallRealMethod().when(spy).decryptAsFile(any());
     exceptionRule.expect(SecretDecryptionException.class);
     String secretConfig = "encrypted:s3!paramName:paramValue";
