@@ -99,6 +99,7 @@ public class SecretManager {
     if (secretEngine == null) {
       throw new InvalidSecretFormatException("Secret Engine does not exist: " + encryptedSecret.getEngineIdentifier());
     }
+    secretEngine.validate(encryptedSecret);
 
     String decryptedContents = getCachedSecret(filePathOrEncrypted);
     if (decryptedContents == null) {
