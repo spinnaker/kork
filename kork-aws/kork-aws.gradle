@@ -16,7 +16,7 @@
 
 dependencies {
   compile spinnaker.dependency('groovy')
-  compile spinnaker.dependency('bootAutoConfigure')
+  compile "org.springframework.boot:spring-boot-autoconfigure:2.1.3.RELEASE"
   compile spinnaker.dependency('awsCore')
   compile spinnaker.dependency("aws")
   compile 'com.jcraft:jsch.agentproxy.jsch:0.0.9'

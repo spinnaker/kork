@@ -1,7 +1,3 @@
-import org.gradle.api.JavaVersion
-import org.gradle.api.plugins.JavaBasePlugin
-import org.gradle.api.plugins.JavaPluginConvention
-
 /*
  * Copyright 2014 Netflix, Inc.
  *
@@ -39,7 +35,7 @@ allprojects {
   group = 'com.netflix.spinnaker.kork'
 
   ext {
-    spinnakerDependenciesVersion = project.hasProperty('spinnakerDependenciesVersion') ? project.property('spinnakerDependenciesVersion') : '1.25.1'
+    spinnakerDependenciesVersion = project.hasProperty('spinnakerDependenciesVersion') ? project.property('spinnakerDependenciesVersion') : '1.9.0-SNAPSHOT'
   }
 
   def checkLocalVersions = [spinnakerDependenciesVersion: spinnakerDependenciesVersion]
