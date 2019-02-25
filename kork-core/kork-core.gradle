@@ -6,6 +6,7 @@ dependencies {
 
   api "org.springframework.boot:spring-boot-autoconfigure"
   api "org.springframework.boot:spring-boot-starter-actuator"
+  api "io.micrometer:micrometer-core"
   api "com.netflix.archaius:archaius-core"
   api "com.netflix.eureka:eureka-client"
   api "com.amazonaws:aws-java-sdk-core"
