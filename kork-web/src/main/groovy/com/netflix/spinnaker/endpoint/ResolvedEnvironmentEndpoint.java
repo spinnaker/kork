@@ -31,7 +31,7 @@ import java.util.stream.Collectors;
 import static java.lang.String.format;
 
 @Component
-@Endpoint
+@Endpoint(id = "resolvedEnv")
 public class ResolvedEnvironmentEndpoint {
 
   private final Sanitizer sanitizer = new Sanitizer();

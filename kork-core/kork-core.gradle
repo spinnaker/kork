@@ -1,7 +1,7 @@
 dependencies {
-    compile "org.springframework.boot:spring-boot-autoconfigure:2.1.3.RELEASE"
-    compile "org.springframework.boot:spring-boot-actuator:2.1.3.RELEASE"
-    compile "io.micrometer:micrometer-core:1.1.3" // TODO(rz): Put in spin-deps
+    compile "org.springframework.boot:spring-boot-autoconfigure:${spinnaker.version("springBoot")}"
+    compile "org.springframework.boot:spring-boot-actuator:${spinnaker.version("springBoot")}"
+    compile spinnaker.dependency("micrometer")
     compile spinnaker.dependency('archaiusCore')
     compile spinnaker.dependency('eurekaClient')
     compile spinnaker.dependency('awsCore')
@@ -9,11 +9,12 @@ dependencies {
     compile spinnaker.dependency('spectatorAws')
     compile spinnaker.dependency('spectatorGc')
     compile spinnaker.dependency('spectatorJvm')
-    compile spinnaker.dependency('spectatorWebSpring')
+    // TODO(rz): Boot 1.x only.
+//    compile spinnaker.dependency('spectatorWebSpring')
     compile project(":kork-secrets-aws")
 
-    testCompile spinnaker.dependency('groovy')
     spinnaker.group('spockBase')
+    testCompile spinnaker.dependency('groovy')
+    testCompile spinnaker.dependency("mockito")
     testRuntime spinnaker.dependency('slf4jSimple')
-    testCompile(group: 'org.mockito', name: 'mockito-core', version: '2.23.4')
 }
