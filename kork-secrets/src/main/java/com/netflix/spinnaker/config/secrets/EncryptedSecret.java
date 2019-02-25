@@ -58,7 +58,7 @@ public class EncryptedSecret {
   }
 
   /**
-   * @param secretConfig
+   * @param secretConfig Potentially encrypted secret value
    * @return EncryptedSecret object
    */
   public static EncryptedSecret parse(String secretConfig) {
@@ -87,7 +87,7 @@ public class EncryptedSecret {
   }
 
   /**
-   * @param secretConfig
+   * @param secretConfig Potentially encrypted secret value
    * @return boolean representing whether or not the secretConfig is formatted correctly
    */
   public static boolean isEncryptedSecret(String secretConfig) {
