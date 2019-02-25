@@ -20,7 +20,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import java.util.ArrayList;
 import java.util.List;
 
-@ConfigurationProperties(prefix = "endpoints.resolvedEnv")
+@ConfigurationProperties(prefix = "endpoints.resolved-env")
 public class ResolvedEnvironmentConfigurationProperties {
 
   List<String> keysToSanitize = new ArrayList<>();

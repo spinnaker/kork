@@ -42,7 +42,7 @@ class TomcatContainerCustomizerUtil {
         }
         handler.setSslImplementationName(BlacklistingSSLImplementation.name)
         SSLHostConfig sslHostConfig = sslConfigs.first()
-        sslHostConfig.setHonorCipherOrder("true")
+        sslHostConfig.setHonorCipherOrder(true)
         sslHostConfig.ciphers = okHttpClientConfigurationProperties.cipherSuites.join(",")
         sslHostConfig.setProtocols(okHttpClientConfigurationProperties.tlsVersions.join(","))
         sslHostConfig.setCertificateRevocationListFile(sslExtensionConfigurationProperties.getCrlFile())
