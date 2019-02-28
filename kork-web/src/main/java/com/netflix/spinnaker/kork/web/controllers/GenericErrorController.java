@@ -37,10 +37,10 @@ public class GenericErrorController implements ErrorController {
 
   @RequestMapping(value = "/error")
   public Map error(@RequestParam(value = "trace", defaultValue = "false") Boolean includeStackTrace,
-                   HttpServletRequest httpServletRequest) {
-    Map<String, Object> attributes = errorAttributes.getErrorAttributes((WebRequest) httpServletRequest, includeStackTrace);
+                   WebRequest webRequest) {
+    Map<String, Object> attributes = errorAttributes.getErrorAttributes(webRequest, includeStackTrace);
 
-    Throwable exception = errorAttributes.getError((WebRequest) httpServletRequest);
+    Throwable exception = errorAttributes.getError(webRequest);
     if (exception != null && exception instanceof HasAdditionalAttributes) {
       attributes.putAll(((HasAdditionalAttributes) exception).getAdditionalAttributes());
     }
