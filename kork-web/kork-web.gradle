@@ -8,6 +8,7 @@ dependencies {
   api project(":kork-exceptions")
   api "org.codehaus.groovy:groovy-all"
   api "org.springframework.boot:spring-boot-starter-web"
+  api "org.springframework.boot:spring-boot-starter-security"
   api "org.springframework.security:spring-security-core"
   api "com.netflix.spectator:spectator-api"
   api "com.fasterxml.jackson.core:jackson-annotations"
@@ -22,4 +23,8 @@ dependencies {
   testImplementation "org.spockframework:spock-core"
   testRuntimeOnly "cglib:cglib-nodep"
   testRuntimeOnly "org.objenesis:objenesis"
+
+  compileOnly "org.projectlombok:lombok"
+  annotationProcessor(platform(project(":spinnaker-dependencies")))
+  annotationProcessor "org.projectlombok:lombok"
 }
