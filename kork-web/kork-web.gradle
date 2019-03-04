@@ -15,6 +15,11 @@ dependencies {
 
   compileOnly spinnaker.dependency('bootActuator')
 
+  compile("com.netflix.spectator:spectator-web-spring:${spinnaker.version("spectator")}") {
+    // IMPORTANT: spectator-web-spring is Spring Boot 1.x; but is code compat with Boot 2. Exclude the transitives
+    transitive = false
+  }
+
   spinnaker.group('spockBase')
 }
 

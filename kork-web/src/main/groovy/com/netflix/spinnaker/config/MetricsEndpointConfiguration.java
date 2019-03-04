@@ -16,31 +16,21 @@
 package com.netflix.spinnaker.config;
 
 import com.netflix.spectator.api.Registry;
-import com.netflix.spinnaker.metrics.MetricsEndpoint;
-import org.springframework.boot.actuate.autoconfigure.security.servlet.EndpointRequest;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
-import org.springframework.boot.context.properties.EnableConfigurationProperties;
-import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
+import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 
 @Configuration
 @ConditionalOnClass(Registry.class)
-@EnableConfigurationProperties(SpectatorEndpointConfigurationProperties.class)
+@ComponentScan(basePackages = "com.netflix.spectator.controllers")
 public class MetricsEndpointConfiguration extends WebSecurityConfigurerAdapter {
-
-  @Bean
-  @ConditionalOnExpression("${spectator.web-endpoint.enabled:false}")
-  public MetricsEndpoint spectatorMetricsEndpoint(Registry registry,
-                                                  SpectatorEndpointConfigurationProperties properties) {
-    return new MetricsEndpoint(registry, properties);
-  }
 
   @Override
   protected void configure(HttpSecurity http) throws Exception {
-    // Allow anyone to access the metrics endpoints.
-    http.requestMatcher(EndpointRequest.to(MetricsEndpoint.ID)).authorizeRequests().anyRequest().permitAll();
+    // Allow anyone to access the spectator metrics endpoint.
+    http.requestMatcher(new AntPathRequestMatcher("/spectator/metrics")).authorizeRequests().anyRequest().permitAll();
   }
 }
