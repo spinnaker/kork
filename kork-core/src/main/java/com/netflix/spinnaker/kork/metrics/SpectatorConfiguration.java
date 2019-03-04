@@ -52,13 +52,6 @@ public class SpectatorConfiguration {
     return registry;
   }
 
-  // TODO(rz): Make compatible with Boot 2
-//  @Bean
-//  @ConditionalOnProperty("spectator.webEndpoint.enabled")
-//  MetricsController metricsController(Registry registry) {
-//    return new MetricsController();
-//  }
-
   @Bean
   RegistryInitializer registryInitializer(Registry registry,
                                           SpectatorGcLoggingConfiguration spectatorConfigurationProperties) {

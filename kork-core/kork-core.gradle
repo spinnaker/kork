@@ -9,8 +9,6 @@ dependencies {
     compile spinnaker.dependency('spectatorAws')
     compile spinnaker.dependency('spectatorGc')
     compile spinnaker.dependency('spectatorJvm')
-    // TODO(rz): Boot 1.x only.
-//    compile spinnaker.dependency('spectatorWebSpring')
     compile project(":kork-secrets-aws")
 
     spinnaker.group('spockBase')
