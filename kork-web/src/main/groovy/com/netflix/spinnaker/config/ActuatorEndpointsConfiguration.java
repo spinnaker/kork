@@ -15,22 +15,17 @@
  */
 package com.netflix.spinnaker.config;
 
-import com.netflix.spectator.api.Registry;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
-import org.springframework.context.annotation.ComponentScan;
+import org.springframework.boot.actuate.autoconfigure.security.servlet.EndpointRequest;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
-import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 
 @Configuration
-@ConditionalOnClass(Registry.class)
-@ComponentScan(basePackages = "com.netflix.spectator.controllers")
-public class MetricsEndpointConfiguration extends WebSecurityConfigurerAdapter {
+public class ActuatorEndpointsConfiguration extends WebSecurityConfigurerAdapter {
 
   @Override
-  protected void configure(HttpSecurity http) throws Exception {
-    // Allow anyone to access the spectator metrics endpoint.
-    http.authorizeRequests().requestMatchers(new AntPathRequestMatcher("/spectator/metrics")).permitAll();
+  public void configure(HttpSecurity http) throws Exception {
+    // The health endpoint should always be exposed without auth.
+    http.authorizeRequests().requestMatchers(EndpointRequest.to("health")).permitAll();
   }
 }
