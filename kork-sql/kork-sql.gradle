@@ -8,7 +8,7 @@ dependencies {
   compile "org.springframework:spring-tx:${spinnaker.version("spring")}"
   compile spinnaker.dependency('jooq')
   compile "org.liquibase:liquibase-core:3.6.1"
-  compile 'com.zaxxer:HikariCP:2.5.1'
+  compile "com.zaxxer:HikariCP:${spinnaker.version('hikari')}"
 
   testCompile "org.springframework.boot:spring-boot-starter-actuator:${spinnaker.version("springBoot")}"
   testCompile "org.springframework.boot:spring-boot-starter-web:${spinnaker.version("springBoot")}"
