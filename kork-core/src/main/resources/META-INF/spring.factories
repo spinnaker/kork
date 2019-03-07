@@ -3,3 +3,6 @@ org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
 
 org.springframework.context.ApplicationContextInitializer=\
   com.netflix.spinnaker.kork.secrets.SecretApplicationContextInitializer
+
+org.springframework.context.ApplicationListener=\
+  com.netflix.spinnaker.kork.spring.SpringBoot1CompatibilityApplicationListener
