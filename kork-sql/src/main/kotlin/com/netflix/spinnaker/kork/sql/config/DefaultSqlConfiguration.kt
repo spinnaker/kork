@@ -45,6 +45,7 @@ import org.springframework.context.annotation.DependsOn
 import org.springframework.context.annotation.Import
 import org.springframework.jdbc.datasource.DataSourceTransactionManager
 import org.springframework.jdbc.datasource.TransactionAwareDataSourceProxy
+import org.springframework.scheduling.annotation.EnableScheduling
 import sun.net.InetAddressCachePolicy
 import java.lang.reflect.Field
 import java.security.Security
@@ -55,6 +56,7 @@ import javax.sql.DataSource
 @ConditionalOnProperty("sql.enabled")
 @EnableConfigurationProperties(SqlProperties::class)
 @EnableAutoConfiguration(exclude = [DataSourceAutoConfiguration::class])
+@EnableScheduling
 @Import(HikariDataSourceConfiguration::class, DataSourcePoolMetadataProvidersConfiguration::class)
 class DefaultSqlConfiguration {
 
@@ -167,7 +169,7 @@ class DefaultSqlConfiguration {
   @Bean
   fun sqlHealthProvider(jooq: DSLContext,
                         registry: Registry,
-                        @Value("\${sql.readOnly:false}") readOnly: Boolean): SqlHealthProvider =
+                        @Value("\${sql.read-only:false}") readOnly: Boolean): SqlHealthProvider =
     SqlHealthProvider(jooq, registry, readOnly)
 
   @Bean("dbHealthIndicator")
