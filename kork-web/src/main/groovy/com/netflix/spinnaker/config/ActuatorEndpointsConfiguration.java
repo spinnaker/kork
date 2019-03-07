@@ -22,10 +22,10 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 
 @Configuration
+@Order(1000)
 public class ActuatorEndpointsConfiguration extends WebSecurityConfigurerAdapter {
 
   @Override
-  @Order(1000)
   public void configure(HttpSecurity http) throws Exception {
     // The health endpoint should always be exposed without auth.
     http.authorizeRequests().requestMatchers(EndpointRequest.to("health")).permitAll();
