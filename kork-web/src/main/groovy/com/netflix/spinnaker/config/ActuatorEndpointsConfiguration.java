@@ -27,6 +27,8 @@ public class ActuatorEndpointsConfiguration extends WebSecurityConfigurerAdapter
 
   @Override
   public void configure(HttpSecurity http) throws Exception {
+    http.csrf().disable();
+
     // The health endpoint should always be exposed without auth.
     http.authorizeRequests().requestMatchers(EndpointRequest.to("health")).permitAll();
   }
