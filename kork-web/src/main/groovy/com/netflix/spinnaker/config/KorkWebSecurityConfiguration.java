@@ -19,14 +19,17 @@ import org.springframework.boot.actuate.autoconfigure.security.servlet.EndpointR
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 
 @Configuration
-@Order(1000)
-public class ActuatorEndpointsConfiguration extends WebSecurityConfigurerAdapter {
+@EnableWebSecurity
+@Order(10)
+public class KorkWebSecurityConfiguration extends WebSecurityConfigurerAdapter {
 
   @Override
   public void configure(HttpSecurity http) throws Exception {
+    // Spring security turns on CSRF by default. We want to disable this by default for most services.
     http.csrf().disable();
 
     // The health endpoint should always be exposed without auth.
