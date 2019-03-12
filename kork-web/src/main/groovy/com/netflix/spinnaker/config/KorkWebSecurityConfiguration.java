@@ -15,17 +15,28 @@
  */
 package com.netflix.spinnaker.config;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.actuate.autoconfigure.security.servlet.EndpointRequest;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.builders.WebSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 
 @Configuration
 @EnableWebSecurity
 @Order(10)
+@EnableConfigurationProperties(KorkWebSecurityProperties.class)
 public class KorkWebSecurityConfiguration extends WebSecurityConfigurerAdapter {
+
+  private final KorkWebSecurityProperties properties;
+
+  @Autowired
+  public KorkWebSecurityConfiguration(KorkWebSecurityProperties properties) {
+    this.properties = properties;
+  }
 
   @Override
   public void configure(HttpSecurity http) throws Exception {
@@ -34,5 +45,12 @@ public class KorkWebSecurityConfiguration extends WebSecurityConfigurerAdapter {
 
     // The health endpoint should always be exposed without auth.
     http.authorizeRequests().requestMatchers(EndpointRequest.to("health")).permitAll();
+  }
+
+  @Override
+  public void configure(WebSecurity web) throws Exception {
+    if (properties.isDebug()) {
+      web.debug(true);
+    }
   }
 }
