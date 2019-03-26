@@ -17,17 +17,17 @@
 package com.netflix.spinnaker.retrofit;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
-import retrofit.RestAdapter;
+import retrofit.RestAdapter.LogLevel;
 
 @ConfigurationProperties("retrofit")
 public class RetrofitConfigurationProperties {
-  RestAdapter.LogLevel logLevel = RestAdapter.LogLevel.BASIC;
+  private LogLevel logLevel = LogLevel.BASIC;
 
-  public RestAdapter.LogLevel getLogLevel() {
+  public LogLevel getLogLevel() {
     return logLevel;
   }
 
-  public void setLogLevel(RestAdapter.LogLevel logLevel) {
+  public void setLogLevel(LogLevel logLevel) {
     this.logLevel = logLevel;
   }
 }

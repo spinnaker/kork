@@ -1,0 +1,12 @@
+apply plugin: "java-library"
+
+dependencies {
+  api "com.squareup.okhttp:okhttp:${spinnaker.version("okHttp")}"
+  api "com.squareup.okhttp3:okhttp:${spinnaker.version("okHttp3")}"
+  api "com.squareup.retrofit:retrofit:${spinnaker.version("retrofit")}"
+
+  implementation project(":kork-security")
+  implementation "com.netflix.spectator:spectator-api:${spinnaker.version("spectator")}"
+  implementation "org.springframework:spring-context:${spinnaker.version("spring")}"
+  implementation "org.springframework.boot:spring-boot-autoconfigure:${spinnaker.version("springBoot")}"
+}

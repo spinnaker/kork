@@ -14,38 +14,35 @@
  * limitations under the License.
  */
 
-package com.netflix.spinnaker.okhttp
+package com.netflix.spinnaker.okhttp;
 
-import com.fasterxml.jackson.annotation.JsonAlias
-import groovy.transform.AutoClone
-import groovy.transform.Canonical
-import org.springframework.boot.context.properties.ConfigurationProperties
-import org.springframework.boot.context.properties.NestedConfigurationProperty
-import org.springframework.core.annotation.AliasFor
+import java.io.File;
+import java.util.Arrays;
+import java.util.List;
+import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.boot.context.properties.NestedConfigurationProperty;
 
-@AutoClone
-@Canonical
 @ConfigurationProperties(prefix="ok-http-client")
 class OkHttpClientConfigurationProperties {
-  long connectTimeoutMs = 15000
-  long readTimeoutMs = 20000
+  long connectTimeoutMs = 15000;
+  long readTimeoutMs = 20000;
 
-  boolean propagateSpinnakerHeaders = true
+  public boolean propagateSpinnakerHeaders = true;
 
-  File keyStore
-  String keyStoreType = 'PKCS12'
-  String keyStorePassword = 'changeit'
+  public File keyStore;
+  public String keyStoreType = "PKCS12";
+  public String keyStorePassword = "changeit";
 
-  File trustStore
-  String trustStoreType = 'PKCS12'
-  String trustStorePassword = 'changeit'
+  public File trustStore;
+  public String trustStoreType = "PKCS12";
+  public String trustStorePassword = "changeit";
 
-  String secureRandomInstanceType = "NativePRNGNonBlocking"
+  public String secureRandomInstanceType = "NativePRNGNonBlocking";
 
-  List<String> tlsVersions = ["TLSv1.2", "TLSv1.1"]
+  public List<String> tlsVersions = Arrays.asList("TLSv1.2", "TLSv1.1");
   //Defaults from https://wiki.mozilla.org/Security/Server_Side_TLS#Modern_compatibility
   // with some extra ciphers (non SHA384/256) to support TLSv1.1 and some non EC ciphers
-  List<String> cipherSuites = [
+  public List<String> cipherSuites = Arrays.asList(
     "TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384",
     "TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384",
     "TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256",
@@ -60,24 +57,22 @@ class OkHttpClientConfigurationProperties {
     "TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA",
     "TLS_DHE_RSA_WITH_AES_256_CBC_SHA",
     "TLS_DHE_RSA_WITH_AES_128_CBC_SHA"
-  ]
+  );
 
   /**
    * Provide backwards compatibility for 'okHttpClient.connectTimoutMs'
    */
-  void setConnectTimoutMs(long connectTimeoutMs) {
+  public void setConnectTimoutMs(long connectTimeoutMs) {
     this.connectTimeoutMs = connectTimeoutMs;
   }
 
-  @Canonical
-  static class ConnectionPoolProperties {
-    int maxIdleConnections = 5
-    int keepAliveDurationMs = 30000
+  public static class ConnectionPoolProperties {
+    public int maxIdleConnections = 5;
+    public int keepAliveDurationMs = 30000;
   }
 
   @NestedConfigurationProperty
-  final ConnectionPoolProperties connectionPool = new ConnectionPoolProperties()
+  public final ConnectionPoolProperties connectionPool = new ConnectionPoolProperties();
 
-  boolean retryOnConnectionFailure = true
-
+  public boolean retryOnConnectionFailure = true;
 }

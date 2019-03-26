@@ -19,6 +19,11 @@ package com.netflix.spinnaker.okhttp;
 import com.netflix.spectator.api.Registry;
 import java.io.IOException;
 import okhttp3.Response;
+import java.net.URL;
+import java.util.concurrent.TimeUnit;
+import com.netflix.spectator.api.Registry;
+import okhttp3.Request;
+import okhttp3.Response;
 
 public class OkHttp3MetricsInterceptor extends MetricsInterceptor implements okhttp3.Interceptor {
 

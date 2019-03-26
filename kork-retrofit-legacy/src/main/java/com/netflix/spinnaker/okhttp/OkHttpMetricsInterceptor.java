@@ -16,6 +16,7 @@
 
 package com.netflix.spinnaker.okhttp;
 
+import java.io.IOException;
 import com.netflix.spectator.api.Registry;
 import com.squareup.okhttp.Interceptor;
 import com.squareup.okhttp.Response;
