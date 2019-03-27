@@ -37,11 +37,13 @@ import okhttp3.TlsVersion;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.stereotype.Component;
 import static java.util.stream.Collectors.toList;
 import static okhttp3.ConnectionSpec.MODERN_TLS;
 
 @Component
+@EnableConfigurationProperties(OkHttpClientConfigurationProperties.class)
 public class OkHttp3ClientConfiguration {
   private final Logger log = LoggerFactory.getLogger(getClass());
 
@@ -60,7 +62,7 @@ public class OkHttp3ClientConfiguration {
   /**
    * @return OkHttpClient w/ <optional> key and trust stores
    */
-  private Builder create() throws NoSuchAlgorithmException, KeyStoreException, IOException, CertificateException, UnrecoverableKeyException, KeyManagementException {
+  public Builder create() throws NoSuchAlgorithmException, KeyStoreException, IOException, CertificateException, UnrecoverableKeyException, KeyManagementException {
     Builder okHttpClientBuilder = new Builder()
       .connectTimeout(okHttpClientConfigurationProperties.connectTimeoutMs, TimeUnit.MILLISECONDS)
       .readTimeout(okHttpClientConfigurationProperties.readTimeoutMs, TimeUnit.MILLISECONDS)

@@ -24,6 +24,7 @@ import java.util.concurrent.TimeUnit;
 import com.netflix.spectator.api.Registry;
 import okhttp3.Request;
 import okhttp3.Response;
+import org.springframework.stereotype.Component;
 
 public class OkHttp3MetricsInterceptor extends MetricsInterceptor implements okhttp3.Interceptor {
 

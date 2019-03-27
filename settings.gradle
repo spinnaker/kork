@@ -27,6 +27,7 @@ include(
   "kork-hystrix",
   "kork-jedis",
   "kork-jedis-test",
+  "kork-okhttp3",
   "kork-retrofit",
   "kork-retrofit-legacy",
   "kork-secrets",
