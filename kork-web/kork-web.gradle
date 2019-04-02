@@ -1,19 +1,26 @@
+apply plugin: "java-library"
 apply plugin: "groovy"
 
 dependencies {
-  compile project(":kork-security")
-  compile project(":kork-exceptions")
+  api(platform(project(":kork-dependencies")))
 
-  compile spinnaker.dependency('bootWeb')
-  compile spinnaker.dependency('springSecurityCore')
-  compile spinnaker.dependency('spectatorApi')
-  compile spinnaker.dependency('groovy')
-  compile spinnaker.dependency('okHttp')
-  compile spinnaker.dependency('okHttp3')
-  compile spinnaker.dependency('retrofit')
-  compile spinnaker.dependency('guava')
+  implementation project(":kork-security")
+  implementation project(":kork-exceptions")
 
-  compileOnly spinnaker.dependency('bootActuator')
+  implementation "org.codehaus.groovy:groovy-all"
+  implementation "org.springframework.boot:spring-boot-starter-web"
+  implementation "org.springframework.security:spring-security-core"
+  implementation "com.netflix.spectator:spectator-api"
+  implementation "com.fasterxml.jackson.core:jackson-annotations"
+  implementation "com.hubspot.jinjava:jinjava"
+  implementation "com.squareup.okhttp:okhttp"
+  implementation "com.squareup.okhttp3:okhttp"
+  implementation "com.squareup.retrofit:retrofit"
+  implementation "com.google.guava:guava"
 
-  spinnaker.group('spockBase')
+  compileOnly "org.springframework.boot:spring-boot-starter-actuator"
+
+  testImplementation "org.spockframework:spock-core"
+  testRuntimeOnly "cglib:cglib-nodep"
+  testRuntimeOnly "org.objenesis:objenesis"
 }

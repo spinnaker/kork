@@ -1,6 +1,8 @@
 apply plugin: "java-library"
 
 dependencies {
+  api(platform(project(":kork-dependencies")))
+
   compile project(":kork-sql")
-  compile "com.h2database:h2:1.4.197"
+  compile "com.h2database:h2"
 }

@@ -1,11 +1,20 @@
+apply plugin: "java-library"
 apply plugin: "groovy"
 
 dependencies {
-  compile spinnaker.dependency('springSecurityCore')
-  compile spinnaker.dependency('groovy')
-  spinnaker.group('spockBase')
-  spinnaker.group('jackson')
+  api(platform(project(":kork-dependencies")))
 
-  compile spinnaker.dependency('slf4j')
-  compile spinnaker.dependency('logbackClassic')
+  api "org.springframework.security:spring-security-core"
+
+  implementation "org.codehaus.groovy:groovy-all"
+  implementation "com.hubspot.jinjava:jinjava"
+  implementation "com.fasterxml.jackson.core:jackson-core"
+  implementation "com.fasterxml.jackson.core:jackson-databind"
+  implementation "com.fasterxml.jackson.core:jackson-annotations"
+  implementation "org.slf4j:jcl-over-slf4j"
+  implementation "ch.qos.logback:logback-classic"
+
+  testImplementation "org.spockframework:spock-core"
+  testRuntimeOnly "cglib:cglib-nodep"
+  testRuntimeOnly "org.objenesis:objenesis"
 }

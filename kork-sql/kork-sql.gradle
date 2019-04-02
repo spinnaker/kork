@@ -1,17 +1,20 @@
+apply plugin: "java-library"
 apply from: "$rootDir/gradle/kotlin.gradle"
 
 dependencies {
+  api(platform(project(":kork-dependencies")))
+
   compile project(":kork-core")
   compile project(":kork-security")
 
-  compile "org.springframework:spring-jdbc:${spinnaker.version("spring")}"
-  compile "org.springframework:spring-tx:${spinnaker.version("spring")}"
-  compile spinnaker.dependency('jooq')
-  compile "org.liquibase:liquibase-core:3.6.1"
-  compile 'com.zaxxer:HikariCP:2.5.1'
+  compile "org.springframework:spring-jdbc"
+  compile "org.springframework:spring-tx"
+  compile "org.jooq:jooq"
+  compile "org.liquibase:liquibase-core"
+  compile "com.zaxxer:HikariCP"
 
-  testCompile "org.springframework.boot:spring-boot-starter-actuator:${spinnaker.version("springBoot")}"
-  testCompile "org.springframework.boot:spring-boot-starter-web:${spinnaker.version("springBoot")}"
-  testCompile "org.springframework.boot:spring-boot-starter-test:${spinnaker.version("springBoot")}"
+  testCompile "org.springframework.boot:spring-boot-starter-actuator"
+  testCompile "org.springframework.boot:spring-boot-starter-web"
+  testCompile "org.springframework.boot:spring-boot-starter-test"
   testRuntime project(":kork-sql-test")
 }

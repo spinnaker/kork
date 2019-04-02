@@ -1,13 +1,18 @@
+apply plugin: "java-library"
 apply plugin: "groovy"
 
 dependencies {
-  compile project(":kork-core")
-  compile 'commons-io:commons-io:2.5'
-  compile spinnaker.dependency('jinjava')
+  api(platform(project(":kork-dependencies")))
+  
+  implementation project(":kork-core")
+  implementation "commons-io:commons-io"
+  implementation "com.hubspot.jinjava:jinjava"
 
-  compileOnly spinnaker.dependency('lombok')
-  annotationProcessor spinnaker.dependency('lombok')
+  compileOnly "org.projectlombok:lombok"
+  annotationProcessor "org.projectlombok:lombok:1.16.20"
 
-  spinnaker.group('spockBase')
-  testCompile spinnaker.dependency('groovy')
+  testImplementation "org.codehaus.groovy:groovy-all"
+  testImplementation "org.spockframework:spock-core"
+  testRuntimeOnly "cglib:cglib-nodep"
+  testRuntimeOnly "org.objenesis:objenesis"
 }

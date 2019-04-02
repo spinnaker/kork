@@ -1,12 +1,14 @@
 apply plugin: "java-library"
 
 dependencies {
-  compile project(":kork-jedis")
-  compile("com.netflix.dyno:dyno-jedis:${spinnaker.version('dynomite')}") {
+  api(platform(project(":kork-dependencies")))
+
+  implementation project(":kork-jedis")
+  implementation("com.netflix.dyno:dyno-jedis") {
     exclude group: 'joda-time'
     exclude group: 'org.apache.httpcomponents'
     exclude group: 'org.slf4j'
   }
 
-  testCompile spinnaker.dependency('junit')
+  testImplementation "junit:junit"
 }
