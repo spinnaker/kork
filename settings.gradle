@@ -16,26 +16,26 @@
 
 include(
   "spinnaker-dependencies",
+  "kork-artifacts",
+  "kork-aws",
   "kork-bom",
   "kork-core",
-  "kork-jedis-test",
-  "kork-swagger",
-  "kork-security",
-  "kork-web",
-  "kork-hystrix",
-  "kork-stackdriver",
-  "kork-exceptions",
-  "kork-artifacts",
-  "kork-jedis",
   "kork-dynomite",
-  "kork-aws",
+  "kork-exceptions",
+  "kork-expressions",
+  "kork-hystrix",
+  "kork-jedis",
+  "kork-jedis-test",
   "kork-secrets",
   "kork-secrets-aws",
+  "kork-security",
   "kork-sql",
   "kork-sql-test",
-  "kork-test",
+  "kork-stackdriver",
+  "kork-swagger",
   "kork-telemetry",
-  "kork-expressions"
+  "kork-test",
+  "kork-web"
 )
 
 rootProject.name = "kork"
