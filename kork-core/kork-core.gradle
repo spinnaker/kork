@@ -1,5 +1,6 @@
 apply plugin: "java-library"
 apply plugin: "groovy"
+apply plugin: "io.freefair.lombok"
 
 dependencies {
   api(platform(project(":spinnaker-dependencies")))
@@ -19,9 +20,6 @@ dependencies {
   api "com.netflix.netflix-commons:netflix-eventbus:0.3.0"
   api "javax.inject:javax.inject:1"
   api "commons-configuration:commons-configuration:1.8"
-
-  compileOnly "org.projectlombok:lombok"
-  annotationProcessor "org.projectlombok:lombok:1.16.20"
 
   testImplementation "org.codehaus.groovy:groovy-all"
   testImplementation("org.mockito:mockito-core")

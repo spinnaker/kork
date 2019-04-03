@@ -1,5 +1,6 @@
 apply plugin: "java-library"
 apply plugin: "groovy"
+apply plugin: "io.freefair.lombok"
 
 dependencies {
   api(platform(project(":spinnaker-dependencies")))
@@ -7,9 +8,6 @@ dependencies {
   implementation project(":kork-core")
   implementation "commons-io:commons-io"
   implementation "com.hubspot.jinjava:jinjava"
-
-  compileOnly "org.projectlombok:lombok"
-  annotationProcessor "org.projectlombok:lombok:1.16.20"
 
   testImplementation "org.codehaus.groovy:groovy-all"
   testImplementation "org.spockframework:spock-core"
