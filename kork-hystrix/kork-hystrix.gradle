@@ -4,13 +4,13 @@ apply plugin: "groovy"
 dependencies {
   api(platform(project(":spinnaker-dependencies")))
 
-  implementation "org.codehaus.groovy:groovy-all"
-  implementation "com.hubspot.jinjava:jinjava"
-  implementation "com.netflix.spectator:spectator-api"
-  implementation "org.springframework:spring-context"
-  implementation "org.springframework:spring-beans"
-  implementation "com.netflix.hystrix:hystrix-core"
-  implementation "com.netflix.hystrix:hystrix-javanica"
+  api "org.codehaus.groovy:groovy-all"
+  api "com.hubspot.jinjava:jinjava"
+  api "com.netflix.spectator:spectator-api"
+  api "org.springframework:spring-context"
+  api "org.springframework:spring-beans"
+  api "com.netflix.hystrix:hystrix-core"
+  api "com.netflix.hystrix:hystrix-javanica"
 
   testImplementation "org.spockframework:spock-core"
   testRuntimeOnly "cglib:cglib-nodep"

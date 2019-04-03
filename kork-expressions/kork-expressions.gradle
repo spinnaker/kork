@@ -8,9 +8,9 @@ test {
 dependencies {
   api(platform(project(":spinnaker-dependencies")))
 
-  implementation "com.fasterxml.jackson.core:jackson-databind"
-  implementation "org.springframework:spring-context"
-  implementation "org.slf4j:slf4j-api"
+  api "com.fasterxml.jackson.core:jackson-databind"
+  api "org.springframework:spring-context"
+  api "org.slf4j:slf4j-api"
 
   testImplementation "org.assertj:assertj-core"
   testImplementation "org.junit.jupiter:junit-jupiter-api"

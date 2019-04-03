@@ -5,9 +5,9 @@ apply plugin: "io.freefair.lombok"
 dependencies {
   api(platform(project(":spinnaker-dependencies")))
   
-  implementation project(":kork-core")
-  implementation "commons-io:commons-io"
-  implementation "com.hubspot.jinjava:jinjava"
+  api project(":kork-core")
+  api "commons-io:commons-io"
+  api "com.hubspot.jinjava:jinjava"
 
   testImplementation "org.codehaus.groovy:groovy-all"
   testImplementation "org.spockframework:spock-core"

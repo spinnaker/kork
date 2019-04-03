@@ -4,19 +4,18 @@ apply plugin: "groovy"
 dependencies {
   api(platform(project(":spinnaker-dependencies")))
 
-  implementation project(":kork-security")
-  implementation project(":kork-exceptions")
-
-  implementation "org.codehaus.groovy:groovy-all"
-  implementation "org.springframework.boot:spring-boot-starter-web"
-  implementation "org.springframework.security:spring-security-core"
-  implementation "com.netflix.spectator:spectator-api"
-  implementation "com.fasterxml.jackson.core:jackson-annotations"
-  implementation "com.hubspot.jinjava:jinjava"
-  implementation "com.squareup.okhttp:okhttp"
-  implementation "com.squareup.okhttp3:okhttp"
-  implementation "com.squareup.retrofit:retrofit"
-  implementation "com.google.guava:guava"
+  api project(":kork-security")
+  api project(":kork-exceptions")
+  api "org.codehaus.groovy:groovy-all"
+  api "org.springframework.boot:spring-boot-starter-web"
+  api "org.springframework.security:spring-security-core"
+  api "com.netflix.spectator:spectator-api"
+  api "com.fasterxml.jackson.core:jackson-annotations"
+  api "com.hubspot.jinjava:jinjava"
+  api "com.squareup.okhttp:okhttp"
+  api "com.squareup.okhttp3:okhttp"
+  api "com.squareup.retrofit:retrofit"
+  api "com.google.guava:guava"
 
   compileOnly "org.springframework.boot:spring-boot-starter-actuator"
 

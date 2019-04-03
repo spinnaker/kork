@@ -6,9 +6,8 @@ dependencies {
 
   api "org.springframework.boot:spring-boot-starter-actuator"
   api "redis.clients:jedis"
-
-  implementation project(":kork-core")
-  implementation "com.netflix.spectator:spectator-api"
+  api project(":kork-core")
+  api "com.netflix.spectator:spectator-api"
 
   testImplementation "com.hubspot.jinjava:jinjava"
   testImplementation project(":kork-jedis-test")

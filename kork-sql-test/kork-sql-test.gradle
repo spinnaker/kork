@@ -3,7 +3,7 @@ apply plugin: "java-library"
 dependencies {
   api(platform(project(":spinnaker-dependencies")))
 
-  implementation project(":kork-sql")
+  api project(":kork-sql")
   
   runtimeOnly "com.h2database:h2"
 }

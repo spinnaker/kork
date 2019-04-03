@@ -4,8 +4,8 @@ apply plugin: "groovy"
 dependencies {
   api(platform(project(":spinnaker-dependencies")))
 
-  implementation "com.netflix.spectator:spectator-api"
-  implementation "com.google.guava:guava"
+  api "com.netflix.spectator:spectator-api"
+  api "com.google.guava:guava"
 
   testImplementation "org.codehaus.groovy:groovy-all"
   testImplementation "com.hubspot.jinjava:jinjava"

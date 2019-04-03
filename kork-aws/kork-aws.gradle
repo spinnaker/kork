@@ -19,14 +19,14 @@ apply plugin: "groovy"
 dependencies {
   api(platform(project(":spinnaker-dependencies")))
 
-  implementation "org.codehaus.groovy:groovy-all"
-  implementation "com.hubspot.jinjava:jinjava"
-  implementation "org.springframework.boot:spring-boot-autoconfigure"
-  implementation "com.amazonaws:aws-java-sdk-core"
-  implementation "com.amazonaws:aws-java-sdk"
-  implementation "com.jcraft:jsch.agentproxy.jsch"
-  implementation "com.jcraft:jsch.agentproxy.connector-factory"
-  implementation "com.aestasit.infrastructure.sshoogr:sshoogr"
+  api "org.springframework.boot:spring-boot-autoconfigure"
+  api "com.amazonaws:aws-java-sdk-core"
+  api "com.amazonaws:aws-java-sdk"
+  api "org.codehaus.groovy:groovy-all"
+  api "com.hubspot.jinjava:jinjava"
+  api "com.jcraft:jsch.agentproxy.jsch"
+  api "com.jcraft:jsch.agentproxy.connector-factory"
+  api "com.aestasit.infrastructure.sshoogr:sshoogr"
 
   testImplementation "org.spockframework:spock-core"
   testRuntimeOnly "cglib:cglib-nodep"

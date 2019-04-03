@@ -18,10 +18,10 @@ apply plugin: "java-library"
 dependencies {
   api(platform(project(":spinnaker-dependencies")))
 
-  implementation "io.reactivex:rxjava"
-  implementation "com.netflix.spectator:spectator-api"
-  implementation "com.netflix.spectator:spectator-web-spring"
-  implementation "com.google.apis:google-api-services-monitoring"
+  api "io.reactivex:rxjava"
+  api "com.netflix.spectator:spectator-api"
+  api "com.netflix.spectator:spectator-web-spring"
+  api "com.google.apis:google-api-services-monitoring"
 
   // Force component bringing this in to already support spring boot configure.
   compileOnly "org.springframework.boot:spring-boot-autoconfigure"

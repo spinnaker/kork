@@ -3,12 +3,10 @@ apply plugin: "java-library"
 dependencies {
   api(platform(project(":spinnaker-dependencies")))
 
-  implementation project(":kork-jedis")
-  implementation("com.netflix.dyno:dyno-jedis") {
+  api project(":kork-jedis")
+  api("com.netflix.dyno:dyno-jedis") {
     exclude group: 'joda-time'
     exclude group: 'org.apache.httpcomponents'
     exclude group: 'org.slf4j'
   }
-
-  testImplementation "junit:junit"
 }
