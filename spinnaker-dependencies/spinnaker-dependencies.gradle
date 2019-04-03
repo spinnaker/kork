@@ -19,12 +19,14 @@ ext {
     coroutines    : "1.1.1",
     groovy        : "2.4.15",
     hystrix       : "1.4.21",
+    jsch          : "0.0.9",
     retrofit      : "1.9.0",
     retrofit2     : "2.5.0",
     slf4j         : "1.7.25",
     spectator     : "0.75.0",
     spek          : "1.1.5",
     spock         : "1.1-groovy-2.4",
+    swagger       : "2.7.0",
     testcontainers: "1.10.7",
   ]
 }
@@ -92,5 +94,12 @@ dependencies {
     api("org.testcontainers:mysql:${versions.testcontainers}")
     api("org.yaml:snakeyaml:1.23")
     api("redis.clients:jedis:2.9.3")
+    api("com.jcraft:jsch.agentproxy.jsch:${versions.jsch}")
+    api("com.jcraft:jsch.agentproxy.connector-factory:${versions.jsch}")
+    api("com.aestasit.infrastructure.sshoogr:sshoogr:0.9.25")
+    api("commons-configuration:commons-configuration:1.8")
+    api("com.netflix.netflix-commons:netflix-eventbus:0.3.0")
+    api("io.springfox:springfox-swagger2:${versions.swagger}")
+    api("io.springfox:springfox-swagger-ui:${versions.swagger}")
   }
 }

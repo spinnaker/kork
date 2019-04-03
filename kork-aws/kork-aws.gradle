@@ -24,9 +24,9 @@ dependencies {
   implementation "org.springframework.boot:spring-boot-autoconfigure"
   implementation "com.amazonaws:aws-java-sdk-core"
   implementation "com.amazonaws:aws-java-sdk"
-  implementation 'com.jcraft:jsch.agentproxy.jsch:0.0.9'
-  implementation 'com.jcraft:jsch.agentproxy.connector-factory:0.0.9'
-  implementation 'com.aestasit.infrastructure.sshoogr:sshoogr:0.9.25'
+  implementation "com.jcraft:jsch.agentproxy.jsch"
+  implementation "com.jcraft:jsch.agentproxy.connector-factory"
+  implementation "com.aestasit.infrastructure.sshoogr:sshoogr"
 
   testImplementation "org.spockframework:spock-core"
   testRuntimeOnly "cglib:cglib-nodep"
