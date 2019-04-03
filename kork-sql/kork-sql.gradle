@@ -4,17 +4,18 @@ apply from: "$rootDir/gradle/kotlin.gradle"
 dependencies {
   api(platform(project(":spinnaker-dependencies")))
 
-  compile project(":kork-core")
-  compile project(":kork-security")
+  api "org.jooq:jooq"
+  api "org.liquibase:liquibase-core"
+  api "com.zaxxer:HikariCP"
 
-  compile "org.springframework:spring-jdbc"
-  compile "org.springframework:spring-tx"
-  compile "org.jooq:jooq"
-  compile "org.liquibase:liquibase-core"
-  compile "com.zaxxer:HikariCP"
+  implementation project(":kork-core")
+  implementation project(":kork-security")
+  implementation "org.springframework:spring-jdbc"
+  implementation "org.springframework:spring-tx"
 
-  testCompile "org.springframework.boot:spring-boot-starter-actuator"
-  testCompile "org.springframework.boot:spring-boot-starter-web"
-  testCompile "org.springframework.boot:spring-boot-starter-test"
-  testRuntime project(":kork-sql-test")
+  testImplementation "org.springframework.boot:spring-boot-starter-actuator"
+  testImplementation "org.springframework.boot:spring-boot-starter-web"
+  testImplementation "org.springframework.boot:spring-boot-starter-test"
+
+  testRuntimeOnly project(":kork-sql-test")
 }
