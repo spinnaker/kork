@@ -15,7 +15,7 @@
  */
 
 include(
-  "kork-dependencies",
+  "spinnaker-dependencies",
   "kork-bom",
   "kork-core",
   "kork-jedis-test",

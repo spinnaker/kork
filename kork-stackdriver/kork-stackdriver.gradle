@@ -16,7 +16,7 @@
 apply plugin: "java-library"
 
 dependencies {
-  api(platform(project(":kork-dependencies")))
+  api(platform(project(":spinnaker-dependencies")))
 
   implementation "io.reactivex:rxjava"
   implementation "com.netflix.spectator:spectator-api"

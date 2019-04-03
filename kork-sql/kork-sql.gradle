@@ -2,7 +2,7 @@ apply plugin: "java-library"
 apply from: "$rootDir/gradle/kotlin.gradle"
 
 dependencies {
-  api(platform(project(":kork-dependencies")))
+  api(platform(project(":spinnaker-dependencies")))
 
   compile project(":kork-core")
   compile project(":kork-security")

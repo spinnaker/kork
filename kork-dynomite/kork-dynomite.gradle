@@ -1,7 +1,7 @@
 apply plugin: "java-library"
 
 dependencies {
-  api(platform(project(":kork-dependencies")))
+  api(platform(project(":spinnaker-dependencies")))
 
   implementation project(":kork-jedis")
   implementation("com.netflix.dyno:dyno-jedis") {

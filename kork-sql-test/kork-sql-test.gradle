@@ -1,7 +1,7 @@
 apply plugin: "java-library"
 
 dependencies {
-  api(platform(project(":kork-dependencies")))
+  api(platform(project(":spinnaker-dependencies")))
 
   compile project(":kork-sql")
   compile "com.h2database:h2"

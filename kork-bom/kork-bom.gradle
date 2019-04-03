@@ -14,7 +14,7 @@ publishing {
 }
 
 dependencies {
-  api(platform(project(":kork-dependencies")))
+  api(platform(project(":spinnaker-dependencies")))
   constraints {
     api(project(":kork-artifacts"))
     api(project(":kork-aws"))

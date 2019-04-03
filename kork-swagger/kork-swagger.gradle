@@ -1,7 +1,7 @@
 apply plugin: "java-library"
 
 dependencies {
-  api(platform(project(":kork-dependencies")))
+  api(platform(project(":spinnaker-dependencies")))
 
   implementation "org.springframework.boot:spring-boot-autoconfigure"
   implementation "io.springfox:springfox-swagger2:2.7.0"

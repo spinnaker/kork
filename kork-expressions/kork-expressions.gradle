@@ -5,7 +5,7 @@ test {
 }
 
 dependencies {
-  api(platform(project(":kork-dependencies")))
+  api(platform(project(":spinnaker-dependencies")))
 
   implementation "com.fasterxml.jackson.core:jackson-databind"
   implementation "org.springframework:spring-context"
