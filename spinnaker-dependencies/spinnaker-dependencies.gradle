@@ -29,7 +29,6 @@ ext {
     retrofit2     : "2.5.0",
     slf4j         : "1.7.25",
     spectator     : "0.75.0",
-    spek          : "1.1.5",
     spock         : "1.1-groovy-2.4",
     swagger       : "2.7.0",
     testcontainers: "1.10.7",
@@ -66,6 +65,7 @@ dependencies {
     api("com.netflix.spectator:spectator-web-spring:${versions.spectator}")
     api("com.netflix.spinnaker.embedded-redis:embedded-redis:0.8.0")
     api("com.netflix.spinnaker.moniker:moniker:0.2.0")
+    api("com.nhaarman:mockito-kotlin:1.5.0")
     api("com.squareup.okhttp:okhttp:2.7.0")
     api("com.squareup.retrofit2:converter-jackson:${versions.retrofit2}")
     api("com.squareup.retrofit2:retrofit-mock:${versions.retrofit2}")
@@ -86,8 +86,6 @@ dependencies {
     api("org.codehaus.groovy:groovy:${versions.groovy}")
     api("org.funktionale:funktionale-partials:1.2")
     api("org.jetbrains.kotlinx:kotlinx-coroutines-core:${versions.coroutines}")
-    api("org.jetbrains.spek:spek-api:${versions.spek}")
-    api("org.jetbrains.spek:spek-junit-platform-engine:${versions.spek}")
     api("org.jooq:jooq:3.11.9")
     api("org.liquibase:liquibase-core:3.6.3")
     api("org.mockito:mockito-core:2.23.4")
@@ -98,6 +96,7 @@ dependencies {
     api("org.spockframework:spock-core:${versions.spock}")
     api("org.spockframework:spock-spring:${versions.spock}")
     api("org.testcontainers:mysql:${versions.testcontainers}")
+    api("org.threeten:threeten-extra:1.0")
     api("org.yaml:snakeyaml:1.23")
     api("redis.clients:jedis:2.9.3")
     api("com.jcraft:jsch.agentproxy.jsch:${versions.jsch}")
