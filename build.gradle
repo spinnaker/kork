@@ -41,4 +41,10 @@ allprojects {
   repositories {
     jcenter()
   }
+
+  javadoc {
+    options {
+      
+    }
+  }
 }

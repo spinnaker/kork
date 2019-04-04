@@ -29,13 +29,16 @@ dependencies {
     api(project(":kork-expressions"))
     api(project(":kork-hystrix"))
     api(project(":kork-jedis"))
+    api(project(":kork-jedis-test"))
     api(project(":kork-secrets"))
     api(project(":kork-secrets-aws"))
     api(project(":kork-security"))
     api(project(":kork-sql"))
+    api(project(":kork-sql-test"))
     api(project(":kork-stackdriver"))
     api(project(":kork-swagger"))
     api(project(":kork-telemetry"))
+    api(project(":kork-test"))
     api(project(":kork-web"))
   }
 }
