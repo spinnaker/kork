@@ -1,6 +1,5 @@
 apply plugin: "java-library"
 apply plugin: "groovy"
-apply plugin: "io.freefair.lombok"
 
 dependencies {
   api(platform(project(":spinnaker-dependencies")))
@@ -27,4 +26,10 @@ dependencies {
   testRuntimeOnly "cglib:cglib-nodep"
   testRuntimeOnly "org.objenesis:objenesis"
   testRuntimeOnly "org.slf4j:slf4j-simple"
+
+  compileOnly "org.projectlombok:lombok"
+  annotationProcessor(platform(project(":spinnaker-dependencies")))
+  annotationProcessor "org.projectlombok:lombok"
+  testAnnotationProcessor(platform(project(":spinnaker-dependencies")))
+  testAnnotationProcessor "org.projectlombok:lombok"
 }
