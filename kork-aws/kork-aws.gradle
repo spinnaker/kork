@@ -21,7 +21,8 @@ dependencies {
 
   api "org.springframework.boot:spring-boot-autoconfigure"
   api "com.amazonaws:aws-java-sdk-core"
-  api "com.amazonaws:aws-java-sdk"
+  api "com.amazonaws:aws-java-sdk-sns"
+  api "com.amazonaws:aws-java-sdk-sqs"
   api "org.codehaus.groovy:groovy-all"
   api "com.hubspot.jinjava:jinjava"
   api "com.jcraft:jsch.agentproxy.jsch"
