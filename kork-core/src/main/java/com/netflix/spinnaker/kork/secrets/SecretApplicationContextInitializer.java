@@ -16,6 +16,8 @@
 
 package com.netflix.spinnaker.kork.secrets;
 
+import org.springframework.beans.factory.support.BeanDefinitionRegistry;
+import org.springframework.beans.factory.support.GenericBeanDefinition;
 import org.springframework.context.ApplicationContextInitializer;
 import org.springframework.context.ConfigurableApplicationContext;
 
@@ -23,6 +25,10 @@ public class SecretApplicationContextInitializer implements ApplicationContextIn
 
   @Override
   public void initialize(ConfigurableApplicationContext applicationContext) {
+    // Register servlet initializer so it is instantiated
+    GenericBeanDefinition bd = new GenericBeanDefinition();
+    bd.setBeanClass(SecretServletContextInitializer.class);
+    ((BeanDefinitionRegistry) applicationContext.getBeanFactory()).registerBeanDefinition("secretServletContextInitializer", bd);
     applicationContext.getBeanFactory().addBeanPostProcessor(new SecretBeanPostProcessor(applicationContext));
   }
 }
