@@ -1,15 +1,22 @@
+apply plugin: "java-library"
+
 test {
   useJUnitPlatform()
 }
 
 dependencies {
-  compile "com.fasterxml.jackson.core:jackson-databind:${spinnaker.version('jackson')}"
-  compile "org.springframework:spring-context:${spinnaker.version("spring")}"
-  compile spinnaker.dependency('slf4jApi')
-  compile spinnaker.dependency('lombok')
+  api(platform(project(":spinnaker-dependencies")))
 
-  testCompile "org.assertj:assertj-core:${spinnaker.version('assertj')}"
-  testCompile "org.junit.jupiter:junit-jupiter-api:${spinnaker.version('jupiter')}"
-  testRuntime "org.junit.jupiter:junit-jupiter-engine:${spinnaker.version('jupiter')}"
-  testRuntime spinnaker.dependency('slf4jSimple')
+  api "com.fasterxml.jackson.core:jackson-databind"
+  api "org.springframework:spring-context"
+  api "org.slf4j:slf4j-api"
+
+  testImplementation "org.assertj:assertj-core"
+  testImplementation "org.junit.jupiter:junit-jupiter-api"
+  testRuntimeOnly "org.junit.jupiter:junit-jupiter-engine"
+  testRuntimeOnly "org.slf4j:slf4j-simple"
+
+  testCompileOnly "org.projectlombok:lombok"
+  testAnnotationProcessor(platform(project(":spinnaker-dependencies")))
+  testAnnotationProcessor "org.projectlombok:lombok"
 }

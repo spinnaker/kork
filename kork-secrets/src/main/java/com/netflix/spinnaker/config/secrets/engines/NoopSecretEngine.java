@@ -26,7 +26,7 @@ import org.springframework.stereotype.Component;
  */
 @Component
 public class NoopSecretEngine implements SecretEngine {
-  private final static String IDENTIFIER = "nop";
+  private final static String IDENTIFIER = "noop";
   private final static String PARAM_VALUE = "v";
 
   @Override
@@ -35,10 +35,13 @@ public class NoopSecretEngine implements SecretEngine {
   }
 
   @Override
-  public String decrypt(EncryptedSecret encryptedSecret) {
-    return encryptedSecret.getParams().get(PARAM_VALUE);
+  public byte[] decrypt(EncryptedSecret encryptedSecret) {
+    return encryptedSecret.getParams().get(PARAM_VALUE).getBytes();
   }
 
   @Override
   public void validate(EncryptedSecret encryptedSecret) {}
+
+  @Override
+  public void clearCache() {}
 }

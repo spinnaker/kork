@@ -24,7 +24,7 @@ package com.netflix.spinnaker.config.secrets;
 public interface SecretEngine {
   String identifier();
 
-  String decrypt(EncryptedSecret encryptedSecret);
+  byte[] decrypt(EncryptedSecret encryptedSecret);
 
   /**
    * In order for a secretEngine to decrypt an EncryptedSecret, it may require extra information (e.g.
@@ -40,4 +40,6 @@ public interface SecretEngine {
   default EncryptedSecret encrypt(String secretToEncrypt) {
     throw new UnsupportedOperationException("This operation is not supported");
   }
+
+  void clearCache();
 }

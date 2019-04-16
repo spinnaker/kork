@@ -1,26 +1,34 @@
+apply plugin: "java-library"
+apply plugin: "groovy"
+
 dependencies {
-  compile project(":kork-security")
-  compile project(":kork-exceptions")
+  api(platform(project(":spinnaker-dependencies")))
 
-  compile spinnaker.dependency("lombok")
-  compile spinnaker.dependency('bootWeb')
-  compile spinnaker.dependency('springSecurityCore')
-  compile spinnaker.dependency("bootSecurity")
-  compile spinnaker.dependency('spectatorApi')
-  compile spinnaker.dependency('groovy')
-  compile spinnaker.dependency('okHttp')
-  compile spinnaker.dependency('okHttp3')
-  compile spinnaker.dependency('retrofit')
-  compile spinnaker.dependency('guava')
-
-  compileOnly spinnaker.dependency('bootActuator')
-
-  compile("com.netflix.spectator:spectator-web-spring:${spinnaker.version("spectator")}") {
+  api project(":kork-security")
+  api project(":kork-exceptions")
+  api "org.codehaus.groovy:groovy-all"
+  api "org.springframework.boot:spring-boot-starter-web"
+  api "org.springframework.boot:spring-boot-starter-security"
+  api "org.springframework.security:spring-security-core"
+  api "com.netflix.spectator:spectator-api"
+  api("com.netflix.spectator:spectator-web-spring") {
     // IMPORTANT: spectator-web-spring is Spring Boot 1.x; but is code compat with Boot 2. Exclude the transitives
     transitive = false
   }
+  api "com.fasterxml.jackson.core:jackson-annotations"
+  api "com.hubspot.jinjava:jinjava"
+  api "com.squareup.okhttp:okhttp"
+  api "com.squareup.okhttp3:okhttp"
+  api "com.squareup.retrofit:retrofit"
+  api "com.google.guava:guava"
 
-  spinnaker.group('spockBase')
+  compileOnly "org.springframework.boot:spring-boot-starter-actuator"
+
+  testImplementation "org.spockframework:spock-core"
+  testRuntimeOnly "cglib:cglib-nodep"
+  testRuntimeOnly "org.objenesis:objenesis"
+
+  compileOnly "org.projectlombok:lombok"
+  annotationProcessor(platform(project(":spinnaker-dependencies")))
+  annotationProcessor "org.projectlombok:lombok"
 }
-
-apply plugin: 'groovy'
