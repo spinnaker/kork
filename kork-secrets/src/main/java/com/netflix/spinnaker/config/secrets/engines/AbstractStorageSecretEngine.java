@@ -38,7 +38,7 @@ public abstract class AbstractStorageSecretEngine implements SecretEngine {
 
   protected Yaml yamlParser = new Yaml();
 
-  public String decrypt(EncryptedSecret encryptedSecret) {
+  public byte[] decrypt(EncryptedSecret encryptedSecret) {
     String fileUri = encryptedSecret.getParams().get(STORAGE_FILE_URI);
     String key = encryptedSecret.getParams().get(STORAGE_PROP_KEY);
 
@@ -51,7 +51,7 @@ public abstract class AbstractStorageSecretEngine implements SecretEngine {
 
       // Return the whole content as a string
       if (key == null) {
-        return new String(readAll(is));
+        return readAll(is);
       }
 
       // Parse as YAML
@@ -110,7 +110,7 @@ public abstract class AbstractStorageSecretEngine implements SecretEngine {
     cache.put(fileURI, parsed);
   }
 
-  protected String getParsedValue(String fileURI, String yamlPath) throws SecretDecryptionException {
+  protected byte[] getParsedValue(String fileURI, String yamlPath) throws SecretDecryptionException {
     Map<String,Object> parsed = cache.get(fileURI);
 
     for (Iterator<String> it = Splitter.on(".").split(yamlPath).iterator(); it.hasNext(); ) {
@@ -120,8 +120,8 @@ public abstract class AbstractStorageSecretEngine implements SecretEngine {
         parsed = (Map<String, Object>) o;
       } else if (o instanceof List) {
         parsed = ((List<Map<String, Object>>) o).get(Integer.valueOf(pathElt));
-      } else if (o != null){
-        return (String) o;
+      } else {
+        return ((String) o).getBytes();
       }
     }
     throw new SecretDecryptionException("Invalid secret key specified: " + yamlPath);
