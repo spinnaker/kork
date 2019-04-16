@@ -1,7 +1,3 @@
-import org.gradle.api.JavaVersion
-import org.gradle.api.plugins.JavaBasePlugin
-import org.gradle.api.plugins.JavaPluginConvention
-
 /*
  * Copyright 2014 Netflix, Inc.
  *
