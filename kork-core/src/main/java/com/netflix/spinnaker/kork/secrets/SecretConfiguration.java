@@ -17,20 +17,16 @@
 package com.netflix.spinnaker.kork.secrets;
 
 import com.netflix.spinnaker.config.secrets.SecretManager;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.web.servlet.ServletContextInitializer;
-import org.springframework.stereotype.Component;
+import org.springframework.context.ConfigurableApplicationContext;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 
-import javax.servlet.ServletContext;
+@Configuration
+public class SecretConfiguration {
 
-/**
- * Servlet context initializer to make sure the secret manager is initialized before any other config
- */
-@Component
-public class SecretServletContextInitializer implements ServletContextInitializer {
-  @Autowired
-  SecretManager secretManager;
+  @Bean
+  static SecretBeanPostProcessor secretBeanPostProcessor(ConfigurableApplicationContext applicationContext, SecretManager secretManager) {
+    return new SecretBeanPostProcessor(applicationContext, secretManager);
+  }
 
-  @Override
-  public void onStartup(ServletContext servletContext) {}
 }
