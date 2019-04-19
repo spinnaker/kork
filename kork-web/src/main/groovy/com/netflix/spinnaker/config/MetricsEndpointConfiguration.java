@@ -19,20 +19,23 @@ import com.netflix.spectator.api.Registry;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
+import org.springframework.security.config.annotation.web.WebSecurityConfigurer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.builders.WebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 
 @Configuration
 @ConditionalOnClass(Registry.class)
 @ComponentScan(basePackages = "com.netflix.spectator.controllers")
-@Order(101)
+@Order(Ordered.HIGHEST_PRECEDENCE + 101)
 public class MetricsEndpointConfiguration extends WebSecurityConfigurerAdapter {
 
   @Override
   protected void configure(HttpSecurity http) throws Exception {
     // Allow anyone to access the spectator metrics endpoint.
-    http.authorizeRequests().requestMatchers(new AntPathRequestMatcher("/spectator/metrics")).permitAll();
+    http.requestMatcher(new AntPathRequestMatcher("/spectator/metrics")).authorizeRequests().anyRequest().permitAll();
   }
 }
