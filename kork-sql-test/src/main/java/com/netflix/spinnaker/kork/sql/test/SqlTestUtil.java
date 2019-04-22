@@ -50,7 +50,7 @@ public class SqlTestUtil {
 
   public static TestDatabase initDatabase(String jdbcUrl) {
     HikariConfig cpConfig = new HikariConfig();
-    cpConfig.setJdbcUrl(format("%s%d", jdbcUrl, Clock.systemDefaultZone().millis()));
+    cpConfig.setJdbcUrl(jdbcUrl);
     cpConfig.setMaximumPoolSize(5);
     DataSource dataSource = new HikariDataSource(cpConfig);
 
