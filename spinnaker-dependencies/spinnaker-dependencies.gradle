@@ -83,11 +83,11 @@ dependencies {
     api("com.netflix.spinnaker.embedded-redis:embedded-redis:0.8.0")
     api("com.netflix.spinnaker.moniker:moniker:0.2.0")
     api("com.nhaarman:mockito-kotlin:1.5.0")
-    api("com.squareup.okhttp3:logging-interceptor:${versions.okhttp3}")
     api("com.squareup.okhttp3:logging-interceptor:${versions.okhttp3}") // see https://github.com/square/okhttp/issues/4960
     api("com.squareup.okhttp3:mockwebserver:${versions.okhttp3}")
     api("com.squareup.okhttp3:okhttp-urlconnection:${versions.okhttp3}")
     api("com.squareup.okhttp3:okhttp:${versions.okhttp3}")
+    api("com.squareup.okhttp3:okhttp-sse:${versions.okhttp3}")
     api("com.squareup.okhttp:mockwebserver:${versions.okhttp}")
     api("com.squareup.okhttp:okhttp-apache:${versions.okhttp}")
     api("com.squareup.okhttp:okhttp-urlconnection:${versions.okhttp}")
