@@ -18,6 +18,7 @@ package com.netflix.spinnaker.config;
 
 import com.netflix.spectator.api.Measurement;
 import com.netflix.spectator.api.Registry;
+import com.netflix.spectator.controllers.filter.PrototypeMeasurementFilter;
 import com.netflix.spectator.stackdriver.ConfigParams;
 import com.netflix.spectator.stackdriver.StackdriverWriter;
 import org.slf4j.Logger;
@@ -176,9 +177,8 @@ public class StackdriverConfig {
       log.error("Ignoring prototypeFilterPath because it is not yet supported.");
       measurementFilter = null;
       log.info("Configuring stackdriver filter from {}", prototypeFilterPath);
-      // TODO(rz): Make this all work with Boot 2
-//      measurementFilter = PrototypeMeasurementFilter.loadFromPath(
-//           prototypeFilterPath).and(filterNotSpring);
+      measurementFilter = PrototypeMeasurementFilter.loadFromPath(
+           prototypeFilterPath).and(filterNotSpring);
     } else {
       measurementFilter = filterNotSpring;
     }
