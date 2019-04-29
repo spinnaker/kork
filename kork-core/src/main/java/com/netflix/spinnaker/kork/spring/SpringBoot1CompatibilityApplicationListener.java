@@ -29,5 +29,8 @@ public class SpringBoot1CompatibilityApplicationListener implements ApplicationL
 
     // Put spring endpoints on / instead of /actuator (for /health backwards compat).
     System.setProperty("management.endpoints.web.base-path", "/");
+
+    // Expose all actuator endpoints.
+    System.setProperty("management.endpoints.web.exposure.include", "*");
   }
 }
