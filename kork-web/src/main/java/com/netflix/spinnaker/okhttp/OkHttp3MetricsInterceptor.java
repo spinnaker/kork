@@ -28,6 +28,6 @@ public class OkHttp3MetricsInterceptor extends MetricsInterceptor implements okh
 
   @Override
   public Response intercept(Chain chain) throws IOException {
-    return (Response) super.intercept(chain);
+    return (Response) doIntercept(chain);
   }
 }

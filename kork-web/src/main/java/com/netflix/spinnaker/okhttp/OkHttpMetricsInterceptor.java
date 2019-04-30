@@ -29,6 +29,6 @@ public class OkHttpMetricsInterceptor extends MetricsInterceptor
 
   @Override
   public Response intercept(Interceptor.Chain chain) throws IOException {
-    return (Response) super.intercept(chain);
+    return (Response) doIntercept(chain);
   }
 }

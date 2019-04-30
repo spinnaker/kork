@@ -1,6 +1,5 @@
 package com.netflix.spinnaker.okhttp;
 
-import com.netflix.spectator.api.BasicTag;
 import com.netflix.spectator.api.Registry;
 import com.netflix.spinnaker.security.AuthenticatedRequest;
 import com.squareup.okhttp.Interceptor;
@@ -19,8 +18,11 @@ import org.slf4j.MDC;
 import org.springframework.util.StringUtils;
 
 /**
- * Sort of generic class to wrap okhttp and okhttp3 interception logic since we basically do the
- * same thing and it's annoying to duplicate it
+ * {@code MetricsInterceptor} is an encapsulation of common interception logic relevant to both
+ * okhttp and okhttp3.
+ *
+ * <p>It is implemented as a single class with the expectation that legacy okhttp usage is on the
+ * way out and the interceptor logic will not be necessary long term.
  */
 class MetricsInterceptor {
   private final Registry registry;
@@ -31,7 +33,7 @@ class MetricsInterceptor {
     this.log = LoggerFactory.getLogger(getClass());
   }
 
-  Object intercept(Object chainObject) throws IOException {
+  protected final Object doIntercept(Object chainObject) throws IOException {
     long start = System.nanoTime();
     boolean wasSuccessful = false;
     int statusCode = -1;
@@ -66,7 +68,7 @@ class MetricsInterceptor {
         }
       }
 
-      Object response = null;
+      Object response;
 
       if (chain != null) {
         method = request.method() + ":" + request.url();
@@ -95,24 +97,13 @@ class MetricsInterceptor {
         String stackTrace = String.join("\n\tat ", stack);
         log.warn(
             String.format(
-                "Request %s:%s does not have authentication headers and will be treated as anonymous.\nat %s",
-                method, url, stackTrace));
+                "Request %s:%s is missing %s authentication headers and will be treated as anonymous.\nRequest from: %s",
+                method, url, missingHeaders, stackTrace));
       }
 
       recordTimer(
           registry, url, System.nanoTime() - start, statusCode, wasSuccessful, !missingAuthHeaders);
-      recordMissingHeaders(registry, missingHeaders);
     }
-  }
-
-  private static void recordMissingHeaders(Registry registry, List<String> missingHeaders) {
-    registry
-        .counter(
-            "okhttp.requests.missingHeaders",
-            missingHeaders.stream()
-                .map(header -> new BasicTag("header", header))
-                .collect(Collectors.toList()))
-        .increment();
   }
 
   private static void recordTimer(
