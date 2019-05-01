@@ -16,14 +16,15 @@
 
 package com.netflix.spinnaker.okhttp;
 
-import java.util.Optional;
 import com.netflix.spinnaker.security.AuthenticatedRequest;
+import java.util.Optional;
 import retrofit.RequestInterceptor;
 
 public class SpinnakerRequestInterceptor implements RequestInterceptor {
   private final OkHttpClientConfigurationProperties okHttpClientConfigurationProperties;
 
-  public SpinnakerRequestInterceptor(OkHttpClientConfigurationProperties okHttpClientConfigurationProperties) {
+  public SpinnakerRequestInterceptor(
+      OkHttpClientConfigurationProperties okHttpClientConfigurationProperties) {
     this.okHttpClientConfigurationProperties = okHttpClientConfigurationProperties;
   }
 
@@ -33,10 +34,9 @@ public class SpinnakerRequestInterceptor implements RequestInterceptor {
       return;
     }
 
-    AuthenticatedRequest
-      .getAuthenticationHeaders()
-      .forEach((String key, Optional<String> value) ->
-        value.ifPresent(s -> request.addHeader(key, s))
-      );
+    AuthenticatedRequest.getAuthenticationHeaders()
+        .forEach(
+            (String key, Optional<String> value) ->
+                value.ifPresent(s -> request.addHeader(key, s)));
   }
 }

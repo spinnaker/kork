@@ -16,6 +16,11 @@
 
 package com.netflix.spinnaker.config;
 
+import static java.util.stream.Collectors.toList;
+import static okhttp3.ConnectionSpec.MODERN_TLS;
+
+import com.netflix.spinnaker.okhttp.OkHttp3MetricsInterceptor;
+import com.netflix.spinnaker.okhttp.OkHttpClientConfigurationProperties;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -27,8 +32,6 @@ import java.util.concurrent.TimeUnit;
 import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManagerFactory;
-import com.netflix.spinnaker.okhttp.OkHttp3MetricsInterceptor;
-import com.netflix.spinnaker.okhttp.OkHttpClientConfigurationProperties;
 import okhttp3.CipherSuite;
 import okhttp3.ConnectionPool;
 import okhttp3.ConnectionSpec;
@@ -39,8 +42,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.stereotype.Component;
-import static java.util.stream.Collectors.toList;
-import static okhttp3.ConnectionSpec.MODERN_TLS;
 
 @Component
 @EnableConfigurationProperties(OkHttpClientConfigurationProperties.class)
@@ -52,41 +53,46 @@ public class OkHttp3ClientConfiguration {
 
   @Autowired
   public OkHttp3ClientConfiguration(
-    OkHttpClientConfigurationProperties okHttpClientConfigurationProperties,
-    OkHttp3MetricsInterceptor okHttp3MetricsInterceptor
-  ) {
+      OkHttpClientConfigurationProperties okHttpClientConfigurationProperties,
+      OkHttp3MetricsInterceptor okHttp3MetricsInterceptor) {
     this.okHttpClientConfigurationProperties = okHttpClientConfigurationProperties;
     this.okHttp3MetricsInterceptor = okHttp3MetricsInterceptor;
   }
 
-  /**
-   * @return OkHttpClient w/ <optional> key and trust stores
-   */
-  public Builder create() throws NoSuchAlgorithmException, KeyStoreException, IOException, CertificateException, UnrecoverableKeyException, KeyManagementException {
-    Builder okHttpClientBuilder = new Builder()
-      .connectTimeout(okHttpClientConfigurationProperties.connectTimeoutMs, TimeUnit.MILLISECONDS)
-      .readTimeout(okHttpClientConfigurationProperties.readTimeoutMs, TimeUnit.MILLISECONDS)
-      .retryOnConnectionFailure(okHttpClientConfigurationProperties.retryOnConnectionFailure)
-      .connectionPool(new ConnectionPool(
-        okHttpClientConfigurationProperties.connectionPool.maxIdleConnections,
-        okHttpClientConfigurationProperties.connectionPool.keepAliveDurationMs,
-        TimeUnit.MILLISECONDS))
-      .addInterceptor(okHttp3MetricsInterceptor);
+  /** @return OkHttpClient w/ <optional> key and trust stores */
+  public Builder create()
+      throws NoSuchAlgorithmException, KeyStoreException, IOException, CertificateException,
+          UnrecoverableKeyException, KeyManagementException {
+    Builder okHttpClientBuilder =
+        new Builder()
+            .connectTimeout(
+                okHttpClientConfigurationProperties.connectTimeoutMs, TimeUnit.MILLISECONDS)
+            .readTimeout(okHttpClientConfigurationProperties.readTimeoutMs, TimeUnit.MILLISECONDS)
+            .retryOnConnectionFailure(okHttpClientConfigurationProperties.retryOnConnectionFailure)
+            .connectionPool(
+                new ConnectionPool(
+                    okHttpClientConfigurationProperties.connectionPool.maxIdleConnections,
+                    okHttpClientConfigurationProperties.connectionPool.keepAliveDurationMs,
+                    TimeUnit.MILLISECONDS))
+            .addInterceptor(okHttp3MetricsInterceptor);
 
-    if (okHttpClientConfigurationProperties.keyStore == null && okHttpClientConfigurationProperties.trustStore == null) {
+    if (okHttpClientConfigurationProperties.keyStore == null
+        && okHttpClientConfigurationProperties.trustStore == null) {
       return okHttpClientBuilder;
     }
 
     SSLContext sslContext = SSLContext.getInstance("TLS");
 
-    KeyManagerFactory keyManagerFactory = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
+    KeyManagerFactory keyManagerFactory =
+        KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
     KeyStore ks = KeyStore.getInstance(okHttpClientConfigurationProperties.keyStoreType);
     try (InputStream it = new FileInputStream(okHttpClientConfigurationProperties.keyStore)) {
       ks.load(it, okHttpClientConfigurationProperties.keyStorePassword.toCharArray());
     }
     keyManagerFactory.init(ks, okHttpClientConfigurationProperties.keyStorePassword.toCharArray());
 
-    TrustManagerFactory trustManagerFactory = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
+    TrustManagerFactory trustManagerFactory =
+        TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
     KeyStore ts = KeyStore.getInstance(okHttpClientConfigurationProperties.trustStoreType);
     try (InputStream it = new FileInputStream(okHttpClientConfigurationProperties.trustStore)) {
       ts.load(it, okHttpClientConfigurationProperties.trustStorePassword.toCharArray());
@@ -95,33 +101,39 @@ public class OkHttp3ClientConfiguration {
 
     SecureRandom secureRandom = new SecureRandom();
     try {
-      secureRandom = SecureRandom.getInstance(okHttpClientConfigurationProperties.secureRandomInstanceType);
+      secureRandom =
+          SecureRandom.getInstance(okHttpClientConfigurationProperties.secureRandomInstanceType);
     } catch (NoSuchAlgorithmException e) {
-      log.error("Unable to fetch secure random instance for {}", okHttpClientConfigurationProperties.secureRandomInstanceType, e);
+      log.error(
+          "Unable to fetch secure random instance for {}",
+          okHttpClientConfigurationProperties.secureRandomInstanceType,
+          e);
     }
 
-    sslContext.init(keyManagerFactory.getKeyManagers(), trustManagerFactory.getTrustManagers(), secureRandom);
+    sslContext.init(
+        keyManagerFactory.getKeyManagers(), trustManagerFactory.getTrustManagers(), secureRandom);
     okHttpClientBuilder.sslSocketFactory(sslContext.getSocketFactory());
 
     return applyConnectionSpecs(okHttpClientBuilder);
   }
 
   private Builder applyConnectionSpecs(Builder okHttpClientBuilder) {
-    String[] cipherSuites = Optional
-      .ofNullable(okHttpClientConfigurationProperties.cipherSuites)
-      .orElse(MODERN_TLS.cipherSuites().stream().map(CipherSuite::javaName).collect(toList()))
-      .toArray(new String[0]);
-    String[] tlsVersions = Optional
-      .ofNullable(okHttpClientConfigurationProperties.tlsVersions)
-      .orElse(MODERN_TLS.tlsVersions().stream().map(TlsVersion::javaName).collect(toList()))
-      .toArray(new String[0]);
+    String[] cipherSuites =
+        Optional.ofNullable(okHttpClientConfigurationProperties.cipherSuites)
+            .orElse(MODERN_TLS.cipherSuites().stream().map(CipherSuite::javaName).collect(toList()))
+            .toArray(new String[0]);
+    String[] tlsVersions =
+        Optional.ofNullable(okHttpClientConfigurationProperties.tlsVersions)
+            .orElse(MODERN_TLS.tlsVersions().stream().map(TlsVersion::javaName).collect(toList()))
+            .toArray(new String[0]);
 
-    ConnectionSpec connectionSpec = new ConnectionSpec.Builder(MODERN_TLS)
-      .cipherSuites(cipherSuites)
-      .tlsVersions(tlsVersions)
-      .build();
+    ConnectionSpec connectionSpec =
+        new ConnectionSpec.Builder(MODERN_TLS)
+            .cipherSuites(cipherSuites)
+            .tlsVersions(tlsVersions)
+            .build();
 
-    return okHttpClientBuilder
-      .connectionSpecs(Arrays.asList(connectionSpec, ConnectionSpec.CLEARTEXT));
+    return okHttpClientBuilder.connectionSpecs(
+        Arrays.asList(connectionSpec, ConnectionSpec.CLEARTEXT));
   }
 }

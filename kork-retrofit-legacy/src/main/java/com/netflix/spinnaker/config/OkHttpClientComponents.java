@@ -29,7 +29,8 @@ import org.springframework.context.annotation.Configuration;
 @EnableConfigurationProperties(OkHttpClientConfigurationProperties.class)
 public class OkHttpClientComponents {
   @Bean
-  public SpinnakerRequestInterceptor spinnakerRequestInterceptor(OkHttpClientConfigurationProperties okHttpClientConfigurationProperties) {
+  public SpinnakerRequestInterceptor spinnakerRequestInterceptor(
+      OkHttpClientConfigurationProperties okHttpClientConfigurationProperties) {
     return new SpinnakerRequestInterceptor(okHttpClientConfigurationProperties);
   }
 

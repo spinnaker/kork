@@ -22,10 +22,10 @@ import java.util.List;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.context.properties.NestedConfigurationProperty;
 
-@ConfigurationProperties(prefix="ok-http-client")
-class OkHttpClientConfigurationProperties {
-  long connectTimeoutMs = 15000;
-  long readTimeoutMs = 20000;
+@ConfigurationProperties(prefix = "ok-http-client")
+public class OkHttpClientConfigurationProperties {
+  public long connectTimeoutMs = 15000;
+  public long readTimeoutMs = 20000;
 
   public boolean propagateSpinnakerHeaders = true;
 
@@ -40,28 +40,26 @@ class OkHttpClientConfigurationProperties {
   public String secureRandomInstanceType = "NativePRNGNonBlocking";
 
   public List<String> tlsVersions = Arrays.asList("TLSv1.2", "TLSv1.1");
-  //Defaults from https://wiki.mozilla.org/Security/Server_Side_TLS#Modern_compatibility
+  // Defaults from https://wiki.mozilla.org/Security/Server_Side_TLS#Modern_compatibility
   // with some extra ciphers (non SHA384/256) to support TLSv1.1 and some non EC ciphers
-  public List<String> cipherSuites = Arrays.asList(
-    "TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384",
-    "TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384",
-    "TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256",
-    "TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256",
-    "TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA384",
-    "TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384",
-    "TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA256",
-    "TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256",
-    "TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA",
-    "TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA",
-    "TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA",
-    "TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA",
-    "TLS_DHE_RSA_WITH_AES_256_CBC_SHA",
-    "TLS_DHE_RSA_WITH_AES_128_CBC_SHA"
-  );
+  public List<String> cipherSuites =
+      Arrays.asList(
+          "TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384",
+          "TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384",
+          "TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256",
+          "TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256",
+          "TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA384",
+          "TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384",
+          "TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA256",
+          "TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256",
+          "TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA",
+          "TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA",
+          "TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA",
+          "TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA",
+          "TLS_DHE_RSA_WITH_AES_256_CBC_SHA",
+          "TLS_DHE_RSA_WITH_AES_128_CBC_SHA");
 
-  /**
-   * Provide backwards compatibility for 'okHttpClient.connectTimoutMs'
-   */
+  /** Provide backwards compatibility for 'okHttpClient.connectTimoutMs' */
   public void setConnectTimoutMs(long connectTimeoutMs) {
     this.connectTimeoutMs = connectTimeoutMs;
   }

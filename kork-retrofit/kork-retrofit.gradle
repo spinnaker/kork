@@ -4,7 +4,7 @@ apply from: "$rootDir/gradle/kotlin.gradle"
 dependencies {
   api project(":kork-security")
   api project(":kork-okhttp3")
-  api "com.squareup.retrofit2:retrofit:${spinnaker.version("retrofit2")}"
+  api "com.squareup.retrofit2:retrofit"
 
-  implementation "com.squareup.okhttp3:logging-interceptor:${spinnaker.version('okHttp3')}"
+  implementation "com.squareup.okhttp3:logging-interceptor"
 }

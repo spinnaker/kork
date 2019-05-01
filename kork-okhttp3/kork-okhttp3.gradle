@@ -2,8 +2,8 @@ apply plugin: "java-library"
 
 dependencies {
   api project(":kork-security")
-  api "com.squareup.okhttp3:okhttp:${spinnaker.version("okHttp3")}"
-  api "org.springframework:spring-context:${spinnaker.version("spring")}"
-  api "org.springframework.boot:spring-boot-autoconfigure:${spinnaker.version("springBoot")}"
-  api "com.netflix.spectator:spectator-api:${spinnaker.version("spectator")}"
+  api "com.squareup.okhttp3:okhttp"
+  api "org.springframework:spring-context"
+  api "org.springframework.boot:spring-boot-autoconfigure"
+  api "com.netflix.spectator:spectator-api"
 }
