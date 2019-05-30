@@ -122,8 +122,8 @@ public class AuthenticatedRequest {
         setOrRemoveMdc(Header.USER.getHeader(), spinnakerUser);
         setOrRemoveMdc(Header.USER_ORIGIN.getHeader(), userOrigin);
         setOrRemoveMdc(Header.ACCOUNTS.getHeader(), spinnakerAccounts);
-        setOrRemoveMdc(Header.REQUEST_ID.getHeader(), executionId);
-        setOrRemoveMdc(Header.EXECUTION_ID.getHeader(), requestId);
+        setOrRemoveMdc(Header.REQUEST_ID.getHeader(), requestId);
+        setOrRemoveMdc(Header.EXECUTION_ID.getHeader(), executionId);
         setOrRemoveMdc(Header.APPLICATION.getHeader(), spinnakerApp);
 
         return closure.call();

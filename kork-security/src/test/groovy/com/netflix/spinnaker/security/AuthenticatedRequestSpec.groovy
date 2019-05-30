@@ -84,7 +84,8 @@ class AuthenticatedRequestSpec extends Specification {
     MDC.put(AuthenticatedRequest.Header.makeCustomHeader("cloudprovider"), "aws")
 
     then:
-    AuthenticatedRequest.getAuthenticationHeaders() == [
+    Map allheaders = AuthenticatedRequest.getAuthenticationHeaders()
+    allheaders == [
             'X-SPINNAKER-USER': Optional.of("spinnaker-another-user"),
             'X-SPINNAKER-ACCOUNTS': Optional.empty(),
             'X-SPINNAKER-CLOUDPROVIDER': Optional.of("aws")]
@@ -95,7 +96,8 @@ class AuthenticatedRequestSpec extends Specification {
     MDC.clear()
 
     then:
-    AuthenticatedRequest.getAuthenticationHeaders() == [
+    Map allheaders = AuthenticatedRequest.getAuthenticationHeaders()
+    allheaders == [
             'X-SPINNAKER-USER': Optional.empty(),
             'X-SPINNAKER-ACCOUNTS': Optional.empty()]
   }
