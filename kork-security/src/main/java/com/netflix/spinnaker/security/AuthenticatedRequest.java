@@ -18,6 +18,7 @@ package com.netflix.spinnaker.security;
 
 import static java.lang.String.format;
 
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -77,16 +78,16 @@ public class AuthenticatedRequest {
    *
    * <pre><code>AuthenticatedRequest.allowAnonymous(() -&gt; { // do HTTP call here });</code></pre>
    */
-  public static <V> V allowAnonymous(Callable<V> closure) {
+  public static <V> V allowAnonymous(Callable<V> closure) throws IOException {
     String originalValue = MDC.get(Header.XSpinnakerAnonymous);
     MDC.put(Header.XSpinnakerAnonymous, "anonymous");
 
     try {
       return closure.call();
-    } catch (RuntimeException re) {
-      throw re;
+    } catch (IOException ex) {
+      throw ex;
     } catch (Exception ex) {
-      throw new RuntimeException(ex);
+      throw new IOException(ex);
     } finally {
       setOrRemoveMdc(Header.XSpinnakerAnonymous, originalValue);
     }
