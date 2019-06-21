@@ -1,0 +1,13 @@
+plugins:
+  - name: stage-plugin
+    enabled: true
+    path: /opt/spinnaker/plugins/stage-plugin-0.0.1-SNAPSHOT.jar
+    extra-configs:
+      foo: bar
+      cat: dog
+  - name: stage-plugin
+    enabled: true
+    path: /opt/spinnaker/plugins/stage-plugin-0.0.1-SNAPSHOT.jar
+    extra-configs:
+      foo: bar
+      cat: dog

@@ -20,6 +20,7 @@ dependencies {
   api "com.netflix.netflix-commons:netflix-eventbus"
   api "javax.inject:javax.inject:1"
   api "commons-configuration:commons-configuration"
+  implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml")
 
   testImplementation "org.codehaus.groovy:groovy-all"
   testImplementation("org.mockito:mockito-core")
