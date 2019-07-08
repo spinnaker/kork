@@ -3,6 +3,9 @@ apply plugin: "java-library"
 dependencies {
   api(platform(project(":spinnaker-dependencies")))
 
-  api "redis.clients:jedis:3.0.1"
+  api("redis.clients:jedis:2.9.3") {
+    force = true
+  }
+
   api "com.netflix.spinnaker.embedded-redis:embedded-redis"
 }

@@ -27,6 +27,7 @@ include(
   "kork-hystrix",
   "kork-jedis",
   "kork-jedis-test",
+  "kork-jedis2-test",
   "kork-manageddelivery",
   "kork-secrets",
   "kork-secrets-aws",

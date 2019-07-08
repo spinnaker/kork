@@ -19,7 +19,12 @@ import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import redis.clients.jedis.*;
-import redis.clients.util.Pool;
+import redis.clients.jedis.commands.BinaryJedisCommands;
+import redis.clients.jedis.commands.JedisCommands;
+import redis.clients.jedis.commands.MultiKeyCommands;
+import redis.clients.jedis.commands.RedisPipeline;
+import redis.clients.jedis.commands.ScriptingCommands;
+import redis.clients.jedis.util.Pool;
 
 public class JedisClientDelegate implements RedisClientDelegate {
 
@@ -175,7 +180,7 @@ public class JedisClientDelegate implements RedisClientDelegate {
         final List<String> results = result.getResult();
         f.accept(() -> results);
 
-        cursor = result.getStringCursor();
+        cursor = result.getCursor();
       } while (!"0".equals(cursor));
     }
   }

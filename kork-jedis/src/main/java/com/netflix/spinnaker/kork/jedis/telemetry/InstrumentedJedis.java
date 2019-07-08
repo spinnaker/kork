@@ -15,7 +15,10 @@
  */
 package com.netflix.spinnaker.kork.jedis.telemetry;
 
-import static com.netflix.spinnaker.kork.jedis.telemetry.TelemetryHelper.*;
+import static com.netflix.spinnaker.kork.jedis.telemetry.TelemetryHelper.invocationId;
+import static com.netflix.spinnaker.kork.jedis.telemetry.TelemetryHelper.payloadSize;
+import static com.netflix.spinnaker.kork.jedis.telemetry.TelemetryHelper.payloadSizeId;
+import static com.netflix.spinnaker.kork.jedis.telemetry.TelemetryHelper.timerId;
 
 import com.netflix.spectator.api.Registry;
 import com.netflix.spectator.api.histogram.PercentileDistributionSummary;
@@ -26,11 +29,11 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.Callable;
 import redis.clients.jedis.*;
-import redis.clients.jedis.params.geo.GeoRadiusParam;
-import redis.clients.jedis.params.sortedset.ZAddParams;
-import redis.clients.jedis.params.sortedset.ZIncrByParams;
-import redis.clients.util.Pool;
-import redis.clients.util.Slowlog;
+import redis.clients.jedis.params.GeoRadiusParam;
+import redis.clients.jedis.params.SetParams;
+import redis.clients.jedis.params.ZAddParams;
+import redis.clients.jedis.params.ZIncrByParams;
+import redis.clients.jedis.util.Slowlog;
 
 /**
  * Instruments: - Timer for each command - Distribution summary for all payload sizes - Error rates
@@ -122,10 +125,9 @@ public class InstrumentedJedis extends Jedis {
   }
 
   @Override
-  public String set(String key, String value, String nxxx, String expx, long time) {
+  public String set(String key, String value, SetParams params) {
     String command = "set";
-    return instrumented(
-        command, payloadSize(value), () -> delegated.set(key, value, nxxx, expx, time));
+    return instrumented(command, payloadSize(value), () -> delegated.set(key, value, params));
   }
 
   @Override
@@ -657,20 +659,6 @@ public class InstrumentedJedis extends Jedis {
   }
 
   @Override
-  @Deprecated
-  public List<String> blpop(String arg) {
-    String command = "blpop";
-    return instrumented(command, () -> delegated.blpop(arg));
-  }
-
-  @Override
-  @Deprecated
-  public List<String> brpop(String arg) {
-    String command = "brpop";
-    return instrumented(command, () -> delegated.brpop(arg));
-  }
-
-  @Override
   public Long sort(String key, SortingParams sortingParameters, String dstkey) {
     String command = "sort";
     return instrumented(command, () -> delegated.sort(key, sortingParameters, dstkey));
@@ -913,7 +901,7 @@ public class InstrumentedJedis extends Jedis {
   }
 
   @Override
-  public Long linsert(String key, BinaryClient.LIST_POSITION where, String pivot, String value) {
+  public Long linsert(String key, ListPosition where, String pivot, String value) {
     String command = "linsert";
     return instrumented(
         command, payloadSize(value), () -> delegated.linsert(key, where, pivot, value));
@@ -1163,13 +1151,6 @@ public class InstrumentedJedis extends Jedis {
   }
 
   @Override
-  @Deprecated
-  public Long pexpire(String key, int milliseconds) {
-    String command = "pexpire";
-    return instrumented(command, () -> delegated.pexpire(key, milliseconds));
-  }
-
-  @Override
   public Long pexpire(String key, long milliseconds) {
     String command = "pexpire";
     return instrumented(command, () -> delegated.pexpire(key, milliseconds));
@@ -1188,31 +1169,10 @@ public class InstrumentedJedis extends Jedis {
   }
 
   @Override
-  @Deprecated
-  public String psetex(String key, int milliseconds, String value) {
-    String command = "psetex";
-    return instrumented(
-        command, payloadSize(value), () -> delegated.psetex(key, milliseconds, value));
-  }
-
-  @Override
   public String psetex(String key, long milliseconds, String value) {
     String command = "psetex";
     return instrumented(
         command, payloadSize(value), () -> delegated.psetex(key, milliseconds, value));
-  }
-
-  @Override
-  public String set(String key, String value, String nxxx) {
-    String command = "set";
-    return instrumented(command, payloadSize(value), () -> delegated.set(key, value, nxxx));
-  }
-
-  @Override
-  public String set(String key, String value, String nxxx, String expx, int time) {
-    String command = "set";
-    return instrumented(
-        command, payloadSize(value), () -> delegated.set(key, value, nxxx, expx, time));
   }
 
   @Override
@@ -1231,62 +1191,6 @@ public class InstrumentedJedis extends Jedis {
   public String migrate(String host, int port, String key, int destinationDb, int timeout) {
     String command = "migrate";
     return instrumented(command, () -> delegated.migrate(host, port, key, destinationDb, timeout));
-  }
-
-  @Override
-  @Deprecated
-  public ScanResult<String> scan(int cursor) {
-    String command = "scan";
-    return instrumented(command, () -> delegated.scan(cursor));
-  }
-
-  @Override
-  @Deprecated
-  public ScanResult<String> scan(int cursor, ScanParams params) {
-    String command = "scan";
-    return instrumented(command, () -> delegated.scan(cursor, params));
-  }
-
-  @Override
-  @Deprecated
-  public ScanResult<Map.Entry<String, String>> hscan(String key, int cursor) {
-    String command = "hscan";
-    return instrumented(command, () -> delegated.hscan(key, cursor));
-  }
-
-  @Override
-  @Deprecated
-  public ScanResult<Map.Entry<String, String>> hscan(String key, int cursor, ScanParams params) {
-    String command = "hscan";
-    return instrumented(command, () -> delegated.hscan(key, cursor, params));
-  }
-
-  @Override
-  @Deprecated
-  public ScanResult<String> sscan(String key, int cursor) {
-    String command = "sscan";
-    return instrumented(command, () -> delegated.sscan(key, cursor));
-  }
-
-  @Override
-  @Deprecated
-  public ScanResult<String> sscan(String key, int cursor, ScanParams params) {
-    String command = "sscan";
-    return instrumented(command, () -> delegated.sscan(key, cursor, params));
-  }
-
-  @Override
-  @Deprecated
-  public ScanResult<Tuple> zscan(String key, int cursor) {
-    String command = "zscan";
-    return instrumented(command, () -> delegated.zscan(key, cursor));
-  }
-
-  @Override
-  @Deprecated
-  public ScanResult<Tuple> zscan(String key, int cursor, ScanParams params) {
-    String command = "zscan";
-    return instrumented(command, () -> delegated.zscan(key, cursor, params));
   }
 
   @Override
@@ -1356,7 +1260,7 @@ public class InstrumentedJedis extends Jedis {
   }
 
   @Override
-  public String clusterReset(JedisCluster.Reset resetType) {
+  public String clusterReset(ClusterReset resetType) {
     String command = "clusterReset";
     return instrumented(command, () -> delegated.clusterReset(resetType));
   }
@@ -1494,7 +1398,7 @@ public class InstrumentedJedis extends Jedis {
   }
 
   @Override
-  public void setDataSource(Pool<Jedis> jedisPool) {
+  public void setDataSource(JedisPoolAbstract jedisPool) {
     delegated.setDataSource(jedisPool);
   }
 
@@ -1622,13 +1526,6 @@ public class InstrumentedJedis extends Jedis {
   public String set(byte[] key, byte[] value) {
     String command = "set";
     return instrumented(command, payloadSize(value), () -> delegated.set(key, value));
-  }
-
-  @Override
-  public String set(byte[] key, byte[] value, byte[] nxxx, byte[] expx, long time) {
-    String command = "set";
-    return instrumented(
-        command, payloadSize(value), () -> delegated.set(key, value, nxxx, expx, time));
   }
 
   @Override
@@ -2160,13 +2057,6 @@ public class InstrumentedJedis extends Jedis {
   }
 
   @Override
-  @Deprecated
-  public List<Object> multi(TransactionBlock jedisTransaction) {
-    String command = "multi";
-    return instrumented(command, () -> delegated.multi(jedisTransaction));
-  }
-
-  @Override
   public void connect() {
     delegated.connect();
   }
@@ -2230,20 +2120,6 @@ public class InstrumentedJedis extends Jedis {
   }
 
   @Override
-  @Deprecated
-  public List<byte[]> blpop(byte[] arg) {
-    String command = "blpop";
-    return instrumented(command, () -> delegated.blpop(arg));
-  }
-
-  @Override
-  @Deprecated
-  public List<byte[]> brpop(byte[] arg) {
-    String command = "brpop";
-    return instrumented(command, () -> delegated.brpop(arg));
-  }
-
-  @Override
   public List<byte[]> blpop(byte[]... args) {
     String command = "blpop";
     return instrumented(command, () -> delegated.blpop(args));
@@ -2259,13 +2135,6 @@ public class InstrumentedJedis extends Jedis {
   public String auth(String password) {
     String command = "auth";
     return instrumented(command, () -> delegated.auth(password));
-  }
-
-  @Override
-  @Deprecated
-  public List<Object> pipelined(PipelineBlock jedisPipeline) {
-    String command = "pipelined";
-    return instrumented(command, () -> delegated.pipelined(jedisPipeline));
   }
 
   @Override
@@ -2588,7 +2457,7 @@ public class InstrumentedJedis extends Jedis {
   }
 
   @Override
-  public Long linsert(byte[] key, BinaryClient.LIST_POSITION where, byte[] pivot, byte[] value) {
+  public Long linsert(byte[] key, ListPosition where, byte[] pivot, byte[] value) {
     String command = "linsert";
     return instrumented(
         command, payloadSize(value), () -> delegated.linsert(key, where, pivot, value));
@@ -2671,7 +2540,7 @@ public class InstrumentedJedis extends Jedis {
   }
 
   @Override
-  public Long getDB() {
+  public int getDB() {
     String command = "getDB";
     return instrumented(command, () -> delegated.getDB());
   }
@@ -2829,13 +2698,6 @@ public class InstrumentedJedis extends Jedis {
   }
 
   @Override
-  @Deprecated
-  public Long pexpire(byte[] key, int milliseconds) {
-    String command = "pexpire";
-    return instrumented(command, () -> delegated.pexpire(key, milliseconds));
-  }
-
-  @Override
   public Long pexpire(byte[] key, long milliseconds) {
     String command = "pexpire";
     return instrumented(command, () -> delegated.pexpire(key, milliseconds));
@@ -2854,14 +2716,6 @@ public class InstrumentedJedis extends Jedis {
   }
 
   @Override
-  @Deprecated
-  public String psetex(byte[] key, int milliseconds, byte[] value) {
-    String command = "psetex";
-    return instrumented(
-        command, payloadSize(value), () -> delegated.psetex(key, milliseconds, value));
-  }
-
-  @Override
   public String psetex(byte[] key, long milliseconds, byte[] value) {
     String command = "psetex";
     return instrumented(
@@ -2869,16 +2723,9 @@ public class InstrumentedJedis extends Jedis {
   }
 
   @Override
-  public String set(byte[] key, byte[] value, byte[] nxxx) {
+  public String set(byte[] key, byte[] value, SetParams params) {
     String command = "set";
-    return instrumented(command, payloadSize(value), () -> delegated.set(key, value, nxxx));
-  }
-
-  @Override
-  public String set(byte[] key, byte[] value, byte[] nxxx, byte[] expx, int time) {
-    String command = "set";
-    return instrumented(
-        command, payloadSize(value), () -> delegated.set(key, value, nxxx, expx, time));
+    return instrumented(command, payloadSize(value), () -> delegated.set(key, value, params));
   }
 
   @Override
@@ -2909,12 +2756,6 @@ public class InstrumentedJedis extends Jedis {
   public List<String> time() {
     String command = "time";
     return instrumented(command, () -> delegated.time());
-  }
-
-  @Override
-  public String migrate(byte[] host, int port, byte[] key, int destinationDb, int timeout) {
-    String command = "migrate";
-    return instrumented(command, () -> delegated.migrate(host, port, key, destinationDb, timeout));
   }
 
   @Override
