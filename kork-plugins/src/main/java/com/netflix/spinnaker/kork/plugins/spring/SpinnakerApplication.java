@@ -20,19 +20,37 @@ import java.util.Map;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.boot.web.servlet.support.SpringBootServletInitializer;
 
+/**
+ * Projects that want to support plugins should extend SpinnakerApplication instead of
+ * SpringBootServletInitializer.
+ */
 public class SpinnakerApplication extends SpringBootServletInitializer {
 
   /**
-   * Projects that want to support plugins should extend SpinnakerApplication instead of
-   * SpringBootServletInitializer. This method wraps the call to SpringApplicationBuilder after
-   * loading plugins
+   * This method initializes a default PluginLoader to use for loading plugins. When extending
+   * SpinnakerApplication this method should be used, as PluginLoader provides sane defaults.
    *
    * @param defaultProps Properties to pass to spring application
    * @param source The parent class loader for delegation
    * @param args The application arguments (usually passed from a Java main method)
    */
   public static void initialize(Map<String, Object> defaultProps, Class source, String... args) {
-    new PluginLoader().loadPlugins(source);
+    PluginLoader pluginLoader = new PluginLoader();
+    initialize(pluginLoader, defaultProps, source, args);
+  }
+
+  /**
+   * This method wraps the call to SpringApplicationBuilder after loading plugins to ensure plugins
+   * are loaded prior to spring context initialization.
+   *
+   * @param pluginLoader
+   * @param defaultProps
+   * @param source
+   * @param args
+   */
+  public static void initialize(
+      PluginLoader pluginLoader, Map<String, Object> defaultProps, Class source, String... args) {
+    pluginLoader.loadPlugins(source);
     new SpringApplicationBuilder().properties(defaultProps).sources(source).run(args);
   }
 }

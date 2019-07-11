@@ -21,6 +21,7 @@ import com.fasterxml.jackson.dataformat.yaml.YAMLFactory
 import org.yaml.snakeyaml.Yaml
 import spock.lang.Specification
 import spock.lang.Subject
+
 import java.nio.file.Paths
 
 class PluginLoaderSpec extends Specification {
@@ -40,8 +41,8 @@ class PluginLoaderSpec extends Specification {
   def "should return enabled plugin paths"() {
     given:
     subject = new PluginLoader(null)
-    PluginProperties.PluginConfiguration pluginConfiguration1 = new PluginProperties.PluginConfiguration("p1", ["p1/path"], plugin1Enabled)
-    PluginProperties.PluginConfiguration pluginConfiguration2 = new PluginProperties.PluginConfiguration("p2", ["p2/path"], plugin2Enabled)
+    PluginProperties.PluginConfiguration pluginConfiguration1 = new PluginProperties.PluginConfiguration("namespace/p1", ["p1/path"], plugin1Enabled)
+    PluginProperties.PluginConfiguration pluginConfiguration2 = new PluginProperties.PluginConfiguration("namespace/p2", ["p2/path"], plugin2Enabled)
 
     when:
     pluginConfigurationArrayList = [ pluginConfiguration1, pluginConfiguration2 ]
@@ -52,9 +53,9 @@ class PluginLoaderSpec extends Specification {
 
     where:
     plugin1Enabled | plugin2Enabled | expected
-    true           | false          | [new PluginProperties.PluginConfiguration("p1", ["p1/path"], plugin1Enabled)]
-    true           | true           | [new PluginProperties.PluginConfiguration("p1", ["p1/path"], plugin1Enabled),
-                                       new PluginProperties.PluginConfiguration("p2", ["p2/path"], plugin2Enabled)]
+    true           | false          | [new PluginProperties.PluginConfiguration("namespace/p1", ["p1/path"], plugin1Enabled)]
+    true           | true           | [new PluginProperties.PluginConfiguration("namespace/p1", ["p1/path"], plugin1Enabled),
+                                       new PluginProperties.PluginConfiguration("namespace/p2", ["p2/path"], plugin2Enabled)]
   }
 
   def "can parse plugin configs"() {
@@ -64,15 +65,15 @@ class PluginLoaderSpec extends Specification {
     when:
     def config = [
             plugins: [
-              [name: 'p1', jars: ["p1/path"], enabled: plugin1Enabled],
-              [name: 'p2', jars: ['p2/path'], enabled: plugin2Enabled],
+              [name: 'namespace/p1', jars: ["p1/path"], enabled: plugin1Enabled],
+              [name: 'namespace/p2', jars: ['p2/path'], enabled: plugin2Enabled],
             ]
     ]
     def configAsYaml = new Yaml().dump(config)
     inputStream = new ByteArrayInputStream(configAsYaml.getBytes())
     pluginConfigurationArrayList = [
-      new PluginProperties.PluginConfiguration("p1", ["p1/path"], plugin1Enabled),
-      new PluginProperties.PluginConfiguration("p2", ["p2/path"], plugin2Enabled)
+      new PluginProperties.PluginConfiguration("namespace/p1", ["p1/path"], plugin1Enabled),
+      new PluginProperties.PluginConfiguration("namespace/p2", ["p2/path"], plugin2Enabled)
     ]
     pluginProperties = new PluginProperties(pluginConfigurationArrayList)
 
@@ -84,5 +85,39 @@ class PluginLoaderSpec extends Specification {
     true           | false
     true           | true
   }
+
+  def "should only add a jar to the classpath once"() {
+    given:
+    subject = new PluginLoader(null)
+
+    when:
+    PluginProperties.PluginConfiguration pluginConfiguration1 = new PluginProperties.PluginConfiguration("namespace/p1", plugin1Jars, true)
+    PluginProperties.PluginConfiguration pluginConfiguration2 = new PluginProperties.PluginConfiguration("namespace/p2", plugin2Jars, true)
+    pluginConfigurationArrayList = [ pluginConfiguration1, pluginConfiguration2 ]
+    pluginProperties = new PluginProperties(pluginConfigurationArrayList)
+
+    then:
+    subject.getJarPathsFromPluginConfigurations(pluginProperties.pluginConfigurationList) == expected
+
+    where:
+    plugin1Jars | plugin2Jars | expected
+    ["foo/bar"] | ["bar/baz"] | [Paths.get("foo/bar").toUri().toURL(), Paths.get("bar/baz").toUri().toURL()]
+    ["foo/bar"] | ["foo/bar"] | [Paths.get("foo/bar").toUri().toURL()]
+  }
+
+  def "Plugin names should only be unique"() {
+    when:
+    subject = new PluginLoader(null)
+    PluginProperties.PluginConfiguration pluginConfiguration1 = new PluginProperties.PluginConfiguration("foo/bar", [], true)
+    PluginProperties.PluginConfiguration pluginConfiguration2 = new PluginProperties.PluginConfiguration("foo/bar", [], true)
+    pluginConfigurationArrayList = [ pluginConfiguration1, pluginConfiguration2 ]
+    pluginProperties = new PluginProperties(pluginConfigurationArrayList)
+    pluginProperties.validate()
+
+    then:
+    thrown MalformedPluginConfigurationException
+  }
+
+
 
 }

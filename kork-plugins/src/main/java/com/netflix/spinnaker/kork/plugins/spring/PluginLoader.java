@@ -23,18 +23,17 @@ import java.net.URL;
 import java.net.URLClassLoader;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Collection;
-import java.util.List;
-import java.util.Optional;
-import java.util.function.Predicate;
+import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
  * PluginLoader is used by SpinnakerApplication in order to enable plugins. Plugins are loaded by
  * adding their jar locations to the classpath. If loadPlugins is called prior to spring context
- * initialization, plugins are able to be autowired.
+ * initialization, plugins are able to be autowired. The PluginLoader config file's location is
+ * configurable itself, via an environment variable.
  */
 public class PluginLoader {
 
@@ -54,13 +53,14 @@ public class PluginLoader {
   }
 
   /**
-   * This is the entry point for loading plugins
+   * This is the entry point for loading plugins. This method parses a config file and adds plugin
+   * jar paths to the classpath in order for plugins to load.
    *
    * @param source The parent class loader for delegation
    * @return EncryptedSecret object
    */
   public void loadPlugins(Class source) {
-    List<URL> urls;
+    URL[] urls;
     if (checkFileExists() == false) {
       log.info("No plugin configuration file found, skipping loading plugins");
       return;
@@ -72,7 +72,9 @@ public class PluginLoader {
       urls = getJarPathsFromPluginConfigurations(pluginConfigurations);
     } catch (IOException e) {
       throw new MissingPluginConfigurationException(
-          "Unable to load plugin config file: " + this.filename, e);
+          String.format(
+              "Not loading plugins: No plugin configuration file found: %s", this.filename),
+          e);
     }
     addJarsToClassPath(source, urls);
   }
@@ -87,6 +89,7 @@ public class PluginLoader {
     ObjectMapper objectMapper = new ObjectMapper(new YAMLFactory());
     try {
       PluginProperties pluginConfigs = objectMapper.readValue(inputStream, PluginProperties.class);
+      pluginConfigs.validate();
       return pluginConfigs;
     } catch (IOException e) {
       throw new MalformedPluginConfigurationException("Unable to parse plugin configurations", e);
@@ -116,7 +119,7 @@ public class PluginLoader {
   private List<PluginProperties.PluginConfiguration> getEnabledJars(
       PluginProperties pluginProperties) {
     return pluginProperties.pluginConfigurationList.stream()
-        .filter(isEnabled())
+        .filter(p -> p.enabled == true)
         .collect(Collectors.toList());
   }
 
@@ -124,19 +127,15 @@ public class PluginLoader {
    * @param pluginConfigurations
    * @return List<URL> List of paths to jars, where enabled is true
    */
-  private List<URL> getJarPathsFromPluginConfigurations(
+  private URL[] getJarPathsFromPluginConfigurations(
       List<PluginProperties.PluginConfiguration> pluginConfigurations) {
     return pluginConfigurations.stream()
         .map(PluginProperties.PluginConfiguration::getJars)
         .flatMap(Collection::stream)
         .map(Paths::get)
         .map(this::getUrlFromPath)
-        .collect(Collectors.toList());
-  }
-
-  /** @return true if a plugin is enabled */
-  private Predicate<PluginProperties.PluginConfiguration> isEnabled() {
-    return p -> p.enabled == true;
+        .distinct()
+        .toArray(URL[]::new);
   }
 
   /**
@@ -157,9 +156,9 @@ public class PluginLoader {
    * @param pluginConfigurations
    */
   private void logPlugins(List<PluginProperties.PluginConfiguration> pluginConfigurations) {
-    if (pluginConfigurations.size() > 0) {
+    if (!pluginConfigurations.isEmpty()) {
       for (PluginProperties.PluginConfiguration pluginConfiguration : pluginConfigurations) {
-        log.info("Loading " + pluginConfiguration.toString());
+        log.info("Loading {}", pluginConfiguration);
       }
     } else {
       log.info("Did not find any plugins to load");
@@ -171,9 +170,11 @@ public class PluginLoader {
    *
    * @param source the parent class loader for delegation
    */
-  private void addJarsToClassPath(Class source, List<URL> urls) {
-    Thread.currentThread()
-        .setContextClassLoader(
-            new URLClassLoader(urls.toArray(new URL[0]), source.getClassLoader()));
+  private void addJarsToClassPath(Class source, URL[] urls) {
+    URL[] currentURLsArray =
+        ((URLClassLoader) Thread.currentThread().getContextClassLoader()).getURLs();
+    URL[] all =
+        Stream.concat(Arrays.stream(currentURLsArray), Arrays.stream(urls)).toArray(URL[]::new);
+    Thread.currentThread().setContextClassLoader(new URLClassLoader(all, source.getClassLoader()));
   }
 }
