@@ -62,7 +62,7 @@ public class PluginLoader {
   public void loadPlugins(Class source) {
     URL[] urls;
     if (checkFileExists() == false) {
-      log.info("No plugin configuration file found, skipping loading plugins");
+      log.info("Not loading plugins: No plugin configuration file found: {}", this.filename);
       return;
     }
     try (InputStream inputStream = openFromFile()) {
