@@ -22,7 +22,6 @@ import java.io.*;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -133,19 +132,22 @@ public class PluginLoader {
     return pluginConfigurations.stream()
         .map(PluginProperties.PluginConfiguration::getJars)
         .flatMap(Collection::stream)
-        .map(Paths::get)
-        .map(this::getUrlFromPath)
+        .map(this::convertToUrl)
         .distinct()
         .toArray(URL[]::new);
   }
 
   /**
-   * @param path
+   * @param jarLocation
    * @return path as a URL
    */
-  private URL getUrlFromPath(Path path) {
+  private URL convertToUrl(String jarLocation) {
     try {
-      return path.toUri().toURL();
+      if (jarLocation.startsWith("/")) {
+        return Paths.get(jarLocation).toUri().toURL();
+      } else {
+        return new URL(jarLocation);
+      }
     } catch (MalformedURLException e) {
       throw new MalformedPluginConfigurationException(e);
     }

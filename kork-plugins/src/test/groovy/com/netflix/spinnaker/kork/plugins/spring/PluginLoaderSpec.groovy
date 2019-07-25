@@ -118,6 +118,19 @@ class PluginLoaderSpec extends Specification {
     thrown MalformedPluginConfigurationException
   }
 
+  def "should be able to get URL from path"() {
+    when:
+    subject = new PluginLoader()
 
+
+    then:
+    subject.convertToUrl(jarLocation) == expected
+
+    where:
+    jarLocation                               | expected
+    "/opt/spinnaker/plugin/foo-bar-1.2.3.jar" | Paths.get("/opt/spinnaker/plugin/foo-bar-1.2.3.jar").toUri().toURL()
+    "http://example.com/foo-bar-1.2.3.jar"    | new URL("http://example.com/foo-bar-1.2.3.jar")
+
+  }
 
 }
