@@ -68,7 +68,9 @@ public class ExpressionsSupport {
         new ArrayList<>(
             Arrays.asList(
                 new JsonExpressionFunctionProvider(), new StringExpressionFunctionProvider()));
-    this.expressionFunctionProviders.addAll(extraExpressionFunctionProviders);
+    if (extraExpressionFunctionProviders != null) {
+      this.expressionFunctionProviders.addAll(extraExpressionFunctionProviders);
+    }
   }
 
   private static void registerFunction(
