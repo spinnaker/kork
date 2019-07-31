@@ -17,12 +17,22 @@ package com.netflix.spinnaker.kork.expressions
 
 interface ExpressionFunctionProvider {
   val namespace: String?
-  val functions: Collection<FunctionDefinition>
+  val functions: Functions
+
+  data class Functions(
+    val functionsDefinitions: Collection<FunctionDefinition>
+  ) {
+    constructor(vararg functionsDefinitions: FunctionDefinition) :
+      this(listOf(*functionsDefinitions))
+  }
 
   data class FunctionDefinition(
     val name: String,
     val parameters: List<FunctionParameter>
-  )
+  ) {
+    constructor(name: String, vararg functionParameters: FunctionParameter) :
+      this(name, listOf(*functionParameters))
+  }
 
   data class FunctionParameter(
     val type: Class<*>,

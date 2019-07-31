@@ -17,7 +17,6 @@
 package com.netflix.spinnaker.kork.expressions;
 
 import static java.lang.String.format;
-import static java.util.Collections.singletonList;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.netflix.spinnaker.kork.expressions.whitelisting.*;
@@ -128,7 +127,8 @@ public class ExpressionsSupport {
 
   private void registerExpressionProviderFunctions(StandardEvaluationContext evaluationContext) {
     for (ExpressionFunctionProvider p : expressionFunctionProviders) {
-      for (ExpressionFunctionProvider.FunctionDefinition function : p.getFunctions()) {
+      for (ExpressionFunctionProvider.FunctionDefinition function :
+          p.getFunctions().getFunctionsDefinitions()) {
         String namespacedFunctionName = function.getName();
         if (p.getNamespace() != null) {
           namespacedFunctionName = format("%s_%s", p.getNamespace(), namespacedFunctionName);
@@ -160,13 +160,12 @@ public class ExpressionsSupport {
     }
 
     @Override
-    public Collection<FunctionDefinition> getFunctions() {
-      return singletonList(
+    public Functions getFunctions() {
+      return new Functions(
           new FunctionDefinition(
               "toJson",
-              singletonList(
-                  new FunctionParameter(
-                      Object.class, "value", "An Object to marshall to a JSON String"))));
+              new FunctionParameter(
+                  Object.class, "value", "An Object to marshall to a JSON String")));
     }
 
     /**
@@ -195,39 +194,31 @@ public class ExpressionsSupport {
     }
 
     @Override
-    public Collection<FunctionDefinition> getFunctions() {
-      return Arrays.asList(
+    public Functions getFunctions() {
+      return new Functions(
           new FunctionDefinition(
               "toInt",
-              Collections.singletonList(
-                  new FunctionParameter(
-                      String.class, "value", "A String value to convert to an int"))),
+              new FunctionParameter(String.class, "value", "A String value to convert to an int")),
           new FunctionDefinition(
               "toFloat",
-              Collections.singletonList(
-                  new FunctionParameter(
-                      String.class, "value", "A String value to convert to a float"))),
+              new FunctionParameter(String.class, "value", "A String value to convert to a float")),
           new FunctionDefinition(
               "toBoolean",
-              Collections.singletonList(
-                  new FunctionParameter(
-                      String.class, "value", "A String value to convert to a boolean"))),
+              new FunctionParameter(
+                  String.class, "value", "A String value to convert to a boolean")),
           new FunctionDefinition(
               "toBase64",
-              Collections.singletonList(
-                  new FunctionParameter(String.class, "value", "A String value to base64 encode"))),
+              new FunctionParameter(String.class, "value", "A String value to base64 encode")),
           new FunctionDefinition(
               "fromBase64",
-              Collections.singletonList(
-                  new FunctionParameter(
-                      String.class, "value", "A base64-encoded String value to decode"))),
+              new FunctionParameter(
+                  String.class, "value", "A base64-encoded String value to decode")),
           new FunctionDefinition(
               "alphanumerical",
-              Collections.singletonList(
-                  new FunctionParameter(
-                      String.class,
-                      "value",
-                      "A String value to strip of all non-alphanumeric characters"))));
+              new FunctionParameter(
+                  String.class,
+                  "value",
+                  "A String value to strip of all non-alphanumeric characters")));
     }
 
     /**
