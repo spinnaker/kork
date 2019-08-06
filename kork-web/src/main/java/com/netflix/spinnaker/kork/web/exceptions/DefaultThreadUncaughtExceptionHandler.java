@@ -21,11 +21,11 @@ import org.slf4j.LoggerFactory;
 import org.springframework.boot.context.event.ApplicationEnvironmentPreparedEvent;
 import org.springframework.context.ApplicationListener;
 
-public class ThreadUncaughtExceptionHandler
+public class DefaultThreadUncaughtExceptionHandler
     implements Thread.UncaughtExceptionHandler,
         ApplicationListener<ApplicationEnvironmentPreparedEvent> {
   private static final Logger logger =
-      LoggerFactory.getLogger(ThreadUncaughtExceptionHandler.class);
+      LoggerFactory.getLogger(DefaultThreadUncaughtExceptionHandler.class);
   private Thread.UncaughtExceptionHandler priorHandler;
 
   @Override
@@ -41,8 +41,7 @@ public class ThreadUncaughtExceptionHandler
 
   @Override
   public void uncaughtException(Thread thread, Throwable exception) {
-    logger.error(
-        "Uncaught exception in thread {}:{}\n{}", thread.getName(), thread.getId(), exception);
+    logger.error("Uncaught exception in thread", exception);
 
     if (priorHandler != null) {
       priorHandler.uncaughtException(thread, exception);
