@@ -69,7 +69,7 @@ public class PluginLoader {
       PluginProperties props = parsePluginConfigs(inputStream);
       List<PluginProperties.PluginConfiguration> pluginConfigurations = getEnabledJars(props);
       logPlugins(pluginConfigurations);
-      urls = getJarPathsFromPluginConfigurations(pluginConfigurations);
+      urls = getJarPathsFromPluginConfigurations(pluginConfigurations, props.downloadingEnabled);
     } catch (IOException e) {
       throw new MissingPluginConfigurationException(
           String.format(
@@ -128,11 +128,11 @@ public class PluginLoader {
    * @return List<URL> List of paths to jars, where enabled is true
    */
   private URL[] getJarPathsFromPluginConfigurations(
-      List<PluginProperties.PluginConfiguration> pluginConfigurations) {
+      List<PluginProperties.PluginConfiguration> pluginConfigurations, boolean downloadingEnabled) {
     return pluginConfigurations.stream()
         .map(PluginProperties.PluginConfiguration::getJars)
         .flatMap(Collection::stream)
-        .map(this::convertToUrl)
+        .map(s -> convertToUrl(s, downloadingEnabled))
         .distinct()
         .toArray(URL[]::new);
   }
@@ -141,12 +141,17 @@ public class PluginLoader {
    * @param jarLocation
    * @return path as a URL
    */
-  private URL convertToUrl(String jarLocation) {
+  private URL convertToUrl(String jarLocation, boolean downloadingEnabled) {
     try {
       if (jarLocation.startsWith("/")) {
         return Paths.get(jarLocation).toUri().toURL();
-      } else {
+      } else if (jarLocation.startsWith("file://")) {
         return new URL(jarLocation);
+      } else if (downloadingEnabled) {
+        return new URL(jarLocation);
+      } else {
+        throw new MalformedPluginConfigurationException(
+            "Attempting to download jar " + jarLocation + " but downloading is disabled");
       }
     } catch (MalformedURLException e) {
       throw new MalformedPluginConfigurationException(e);

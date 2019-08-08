@@ -33,6 +33,9 @@ public class PluginProperties {
   @JsonProperty("plugins")
   List<PluginConfiguration> pluginConfigurationList;
 
+  @JsonProperty("downloadingEnabled")
+  public Boolean downloadingEnabled;
+
   public void validate() {
     validateUniquePlugins();
     for (PluginConfiguration pluginConfiguration : pluginConfigurationList) {

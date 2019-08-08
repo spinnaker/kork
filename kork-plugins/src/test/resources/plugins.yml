@@ -1,4 +1,6 @@
 plugins:
+  downloadingEnabled: true
+  plugins:
   - name: namespace/stage-plugin
     enabled: true
     jars:

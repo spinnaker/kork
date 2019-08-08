@@ -41,21 +41,21 @@ class PluginLoaderSpec extends Specification {
   def "should return enabled plugin paths"() {
     given:
     subject = new PluginLoader(null)
-    PluginProperties.PluginConfiguration pluginConfiguration1 = new PluginProperties.PluginConfiguration("namespace/p1", ["p1/path"], plugin1Enabled)
-    PluginProperties.PluginConfiguration pluginConfiguration2 = new PluginProperties.PluginConfiguration("namespace/p2", ["p2/path"], plugin2Enabled)
+    PluginProperties.PluginConfiguration pluginConfiguration1 = new PluginProperties.PluginConfiguration("namespace/p1", ["/p1/path"], plugin1Enabled)
+    PluginProperties.PluginConfiguration pluginConfiguration2 = new PluginProperties.PluginConfiguration("namespace/p2", ["/p2/path"], plugin2Enabled)
 
     when:
     pluginConfigurationArrayList = [ pluginConfiguration1, pluginConfiguration2 ]
-    pluginProperties = new PluginProperties(pluginConfigurationArrayList)
+    pluginProperties = new PluginProperties(pluginConfigurationArrayList, true)
 
     then:
     subject.getEnabledJars(pluginProperties) == expected
 
     where:
     plugin1Enabled | plugin2Enabled | expected
-    true           | false          | [new PluginProperties.PluginConfiguration("namespace/p1", ["p1/path"], plugin1Enabled)]
-    true           | true           | [new PluginProperties.PluginConfiguration("namespace/p1", ["p1/path"], plugin1Enabled),
-                                       new PluginProperties.PluginConfiguration("namespace/p2", ["p2/path"], plugin2Enabled)]
+    true           | false          | [new PluginProperties.PluginConfiguration("namespace/p1", ["/p1/path"], plugin1Enabled)]
+    true           | true           | [new PluginProperties.PluginConfiguration("namespace/p1", ["/p1/path"], plugin1Enabled),
+                                       new PluginProperties.PluginConfiguration("namespace/p2", ["/p2/path"], plugin2Enabled)]
   }
 
   def "can parse plugin configs"() {
@@ -64,18 +64,19 @@ class PluginLoaderSpec extends Specification {
 
     when:
     def config = [
-            plugins: [
-              [name: 'namespace/p1', jars: ["p1/path"], enabled: plugin1Enabled],
-              [name: 'namespace/p2', jars: ['p2/path'], enabled: plugin2Enabled],
-            ]
+      plugins: [
+          [name: 'namespace/p1', jars: ["/p1/path"], enabled: plugin1Enabled],
+          [name: 'namespace/p2', jars: ["/p2/path"], enabled: plugin2Enabled],
+      ],
+      downloadingEnabled: true
     ]
     def configAsYaml = new Yaml().dump(config)
     inputStream = new ByteArrayInputStream(configAsYaml.getBytes())
     pluginConfigurationArrayList = [
-      new PluginProperties.PluginConfiguration("namespace/p1", ["p1/path"], plugin1Enabled),
-      new PluginProperties.PluginConfiguration("namespace/p2", ["p2/path"], plugin2Enabled)
+      new PluginProperties.PluginConfiguration("namespace/p1", ["/p1/path"], plugin1Enabled),
+      new PluginProperties.PluginConfiguration("namespace/p2", ["/p2/path"], plugin2Enabled)
     ]
-    pluginProperties = new PluginProperties(pluginConfigurationArrayList)
+    pluginProperties = new PluginProperties(pluginConfigurationArrayList, true)
 
     then:
     subject.parsePluginConfigs(inputStream) == pluginProperties
@@ -94,15 +95,15 @@ class PluginLoaderSpec extends Specification {
     PluginProperties.PluginConfiguration pluginConfiguration1 = new PluginProperties.PluginConfiguration("namespace/p1", plugin1Jars, true)
     PluginProperties.PluginConfiguration pluginConfiguration2 = new PluginProperties.PluginConfiguration("namespace/p2", plugin2Jars, true)
     pluginConfigurationArrayList = [ pluginConfiguration1, pluginConfiguration2 ]
-    pluginProperties = new PluginProperties(pluginConfigurationArrayList)
+    pluginProperties = new PluginProperties(pluginConfigurationArrayList, true)
 
     then:
-    subject.getJarPathsFromPluginConfigurations(pluginProperties.pluginConfigurationList) == expected
+    subject.getJarPathsFromPluginConfigurations(pluginProperties.pluginConfigurationList, true) == expected
 
     where:
     plugin1Jars | plugin2Jars | expected
-    ["foo/bar"] | ["bar/baz"] | [Paths.get("foo/bar").toUri().toURL(), Paths.get("bar/baz").toUri().toURL()]
-    ["foo/bar"] | ["foo/bar"] | [Paths.get("foo/bar").toUri().toURL()]
+    ["/foo/bar"] | ["/bar/baz"] | [Paths.get("/foo/bar").toUri().toURL(), Paths.get("/bar/baz").toUri().toURL()]
+    ["/foo/bar"] | ["/foo/bar"] | [Paths.get("/foo/bar").toUri().toURL()]
   }
 
   def "Plugin names should only be unique"() {
@@ -111,7 +112,7 @@ class PluginLoaderSpec extends Specification {
     PluginProperties.PluginConfiguration pluginConfiguration1 = new PluginProperties.PluginConfiguration("foo/bar", [], true)
     PluginProperties.PluginConfiguration pluginConfiguration2 = new PluginProperties.PluginConfiguration("foo/bar", [], true)
     pluginConfigurationArrayList = [ pluginConfiguration1, pluginConfiguration2 ]
-    pluginProperties = new PluginProperties(pluginConfigurationArrayList)
+    pluginProperties = new PluginProperties(pluginConfigurationArrayList, true)
     pluginProperties.validate()
 
     then:
@@ -122,15 +123,35 @@ class PluginLoaderSpec extends Specification {
     when:
     subject = new PluginLoader()
 
-
     then:
-    subject.convertToUrl(jarLocation) == expected
+    subject.convertToUrl(jarLocation, true) == expected
 
     where:
     jarLocation                               | expected
     "/opt/spinnaker/plugin/foo-bar-1.2.3.jar" | Paths.get("/opt/spinnaker/plugin/foo-bar-1.2.3.jar").toUri().toURL()
+    "file://example/com/foo-bar-1.2.3.jar"    | new URL("file://example/com/foo-bar-1.2.3.jar")
     "http://example.com/foo-bar-1.2.3.jar"    | new URL("http://example.com/foo-bar-1.2.3.jar")
+  }
 
+  def "should use local jars if downloading is disabled "() {
+    when:
+    subject = new PluginLoader()
+
+    then:
+    subject.convertToUrl(jarLocation, false) == expected
+    where:
+    jarLocation                               | expected
+    "/opt/spinnaker/plugin/foo-bar-1.2.3.jar" | Paths.get("/opt/spinnaker/plugin/foo-bar-1.2.3.jar").toUri().toURL()
+    "file://example/com/foo-bar-1.2.3.jar"    | new URL("file://example/com/foo-bar-1.2.3.jar")
+  }
+
+  def "should throw exception if trying to download a jar when not enabled"() {
+    when:
+    subject = new PluginLoader()
+    subject.convertToUrl("http://example.com/foo-bar-1.2.3.jar", false)
+
+    then:
+    thrown(MalformedPluginConfigurationException)
   }
 
 }
