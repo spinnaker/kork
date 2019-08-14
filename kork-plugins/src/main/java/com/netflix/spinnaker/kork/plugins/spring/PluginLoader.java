@@ -18,6 +18,9 @@ package com.netflix.spinnaker.kork.plugins.spring;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.google.common.annotations.Beta;
+import com.netflix.spinnaker.kork.plugins.spring.configs.PluginConfiguration;
+import com.netflix.spinnaker.kork.plugins.spring.configs.PluginProperties;
+import com.netflix.spinnaker.kork.plugins.spring.configs.PluginPropertyDetails;
 import java.io.*;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -66,8 +69,8 @@ public class PluginLoader {
       return;
     }
     try (InputStream inputStream = openFromFile()) {
-      PluginProperties props = parsePluginConfigs(inputStream);
-      List<PluginProperties.PluginConfiguration> pluginConfigurations = getEnabledJars(props);
+      PluginPropertyDetails props = parsePluginConfigs(inputStream);
+      List<PluginConfiguration> pluginConfigurations = getEnabledJars(props);
       logPlugins(pluginConfigurations);
       urls = getJarPathsFromPluginConfigurations(pluginConfigurations, props.downloadingEnabled);
     } catch (IOException e) {
@@ -83,14 +86,15 @@ public class PluginLoader {
    * Convert inputStream to pluginProperties object
    *
    * @param inputStream The list of plugins
-   * @return PluginProperties
+   * @return PluginPropertyDetails
    */
-  private PluginProperties parsePluginConfigs(InputStream inputStream) {
+  private PluginPropertyDetails parsePluginConfigs(InputStream inputStream) {
     ObjectMapper objectMapper = new ObjectMapper(new YAMLFactory());
     try {
-      PluginProperties pluginConfigs = objectMapper.readValue(inputStream, PluginProperties.class);
-      pluginConfigs.validate();
-      return pluginConfigs;
+      PluginPropertyDetails pluginPropertyDetails =
+          objectMapper.readValue(inputStream, PluginProperties.class).getPluginsPropertyDetails();
+      pluginPropertyDetails.validate();
+      return pluginPropertyDetails;
     } catch (IOException e) {
       throw new MalformedPluginConfigurationException("Unable to parse plugin configurations", e);
     }
@@ -113,12 +117,11 @@ public class PluginLoader {
   /**
    * This method returns a list of Plugin Configurations that are enabled
    *
-   * @param pluginProperties Plugin configs, deserialized
+   * @param pluginPropertyDetails Plugin configs, deserialized
    * @return List<PluginConfiguration> List of pluginConfigurations where enabled is true
    */
-  private List<PluginProperties.PluginConfiguration> getEnabledJars(
-      PluginProperties pluginProperties) {
-    return pluginProperties.pluginConfigurationList.stream()
+  private List<PluginConfiguration> getEnabledJars(PluginPropertyDetails pluginPropertyDetails) {
+    return pluginPropertyDetails.getPluginConfigurations().stream()
         .filter(p -> p.enabled == true)
         .collect(Collectors.toList());
   }
@@ -128,9 +131,9 @@ public class PluginLoader {
    * @return List<URL> List of paths to jars, where enabled is true
    */
   private URL[] getJarPathsFromPluginConfigurations(
-      List<PluginProperties.PluginConfiguration> pluginConfigurations, boolean downloadingEnabled) {
+      List<PluginConfiguration> pluginConfigurations, boolean downloadingEnabled) {
     return pluginConfigurations.stream()
-        .map(PluginProperties.PluginConfiguration::getJars)
+        .map(PluginConfiguration::getJars)
         .flatMap(Collection::stream)
         .map(s -> convertToUrl(s, downloadingEnabled))
         .distinct()
@@ -145,9 +148,7 @@ public class PluginLoader {
     try {
       if (jarLocation.startsWith("/")) {
         return Paths.get(jarLocation).toUri().toURL();
-      } else if (jarLocation.startsWith("file://")) {
-        return new URL(jarLocation);
-      } else if (downloadingEnabled) {
+      } else if (jarLocation.startsWith("file://") || downloadingEnabled) {
         return new URL(jarLocation);
       } else {
         throw new MalformedPluginConfigurationException(
@@ -163,9 +164,9 @@ public class PluginLoader {
    *
    * @param pluginConfigurations
    */
-  private void logPlugins(List<PluginProperties.PluginConfiguration> pluginConfigurations) {
+  private void logPlugins(List<PluginConfiguration> pluginConfigurations) {
     if (!pluginConfigurations.isEmpty()) {
-      for (PluginProperties.PluginConfiguration pluginConfiguration : pluginConfigurations) {
+      for (PluginConfiguration pluginConfiguration : pluginConfigurations) {
         log.info("Loading {}", pluginConfiguration);
       }
     } else {

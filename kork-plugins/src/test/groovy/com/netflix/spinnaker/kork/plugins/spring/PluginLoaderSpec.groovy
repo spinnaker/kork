@@ -18,6 +18,9 @@ package com.netflix.spinnaker.kork.plugins.spring
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory
+import com.netflix.spinnaker.kork.plugins.spring.configs.PluginConfiguration
+import com.netflix.spinnaker.kork.plugins.spring.configs.PluginProperties
+import com.netflix.spinnaker.kork.plugins.spring.configs.PluginPropertyDetails
 import org.yaml.snakeyaml.Yaml
 import spock.lang.Specification
 import spock.lang.Subject
@@ -29,7 +32,8 @@ class PluginLoaderSpec extends Specification {
   ByteArrayInputStream inputStream
   ObjectMapper objectMapper
   PluginProperties pluginProperties
-  ArrayList<PluginProperties.PluginConfiguration> pluginConfigurationArrayList
+  PluginPropertyDetails pluginPropertyDetails
+  ArrayList<PluginConfiguration> pluginConfigurationArrayList
 
   @Subject
   PluginLoader subject
@@ -41,21 +45,23 @@ class PluginLoaderSpec extends Specification {
   def "should return enabled plugin paths"() {
     given:
     subject = new PluginLoader(null)
-    PluginProperties.PluginConfiguration pluginConfiguration1 = new PluginProperties.PluginConfiguration("namespace/p1", ["/p1/path"], plugin1Enabled)
-    PluginProperties.PluginConfiguration pluginConfiguration2 = new PluginProperties.PluginConfiguration("namespace/p2", ["/p2/path"], plugin2Enabled)
+    PluginConfiguration pluginConfiguration1 = new PluginConfiguration("namespace/p1", ["/p1/path"], plugin1Enabled)
+    PluginConfiguration pluginConfiguration2 = new PluginConfiguration("namespace/p2", ["/p2/path"], plugin2Enabled)
 
     when:
     pluginConfigurationArrayList = [ pluginConfiguration1, pluginConfiguration2 ]
-    pluginProperties = new PluginProperties(pluginConfigurationArrayList, true)
+    pluginProperties = new PluginProperties(new PluginPropertyDetails( pluginConfigurationArrayList, true))
+    pluginPropertyDetails = pluginProperties.getPluginsPropertyDetails()
+
 
     then:
-    subject.getEnabledJars(pluginProperties) == expected
+    subject.getEnabledJars(pluginPropertyDetails) == expected
 
     where:
     plugin1Enabled | plugin2Enabled | expected
-    true           | false          | [new PluginProperties.PluginConfiguration("namespace/p1", ["/p1/path"], plugin1Enabled)]
-    true           | true           | [new PluginProperties.PluginConfiguration("namespace/p1", ["/p1/path"], plugin1Enabled),
-                                       new PluginProperties.PluginConfiguration("namespace/p2", ["/p2/path"], plugin2Enabled)]
+    true           | false          | [new PluginConfiguration("namespace/p1", ["/p1/path"], plugin1Enabled)]
+    true           | true           | [new PluginConfiguration("namespace/p1", ["/p1/path"], plugin1Enabled),
+                                       new PluginConfiguration("namespace/p2", ["/p2/path"], plugin2Enabled)]
   }
 
   def "can parse plugin configs"() {
@@ -65,21 +71,24 @@ class PluginLoaderSpec extends Specification {
     when:
     def config = [
       plugins: [
+        pluginConfigurations: [
           [name: 'namespace/p1', jars: ["/p1/path"], enabled: plugin1Enabled],
           [name: 'namespace/p2', jars: ["/p2/path"], enabled: plugin2Enabled],
-      ],
-      downloadingEnabled: true
+        ],
+        downloadingEnabled: true
+      ]
     ]
     def configAsYaml = new Yaml().dump(config)
     inputStream = new ByteArrayInputStream(configAsYaml.getBytes())
     pluginConfigurationArrayList = [
-      new PluginProperties.PluginConfiguration("namespace/p1", ["/p1/path"], plugin1Enabled),
-      new PluginProperties.PluginConfiguration("namespace/p2", ["/p2/path"], plugin2Enabled)
+      new PluginConfiguration("namespace/p1", ["/p1/path"], plugin1Enabled),
+      new PluginConfiguration("namespace/p2", ["/p2/path"], plugin2Enabled)
     ]
-    pluginProperties = new PluginProperties(pluginConfigurationArrayList, true)
+    pluginProperties = new PluginProperties(new PluginPropertyDetails(pluginConfigurationArrayList, true))
+    pluginPropertyDetails = pluginProperties.getPluginsPropertyDetails()
 
     then:
-    subject.parsePluginConfigs(inputStream) == pluginProperties
+    subject.parsePluginConfigs(inputStream) == pluginPropertyDetails
 
     where:
     plugin1Enabled | plugin2Enabled
@@ -92,13 +101,14 @@ class PluginLoaderSpec extends Specification {
     subject = new PluginLoader(null)
 
     when:
-    PluginProperties.PluginConfiguration pluginConfiguration1 = new PluginProperties.PluginConfiguration("namespace/p1", plugin1Jars, true)
-    PluginProperties.PluginConfiguration pluginConfiguration2 = new PluginProperties.PluginConfiguration("namespace/p2", plugin2Jars, true)
+    PluginConfiguration pluginConfiguration1 = new PluginConfiguration("namespace/p1", plugin1Jars, true)
+    PluginConfiguration pluginConfiguration2 = new PluginConfiguration("namespace/p2", plugin2Jars, true)
     pluginConfigurationArrayList = [ pluginConfiguration1, pluginConfiguration2 ]
-    pluginProperties = new PluginProperties(pluginConfigurationArrayList, true)
+    pluginProperties = new PluginProperties(new PluginPropertyDetails( pluginConfigurationArrayList, true))
+    pluginPropertyDetails = pluginProperties.getPluginsPropertyDetails()
 
     then:
-    subject.getJarPathsFromPluginConfigurations(pluginProperties.pluginConfigurationList, true) == expected
+    subject.getJarPathsFromPluginConfigurations(pluginPropertyDetails.getPluginConfigurations(), true) == expected
 
     where:
     plugin1Jars | plugin2Jars | expected
@@ -109,11 +119,12 @@ class PluginLoaderSpec extends Specification {
   def "Plugin names should only be unique"() {
     when:
     subject = new PluginLoader(null)
-    PluginProperties.PluginConfiguration pluginConfiguration1 = new PluginProperties.PluginConfiguration("foo/bar", [], true)
-    PluginProperties.PluginConfiguration pluginConfiguration2 = new PluginProperties.PluginConfiguration("foo/bar", [], true)
+    PluginConfiguration pluginConfiguration1 = new PluginConfiguration("foo/bar", [], true)
+    PluginConfiguration pluginConfiguration2 = new PluginConfiguration("foo/bar", [], true)
     pluginConfigurationArrayList = [ pluginConfiguration1, pluginConfiguration2 ]
-    pluginProperties = new PluginProperties(pluginConfigurationArrayList, true)
-    pluginProperties.validate()
+    pluginProperties = new PluginProperties(new PluginPropertyDetails( pluginConfigurationArrayList, true))
+    pluginPropertyDetails = pluginProperties.getPluginsPropertyDetails()
+    pluginPropertyDetails.validate()
 
     then:
     thrown MalformedPluginConfigurationException

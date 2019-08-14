@@ -1,7 +1,7 @@
 plugins:
   downloadingEnabled: true
-  plugins:
+  pluginConfigurations:
   - name: namespace/stage-plugin
     enabled: true
     jars:
-      - /opt/spinnaker/plugins/plugin-1.2.3.jar
+    - /opt/spinnaker/plugins/plugin-1.2.3.jar
