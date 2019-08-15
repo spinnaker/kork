@@ -144,12 +144,28 @@ class PluginLoaderSpec extends Specification {
     "http://example.com/foo-bar-1.2.3.jar"    | new URL("http://example.com/foo-bar-1.2.3.jar")
   }
 
+  def "should throw exception if not a valid JAR location"() {
+    when:
+    subject = new PluginLoader()
+    subject.convertToUrl(jarLocation, true)
+
+    then:
+    thrown(thrownException)
+
+    where:
+    jarLocation | thrownException
+    "foobar"    | MalformedPluginConfigurationException
+    null        | MalformedPluginConfigurationException
+  }
+
+
   def "should use local jars if downloading is disabled "() {
     when:
     subject = new PluginLoader()
 
     then:
     subject.convertToUrl(jarLocation, false) == expected
+
     where:
     jarLocation                               | expected
     "/opt/spinnaker/plugin/foo-bar-1.2.3.jar" | Paths.get("/opt/spinnaker/plugin/foo-bar-1.2.3.jar").toUri().toURL()

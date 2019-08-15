@@ -154,7 +154,7 @@ public class PluginLoader {
         throw new MalformedPluginConfigurationException(
             "Attempting to download jar " + jarLocation + " but downloading is disabled");
       }
-    } catch (MalformedURLException e) {
+    } catch (MalformedURLException | NullPointerException e) {
       throw new MalformedPluginConfigurationException(e);
     }
   }

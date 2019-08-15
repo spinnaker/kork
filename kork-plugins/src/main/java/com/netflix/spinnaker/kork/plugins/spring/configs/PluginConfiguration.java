@@ -18,7 +18,6 @@ package com.netflix.spinnaker.kork.plugins.spring.configs;
 
 import com.netflix.spinnaker.kork.plugins.spring.MalformedPluginConfigurationException;
 import java.util.List;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -29,16 +28,14 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class PluginConfiguration {
 
+  static final Pattern PLUGIN_NAME_PATTERN = Pattern.compile("[a-zA-Z0-9]+\\/[\\w-]+");
+
   public String name;
   List<String> jars;
   public boolean enabled;
 
-  static final String regex = "^[a-zA-Z0-9]+\\/[\\w-]+$";
-  static final Pattern pattern = Pattern.compile(regex);
-
   public void validate() {
-    Matcher matcher = pattern.matcher(name);
-    if (!matcher.find()) {
+    if (!PLUGIN_NAME_PATTERN.matcher(name).matches()) {
       throw new MalformedPluginConfigurationException(
           String.format("Invalid plugin name: %s", name));
     }
