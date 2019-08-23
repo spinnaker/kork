@@ -21,7 +21,6 @@ import lombok.Setter;
 
 /** A root-level marker interface for all exceptions to be thrown by Spinnaker code. */
 @Getter
-@Setter
 public class SpinnakerException extends RuntimeException implements HasAdditionalAttributes {
 
   /**
@@ -39,7 +38,7 @@ public class SpinnakerException extends RuntimeException implements HasAdditiona
    * <p>If the result is NULL, the exception's retry characteristics are undefined and thus retries
    * on the original logic that caused the exception may have undefined behavior.
    */
-  @Nullable private Boolean retryable;
+  @Setter @Nullable private Boolean retryable;
 
   public SpinnakerException() {}
 
