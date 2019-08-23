@@ -17,9 +17,11 @@ package com.netflix.spinnaker.kork.exceptions;
 
 import javax.annotation.Nullable;
 import lombok.Getter;
+import lombok.Setter;
 
 /** A root-level marker interface for all exceptions to be thrown by Spinnaker code. */
 @Getter
+@Setter
 public class SpinnakerException extends RuntimeException implements HasAdditionalAttributes {
 
   /**
