@@ -20,6 +20,13 @@ import com.netflix.spinnaker.kork.archaius.ArchaiusConfiguration;
 import com.netflix.spinnaker.kork.dynamicconfig.TransientConfigConfiguration;
 import com.netflix.spinnaker.kork.eureka.EurekaComponents;
 import com.netflix.spinnaker.kork.metrics.SpectatorConfiguration;
+import com.netflix.spinnaker.kork.version.ManifestVersionResolver;
+import com.netflix.spinnaker.kork.version.ServiceVersion;
+import com.netflix.spinnaker.kork.version.VersionResolver;
+import io.github.resilience4j.retry.RetryRegistry;
+import java.util.List;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 
@@ -30,4 +37,20 @@ import org.springframework.context.annotation.Import;
   EurekaComponents.class,
   SpectatorConfiguration.class,
 })
-public class PlatformComponents {}
+public class PlatformComponents {
+  @Bean
+  ServiceVersion serviceVersion(List<VersionResolver> versionResolvers) {
+    return new ServiceVersion(versionResolvers);
+  }
+
+  @Bean
+  VersionResolver manifestVersionResolver() {
+    return new ManifestVersionResolver();
+  }
+
+  @Bean
+  @ConditionalOnMissingBean(RetryRegistry.class)
+  RetryRegistry retryRegistry() {
+    return RetryRegistry.ofDefaults();
+  }
+}
