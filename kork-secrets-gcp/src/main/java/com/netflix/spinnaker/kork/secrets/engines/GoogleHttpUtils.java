@@ -25,10 +25,10 @@ import java.io.IOException;
 import java.security.GeneralSecurityException;
 import java.util.concurrent.TimeUnit;
 
-public class GoogleCredentials {
+public class GoogleHttpUtils {
 
-  private static final long CONNECT_TIMEOUT = TimeUnit.MINUTES.toMillis(2);
-  private static final long READ_TIMEOUT = TimeUnit.MINUTES.toMillis(2);
+  private static final int CONNECT_TIMEOUT = (int) TimeUnit.MINUTES.toMillis(2);
+  private static final int READ_TIMEOUT = (int) TimeUnit.MINUTES.toMillis(2);
 
   public static HttpTransport buildHttpTransport() {
     try {
@@ -38,23 +38,17 @@ public class GoogleCredentials {
     }
   }
 
-  public static HttpRequestInitializer retryRequestInitializer() {
-    return request -> {
-      request.setConnectTimeout((int) CONNECT_TIMEOUT);
-      request.setReadTimeout((int) READ_TIMEOUT);
-      request.setUnsuccessfulResponseHandler(
-          new HttpBackOffUnsuccessfulResponseHandler(new ExponentialBackOff()));
-    };
-  }
-
-  public static HttpRequestInitializer setHttpTimeout(
+  public static HttpRequestInitializer setTimeoutsAndRetryBehavior(
       final HttpRequestInitializer requestInitializer) {
     return request -> {
       requestInitializer.initialize(request);
-      request.setConnectTimeout((int) CONNECT_TIMEOUT);
-      request.setReadTimeout((int) READ_TIMEOUT);
-      request.setUnsuccessfulResponseHandler(
-          new HttpBackOffUnsuccessfulResponseHandler(new ExponentialBackOff()));
+      request.setConnectTimeout(CONNECT_TIMEOUT);
+      request.setReadTimeout(READ_TIMEOUT);
+      HttpBackOffUnsuccessfulResponseHandler unsuccessfulResponseHandler =
+          new HttpBackOffUnsuccessfulResponseHandler(new ExponentialBackOff());
+      unsuccessfulResponseHandler.setBackOffRequired(
+          HttpBackOffUnsuccessfulResponseHandler.BackOffRequired.ON_SERVER_ERROR);
+      request.setUnsuccessfulResponseHandler(unsuccessfulResponseHandler);
     };
   }
 }

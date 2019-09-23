@@ -25,8 +25,6 @@ import com.google.api.services.storage.StorageScopes;
 import com.netflix.spinnaker.kork.secrets.EncryptedSecret;
 import com.netflix.spinnaker.kork.secrets.InvalidSecretFormatException;
 import com.netflix.spinnaker.kork.secrets.SecretException;
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Collections;
@@ -37,18 +35,26 @@ import org.springframework.stereotype.Component;
 @Component
 @Slf4j
 public class GcsSecretEngine extends AbstractStorageSecretEngine {
-  private static String IDENTIFIER = "gcs";
+  private static final String IDENTIFIER = "gcs";
+  private static final String APPLICATION_NAME = "Spinnaker";
 
-  private Storage applicationDefaultGoogleStorage;
-  private Storage unauthenticatedGoogleStorage;
+  private final Storage googleStorage;
 
   public GcsSecretEngine() {
-    applicationDefaultGoogleStorage = createGoogleStorage(true);
-    unauthenticatedGoogleStorage = createGoogleStorage(false);
+    Storage storage;
+    try {
+      storage = createAuthenticatedStorage();
+    } catch (IOException e) {
+      log.debug(
+          "No application default credential could be loaded for reading GCS secrets. Continuing unauthenticated: {}",
+          e.getMessage());
+      storage = createAnonymousStorage();
+    }
+    this.googleStorage = storage;
   }
 
   public String identifier() {
-    return GcsSecretEngine.IDENTIFIER;
+    return IDENTIFIER;
   }
 
   @Override
@@ -70,61 +76,40 @@ public class GcsSecretEngine extends AbstractStorageSecretEngine {
     String bucket = encryptedSecret.getParams().get(STORAGE_BUCKET);
     String objName = encryptedSecret.getParams().get(STORAGE_FILE_URI);
 
-    ByteArrayOutputStream output = new ByteArrayOutputStream();
     log.info("Getting contents of object {} from bucket {}", objName, bucket);
 
     try {
-      applicationDefaultGoogleStorage
-          .objects()
-          .get(bucket, objName)
-          .executeMediaAndDownloadTo(output);
+      return googleStorage.objects().get(bucket, objName).executeMediaAsInputStream();
     } catch (IOException e) {
-      log.info(
-          "Getting object contents of {} failed. Retrying with no authentication.", objName, e);
-      output = new ByteArrayOutputStream();
-      try {
-        unauthenticatedGoogleStorage
-            .objects()
-            .get(bucket, objName)
-            .executeMediaAndDownloadTo(output);
-      } catch (IOException otherEx) {
-        throw new SecretException(
-            String.format(
-                "Error reading contents of GCS. Bucket: %s, Object: %s.\nError: %s",
-                bucket, objName, otherEx.toString()));
-      }
+      throw new SecretException(
+          String.format(
+              "Error reading contents of GCS. Bucket: %s, Object: %s.\nError: %s",
+              bucket, objName, e.toString()));
     }
-
-    return new ByteArrayInputStream(output.toByteArray());
   }
 
-  private Storage createGoogleStorage(boolean useApplicationDefaultCreds) {
-    JsonFactory jsonFactory = JacksonFactory.getDefaultInstance();
-    String applicationName = "Spinnaker";
-    HttpRequestInitializer requestInitializer;
+  private Storage createAuthenticatedStorage() throws IOException {
+    GoogleCredential credential = GoogleCredential.getApplicationDefault();
+    return commonCreateStorage(credential);
+  }
 
-    try {
-      GoogleCredential credential =
-          useApplicationDefaultCreds
-              ? GoogleCredential.getApplicationDefault()
-              : new GoogleCredential();
-      if (credential.createScopedRequired()) {
-        credential =
-            credential.createScoped(Collections.singleton(StorageScopes.DEVSTORAGE_READ_ONLY));
-      }
-      requestInitializer = GoogleCredentials.setHttpTimeout(credential);
+  private Storage createAnonymousStorage() {
+    GoogleCredential credential = new GoogleCredential();
+    return commonCreateStorage(credential);
+  }
 
-      log.info("Loaded credentials for reading GCS secrets.");
-    } catch (Exception e) {
-      requestInitializer = GoogleCredentials.retryRequestInitializer();
-      log.debug(
-          "No application default credential could be loaded for reading GCS secrets. Continuing unauthenticated: {}",
-          e.getMessage());
+  private Storage commonCreateStorage(GoogleCredential credential) {
+    if (credential.createScopedRequired()) {
+      credential =
+          credential.createScoped(Collections.singleton(StorageScopes.DEVSTORAGE_READ_ONLY));
     }
+    HttpRequestInitializer requestInitializer =
+        GoogleHttpUtils.setTimeoutsAndRetryBehavior(credential);
+    JsonFactory jsonFactory = JacksonFactory.getDefaultInstance();
 
     return new Storage.Builder(
-            GoogleCredentials.buildHttpTransport(), jsonFactory, requestInitializer)
-        .setApplicationName(applicationName)
+            GoogleHttpUtils.buildHttpTransport(), jsonFactory, requestInitializer)
+        .setApplicationName(APPLICATION_NAME)
         .build();
   }
 }
