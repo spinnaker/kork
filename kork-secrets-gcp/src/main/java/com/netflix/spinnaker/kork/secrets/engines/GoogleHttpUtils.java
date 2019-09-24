@@ -27,8 +27,8 @@ import java.util.concurrent.TimeUnit;
 
 class GoogleHttpUtils {
 
-  private static final int CONNECT_TIMEOUT = (int) TimeUnit.MINUTES.toMillis(2);
-  private static final int READ_TIMEOUT = (int) TimeUnit.MINUTES.toMillis(2);
+  private static final int CONNECT_TIMEOUT = (int) TimeUnit.SECONDS.toMillis(20);
+  private static final int READ_TIMEOUT = (int) TimeUnit.SECONDS.toMillis(20);
 
   static HttpTransport buildHttpTransport() {
     try {
