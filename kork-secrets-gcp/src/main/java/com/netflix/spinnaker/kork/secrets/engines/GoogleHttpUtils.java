@@ -25,12 +25,12 @@ import java.io.IOException;
 import java.security.GeneralSecurityException;
 import java.util.concurrent.TimeUnit;
 
-public class GoogleHttpUtils {
+class GoogleHttpUtils {
 
   private static final int CONNECT_TIMEOUT = (int) TimeUnit.MINUTES.toMillis(2);
   private static final int READ_TIMEOUT = (int) TimeUnit.MINUTES.toMillis(2);
 
-  public static HttpTransport buildHttpTransport() {
+  static HttpTransport buildHttpTransport() {
     try {
       return GoogleNetHttpTransport.newTrustedTransport();
     } catch (GeneralSecurityException | IOException e) {
@@ -38,7 +38,7 @@ public class GoogleHttpUtils {
     }
   }
 
-  public static HttpRequestInitializer setTimeoutsAndRetryBehavior(
+  static HttpRequestInitializer setTimeoutsAndRetryBehavior(
       final HttpRequestInitializer requestInitializer) {
     return request -> {
       requestInitializer.initialize(request);
