@@ -16,7 +16,7 @@
 
 package com.netflix.spinnaker.kork.expressions.whitelisting;
 
-import java.net.URL;
+import java.net.URLEncoder;
 import java.text.SimpleDateFormat;
 import java.time.Instant;
 import java.time.LocalDate;
@@ -42,7 +42,7 @@ public class InstantiationTypeRestrictor {
                   LocalDate.class,
                   Instant.class,
                   ChronoUnit.class,
-                  URL.class)));
+                  URLEncoder.class)));
 
   boolean supports(Class<?> type) {
     return allowedTypes.contains(type);
