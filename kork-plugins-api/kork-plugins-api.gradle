@@ -1,7 +1,7 @@
 /*
- * Copyright 2017 Netflix, Inc.
+ * Copyright 2019 Netflix, Inc.
  *
- * Licensed under the Apache License, Version 2.0 (the "License")
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
@@ -14,16 +14,14 @@
  * limitations under the License.
  */
 
-package com.netflix.spinnaker.kork.expressions;
+apply plugin: "java-library"
+apply from: "$rootDir/gradle/kotlin.gradle"
 
-import com.netflix.spinnaker.kork.exceptions.SpinnakerException;
+dependencies {
+  api(platform(project(":spinnaker-dependencies")))
+  api project(":kork-exceptions")
+  api "org.pf4j:pf4j"
+  api "org.springframework.boot:spring-boot-starter"
 
-public class SpelHelperFunctionException extends SpinnakerException {
-  public SpelHelperFunctionException(String message) {
-    super(message);
-  }
-
-  public SpelHelperFunctionException(String message, Throwable cause) {
-    super(message, cause);
-  }
+  testImplementation "org.springframework.boot:spring-boot-starter-test"
 }
