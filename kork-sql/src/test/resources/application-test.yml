@@ -1,0 +1,28 @@
+spring:
+  profiles:
+    active: test
+sql:
+  enabled: true
+  secondary:
+    enabled: true
+    pool-name: secondary
+  connectionPools:
+    default:
+      jdbcUrl: "jdbc:h2:mem:test"
+      default: true
+      user:
+      password:
+    secondary:
+      enabled: true
+      jdbcUrl: "jdbc:h2:mem:test"
+      dialect: H2
+      user:
+      password:
+  migration:
+    jdbcUrl: "jdbc:h2:mem:test"
+    user:
+    password:
+  secondaryMigration:
+    jdbcUrl: "jdbc:h2:mem:test"
+    user:
+    password:
