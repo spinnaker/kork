@@ -23,6 +23,7 @@ import com.netflix.spinnaker.kork.plugins.loaders.SpinnakerDevelopmentPluginLoad
 import com.netflix.spinnaker.kork.plugins.loaders.SpinnakerJarPluginLoader
 import org.pf4j.CompoundPluginLoader
 import org.pf4j.DefaultPluginManager
+import org.pf4j.ExtensionFactory
 import org.pf4j.PluginLoader
 import org.pf4j.PluginDescriptorFinder
 import org.pf4j.PluginStatusProvider
@@ -43,10 +44,23 @@ open class SpinnakerPluginManager(
   pluginsRoot: Path
 ) : DefaultPluginManager(pluginsRoot) {
 
-  init {
-    pluginStatusProvider = statusProvider
-    extensionFactory = SpringExtensionFactory(this, configResolver)
+  private val springExtensionFactory: ExtensionFactory = SpringExtensionFactory(this, configResolver)
+
+  private inner class ExtensionFactoryDelegate() : ExtensionFactory {
+    override fun <T : Any?> create(extensionClass: Class<T>?): T = springExtensionFactory.create(extensionClass)
   }
+
+  private inner class PluginStatusProviderDelegate() : PluginStatusProvider {
+    override fun disablePlugin(pluginId: String?) = statusProvider.disablePlugin(pluginId)
+
+    override fun isPluginDisabled(pluginId: String?): Boolean = statusProvider.isPluginDisabled(pluginId)
+
+    override fun enablePlugin(pluginId: String?) = statusProvider.enablePlugin(pluginId)
+  }
+
+  override fun createExtensionFactory(): ExtensionFactory = ExtensionFactoryDelegate()
+
+  override fun createPluginStatusProvider(): PluginStatusProvider = PluginStatusProviderDelegate()
 
   override fun createPluginLoader(): PluginLoader =
     CompoundPluginLoader()
