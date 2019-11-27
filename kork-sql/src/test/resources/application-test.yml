@@ -1,11 +1,15 @@
 spring:
-  profiles:
-    active: test
+  profiles: test
+
+sql:
+  enabled: false
+
+---
+spring:
+  profiles: twodialects
+
 sql:
   enabled: true
-  secondary:
-    enabled: true
-    pool-name: secondary
   connectionPools:
     default:
       jdbcUrl: "jdbc:h2:mem:test"
@@ -23,6 +27,28 @@ sql:
     user:
     password:
   secondaryMigration:
+    jdbcUrl: "jdbc:h2:mem:test"
+    user:
+    password:
+---
+
+spring:
+  profiles: singledialect
+
+sql:
+  enabled: true
+  connectionPools:
+    default:
+      jdbcUrl: "jdbc:h2:mem:test"
+      default: true
+      user:
+      password:
+    secondary:
+      enabled: true
+      jdbcUrl: "jdbc:h2:mem:test"
+      user:
+      password:
+  migration:
     jdbcUrl: "jdbc:h2:mem:test"
     user:
     password:

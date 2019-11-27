@@ -20,40 +20,76 @@ import com.netflix.spinnaker.kork.PlatformComponents
 import com.netflix.spinnaker.kork.sql.config.DefaultSqlConfiguration
 import com.netflix.spinnaker.kork.sql.config.SqlProperties
 import org.jooq.DSLContext
-import org.junit.Test
-import org.junit.runner.RunWith
+import org.junit.jupiter.api.Test
+
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.context.ApplicationContext
 import org.springframework.context.annotation.Import
 import org.springframework.test.context.ActiveProfiles
-import org.springframework.test.context.junit4.SpringRunner
 import strikt.api.expectThat
 import strikt.assertions.isEqualTo
 import strikt.assertions.isNotNull
+import org.junit.jupiter.api.DisplayName
+import org.junit.jupiter.api.Nested
+import org.springframework.test.context.junit.jupiter.SpringExtension
+import org.junit.jupiter.api.extension.ExtendWith
+import strikt.assertions.isA
 
-@RunWith(SpringRunner::class)
-@ActiveProfiles("test")
-@SpringBootTest(
-  classes = [SqlConfigTestApp::class]
-)
 internal class SqlConfigurationTests {
 
-  @Autowired
-  lateinit var applicationContext: ApplicationContext
+  @Nested
+  @ExtendWith(SpringExtension::class)
+  @ActiveProfiles("test", "twodialects")
+  @SpringBootTest(
+    classes = [SqlConfigTestApp::class]
+  )
+  @DisplayName("Two pools with different dialect.")
+  class MultiDialectTest {
 
-  @Autowired
-  lateinit var sqlProperties: SqlProperties
+    @Autowired
+    lateinit var applicationContext: ApplicationContext
 
-  @Test
-  fun `should have 2 JOOQ configured for both H2 & MYSQL pool`() {
-    expectThat(applicationContext.getBeansOfType(DSLContext::class.java).size).isEqualTo(2)
-    expectThat(sqlProperties.connectionPools.size).isEqualTo(2)
-    expectThat(applicationContext.getBean("jooq")).isNotNull()
-    expectThat(applicationContext.getBean("secondaryJooq")).isNotNull()
-    expectThat(applicationContext.getBean("liquibase")).isNotNull()
-    expectThat(applicationContext.getBean("secondaryLiquibase")).isNotNull()
+    @Autowired
+    lateinit var sqlProperties: SqlProperties
+
+    @Test
+    fun `should have 2 JOOQ configured one for each H2 and MySQL`() {
+      expectThat(applicationContext.getBeansOfType(DSLContext::class.java).size).isEqualTo(2)
+      expectThat(sqlProperties.connectionPools.size).isEqualTo(2)
+      expectThat(applicationContext.getBean("jooq")).isNotNull()
+      expectThat(applicationContext.getBean("jooq")).isA<DSLContext>()
+      expectThat(applicationContext.getBean("secondaryJooq")).isNotNull()
+      expectThat(applicationContext.getBean("secondaryJooq")).isA<DSLContext>()
+      expectThat(applicationContext.getBean("liquibase")).isNotNull()
+      expectThat(applicationContext.getBean("secondaryLiquibase")).isNotNull()
+    }
+  }
+
+  @Nested
+  @ExtendWith(SpringExtension::class)
+  @ActiveProfiles("test", "singledialect")
+  @SpringBootTest(
+    classes = [SqlConfigTestApp::class]
+  )
+  @DisplayName("Two pools with single MYSQL(default) dialect.")
+  class SingleDialectTest {
+
+    @Autowired
+    lateinit var applicationContext: ApplicationContext
+
+    @Autowired
+    lateinit var sqlProperties: SqlProperties
+
+    @Test
+    fun `should have 1 JOOQ configured for MYSQL`() {
+      expectThat(applicationContext.getBeansOfType(DSLContext::class.java).size).isEqualTo(1)
+      expectThat(sqlProperties.connectionPools.size).isEqualTo(2)
+      expectThat(applicationContext.getBean("jooq")).isNotNull()
+      expectThat(applicationContext.getBean("jooq")).isA<DSLContext>()
+      expectThat(applicationContext.getBean("liquibase")).isNotNull()
+    }
   }
 }
 

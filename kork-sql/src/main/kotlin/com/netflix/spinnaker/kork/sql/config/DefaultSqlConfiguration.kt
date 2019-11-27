@@ -74,7 +74,7 @@ class DefaultSqlConfiguration {
     SpringLiquibaseProxy(properties.migration)
 
   @Bean
-  @ConditionalOnProperty("sql.secondaryMigration.jdbcUrl")
+  @ConditionalOnProperty("sql.secondary-migration.jdbc-url")
   fun secondaryLiquibase(properties: SqlProperties): SpringLiquibase =
     SpringLiquibaseProxy(properties.secondaryMigration!!)
 
