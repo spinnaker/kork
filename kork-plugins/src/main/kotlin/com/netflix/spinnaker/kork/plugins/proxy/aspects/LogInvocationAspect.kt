@@ -24,7 +24,7 @@ class LogInvocationAspect : InvocationAspect<LogInvocationState> {
   private val log by lazy { LoggerFactory.getLogger(javaClass) }
 
   override fun supports(invocationState: Class<InvocationState>): Boolean {
-    TODO("not implemented")
+    return invocationState == LogInvocationState::class.java
   }
 
   override fun create(
