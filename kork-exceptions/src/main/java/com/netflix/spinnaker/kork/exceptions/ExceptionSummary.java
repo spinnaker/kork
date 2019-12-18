@@ -21,6 +21,7 @@ import java.util.List;
 import java.util.Map;
 import lombok.Builder;
 import lombok.Getter;
+import lombok.With;
 import lombok.experimental.Wither;
 
 /**
@@ -110,7 +111,7 @@ public class ExceptionSummary {
 
   @Getter
   @Builder
-  @Wither
+  @With
   public static class TraceDetail {
     /** The exception message. */
     private String message;
