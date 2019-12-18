@@ -20,10 +20,10 @@ import com.netflix.spinnaker.kork.plugins.SpinnakerPluginDescriptor
 import org.slf4j.LoggerFactory
 import java.lang.reflect.Method
 
-class LogInvocationAspect : InvocationAspect<LogMethodInvocationState> {
+class LogInvocationAspect : InvocationAspect<LogInvocationState> {
   private val log by lazy { LoggerFactory.getLogger(javaClass) }
 
-  override fun supports(methodInvocationState: Class<MethodInvocationState>): Boolean {
+  override fun supports(invocationState: Class<InvocationState>): Boolean {
     TODO("not implemented")
   }
 
@@ -33,11 +33,11 @@ class LogInvocationAspect : InvocationAspect<LogMethodInvocationState> {
     method: Method,
     args: Array<out Any>?,
     descriptor: SpinnakerPluginDescriptor
-  ): LogMethodInvocationState {
+  ): LogInvocationState {
     TODO("not implemented")
   }
 
-  override fun after(success: Boolean, methodInvocationState: LogMethodInvocationState) {
+  override fun after(success: Boolean, invocationState: LogInvocationState) {
     TODO("not implemented")
   }
 }

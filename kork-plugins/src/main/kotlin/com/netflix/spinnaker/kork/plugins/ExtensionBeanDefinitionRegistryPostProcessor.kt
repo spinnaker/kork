@@ -19,7 +19,7 @@ import com.netflix.spinnaker.kork.exceptions.IntegrationException
 import com.netflix.spinnaker.kork.plugins.events.ExtensionLoaded
 import com.netflix.spinnaker.kork.plugins.proxy.ExtensionInvocationProxy
 import com.netflix.spinnaker.kork.plugins.proxy.aspects.InvocationAspect
-import com.netflix.spinnaker.kork.plugins.proxy.aspects.MethodInvocationState
+import com.netflix.spinnaker.kork.plugins.proxy.aspects.InvocationState
 import com.netflix.spinnaker.kork.plugins.update.PluginUpdateService
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.config.ConfigurableListableBeanFactory
@@ -87,7 +87,7 @@ class ExtensionBeanDefinitionRegistryPostProcessor(
 
         val bean = ExtensionInvocationProxy.proxy(
           pluginManager.extensionFactory.create(extensionClass),
-          invocationAspects as List<InvocationAspect<MethodInvocationState>>,
+          invocationAspects as List<InvocationAspect<InvocationState>>,
           plugin.descriptor as SpinnakerPluginDescriptor)
 
         val beanName = "${plugin.pluginId.replace(".", "")}${extensionClass.simpleName.capitalize()}"

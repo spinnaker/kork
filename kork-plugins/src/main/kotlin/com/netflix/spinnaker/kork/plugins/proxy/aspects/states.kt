@@ -18,14 +18,14 @@ package com.netflix.spinnaker.kork.plugins.proxy.aspects
 
 import com.netflix.spectator.api.Id
 
-interface MethodInvocationState
+interface InvocationState
 
-data class MetricMethodInvocationState(
+data class MetricInvocationState(
   internal val startTime: Long,
   internal val timingId: Id,
   internal val invocationsId: Id
-) : MethodInvocationState
+) : InvocationState
 
-data class LogMethodInvocationState(
+data class LogInvocationState(
   internal val arguments: String
-) : MethodInvocationState
+) : InvocationState

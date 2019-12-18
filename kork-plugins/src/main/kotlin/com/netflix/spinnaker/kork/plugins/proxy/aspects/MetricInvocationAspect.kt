@@ -25,12 +25,12 @@ import java.util.concurrent.TimeUnit
 
 class MetricInvocationAspect(
   private val registry: Registry
-) : InvocationAspect<MetricMethodInvocationState> {
+) : InvocationAspect<MetricInvocationState> {
 
   // TODO(jonsie): Add extension name to metricNamespace or to tags??
 
-  override fun supports(methodInvocationState: Class<MethodInvocationState>): Boolean {
-    return methodInvocationState == MetricMethodInvocationState::class.java
+  override fun supports(invocationState: Class<InvocationState>): Boolean {
+    return invocationState == MetricInvocationState::class.java
   }
 
   override fun create(
@@ -39,21 +39,21 @@ class MetricInvocationAspect(
     method: Method,
     args: Array<out Any>?,
     descriptor: SpinnakerPluginDescriptor
-  ): MetricMethodInvocationState {
-    return MetricMethodInvocationState(
+  ): MetricInvocationState {
+    return MetricInvocationState(
       System.currentTimeMillis(),
       timingId(method, descriptor.pluginId, mapOf(Pair("pluginVersion", descriptor.version))),
       invocationId(method, descriptor.pluginId, mapOf(Pair("pluginVersion", descriptor.version)))
     )
   }
 
-  override fun after(success: Boolean, methodInvocationState: MetricMethodInvocationState) {
+  override fun after(success: Boolean, invocationState: MetricInvocationState) {
     val result = if (success) "success" else "failure"
 
     registry
-      .counter(methodInvocationState.invocationsId.withTag("result", result))
+      .counter(invocationState.invocationsId.withTag("result", result))
       .increment()
-    recordTiming(methodInvocationState.timingId.withTag("result", result), methodInvocationState.startTime)
+    recordTiming(invocationState.timingId.withTag("result", result), invocationState.startTime)
   }
 
   private fun recordTiming(id: Id, startTimeMs: Long) {
