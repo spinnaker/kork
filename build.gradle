@@ -61,13 +61,16 @@ allprojects {
 
       dependencies {
         errorprone("com.google.errorprone:error_prone_core:2.3.4")
-        errorprone("com.uber.nullaway:nullaway:0.7.9")
+//        errorprone("com.uber.nullaway:nullaway:0.7.9")
         errorproneJavac("com.google.errorprone:javac:9+181-r4173-1")
       }
 
       tasks.withType(JavaCompile).configureEach {
         options.errorprone {
-          option("NullAway:AnnotatedPackages", "com.netflix.spinnaker")
+          // These rules crash errorprone
+          disable("ReferenceEquality") // Crashes errorprone
+          disable("BoxedPrimitiveEquality") // Crashes errorprone
+          disable("UnusedVariable") // Crashes errorprone
         }
       }
     }
