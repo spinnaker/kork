@@ -18,6 +18,7 @@ package com.netflix.spinnaker.kork.plugins.spring.actuator
 
 import com.netflix.spinnaker.kork.plugins.SpinnakerPluginDescriptor
 import com.netflix.spinnaker.kork.plugins.SpinnakerPluginManager
+import com.netflix.spinnaker.kork.web.exceptions.NotFoundException
 import dev.minutest.junit.JUnit5Minutests
 import dev.minutest.rootContext
 import io.mockk.every
@@ -46,7 +47,7 @@ class SpinnakerPluginEndpointTest : JUnit5Minutests {
     }
 
     test("endpoint should throw plugin not found exception") {
-      assertThrows<SpinnakerPluginEndpoint.PluginNotFoundException> { (subject.pluginById("abc")) }
+      assertThrows<NotFoundException> { (subject.pluginById("abc")) }
     }
 
     test("endpoint should return plugin with matching pluginId") {

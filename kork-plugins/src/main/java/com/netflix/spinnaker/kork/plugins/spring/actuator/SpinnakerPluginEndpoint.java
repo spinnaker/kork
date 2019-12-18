@@ -17,6 +17,7 @@
 package com.netflix.spinnaker.kork.plugins.spring.actuator;
 
 import com.netflix.spinnaker.kork.plugins.SpinnakerPluginManager;
+import com.netflix.spinnaker.kork.web.exceptions.NotFoundException;
 import java.util.List;
 import java.util.stream.Collectors;
 import org.pf4j.PluginDescriptor;
@@ -24,8 +25,6 @@ import org.pf4j.PluginWrapper;
 import org.springframework.boot.actuate.endpoint.annotation.Endpoint;
 import org.springframework.boot.actuate.endpoint.annotation.ReadOperation;
 import org.springframework.boot.actuate.endpoint.annotation.Selector;
-import org.springframework.http.HttpStatus;
-import org.springframework.web.bind.annotation.ResponseStatus;
 
 @Endpoint(id = "plugins")
 public class SpinnakerPluginEndpoint {
@@ -47,15 +46,8 @@ public class SpinnakerPluginEndpoint {
   public PluginDescriptor pluginById(@Selector String pluginId) {
     PluginWrapper pluginWrapper = pluginManager.getPlugin(pluginId);
     if (pluginWrapper == null) {
-      throw new PluginNotFoundException("Plugin not found: " + pluginId);
+      throw new NotFoundException("Plugin not found: " + pluginId);
     }
     return pluginWrapper.getDescriptor();
-  }
-
-  @ResponseStatus(value = HttpStatus.NOT_FOUND)
-  public static class PluginNotFoundException extends RuntimeException {
-    PluginNotFoundException(String message) {
-      super(message);
-    }
   }
 }
