@@ -24,6 +24,7 @@ import com.fasterxml.jackson.databind.node.MissingNode
 import com.fasterxml.jackson.databind.node.ObjectNode
 import com.fasterxml.jackson.databind.node.TreeTraversingParser
 import com.fasterxml.jackson.dataformat.javaprop.JavaPropsMapper
+import com.fasterxml.jackson.module.kotlin.KotlinModule
 import com.netflix.spinnaker.kork.annotations.Alpha
 import com.netflix.spinnaker.kork.exceptions.IntegrationException
 import com.netflix.spinnaker.kork.exceptions.SystemException
@@ -54,26 +55,24 @@ class SpringEnvironmentExtensionConfigResolver(
   private val mapper = ObjectMapper()
     .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
     .disable(SerializationFeature.FAIL_ON_EMPTY_BEANS)
-    .findAndRegisterModules()
+    .registerModules(KotlinModule())
 
   override fun <T> resolve(coordinates: ConfigCoordinates, expectedType: Class<T>): T {
     val pointer = when (coordinates) {
       is PluginConfigCoordinates ->
         listOf(
-          if (coordinates.pluginNamespace == "undefined") null else coordinates.pluginNamespace,
           coordinates.pluginId,
           "extensions",
-          coordinates.extensionNamespace,
           coordinates.extensionId
-        ).filter { it != null }.let {
-          "/spinnaker/plugins/${it.joinToString("/")}/config"
+        ).let {
+          "/spinnaker/extensibility/plugins/${it.joinToString("/").replace(".", "/")}/config"
         }
       is SystemExtensionConfigCoordinates ->
-        "/spinnaker/extensions/${coordinates.extensionNamespace}/${coordinates.extensionId}/config"
+        "/spinnaker/extensibility/extensions/${coordinates.extensionId.replace(".", "/")}/config"
     }
     log.debug("Searching for config at '$pointer'")
 
-    val tree = mapper.valueToTree<ObjectNode>(environment.propertySourcesAsMap()).at(pointer)
+    val tree = mapper.valueToTree<ObjectNode>(propertySourcesAsMap()).at(pointer)
 
     if (tree is MissingNode) {
       log.debug("Missing configuration for '$coordinates': Loading default")
@@ -97,7 +96,7 @@ class SpringEnvironmentExtensionConfigResolver(
     }
   }
 
-  private fun ConfigurableEnvironment.propertySourcesAsMap(): Map<*, *> {
+  private fun propertySourcesAsMap(): Map<*, *> {
     return environment.propertySources.reversed()
       .filterIsInstance<EnumerablePropertySource<*>>()
       .fold(mutableMapOf<String, Any?>()) { acc, ps ->
@@ -113,7 +112,7 @@ class SpringEnvironmentExtensionConfigResolver(
    */
   private fun EnumerablePropertySource<*>.toRelevantProperties(): Map<String, Any?> =
     propertyNames
-      .filter { it.startsWith("spinnaker.plugins") || it.startsWith("spinnaker.extensions") }
+      .filter { it.startsWith("spinnaker.extensibility") }
       .map { it to getProperty(it) }
       .toMap()
 }

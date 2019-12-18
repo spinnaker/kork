@@ -49,8 +49,28 @@ class TestPluginBuilder(
    * The name of the generated plugin and extension.
    * The plugin will be ${name}TestPlugin and the Extension ${name}TestExtension.
    */
-  val name: String = "Generated"
+  val name: String = "Generated",
+
+  /**
+   * The version of the generated plugin.
+   */
+  val version: String = "0.0.1"
 ) {
+
+  /**
+   * The canonical Plugin class name.
+   */
+  val canonicalPluginClass = "$packageName.${name}TestPlugin"
+
+  /**
+   * The canonical Extension class name.
+   */
+  val canonicalExtensionClass = "$packageName.${name}TestExtension"
+
+  /**
+   * The fully resolved plugin ID.
+   */
+  val pluginId = "spinnaker.${name.toLowerCase()}testplugin"
 
   fun build() {
     val generated = generateSources()
@@ -152,7 +172,7 @@ class TestPluginBuilder(
     import org.pf4j.Extension;
 
     @Extension
-    @SpinnakerExtension(namespace = "spinnaker", id = "${name.toLowerCase()}-test-extension")
+    @SpinnakerExtension(id = "spinnaker.${name.toLowerCase()}-test-extension")
     public class ${name}TestExtension implements TestExtension {
       @Override
       public String getTestValue() {
@@ -163,15 +183,14 @@ class TestPluginBuilder(
 
   private val pluginProperties =
     """
-    plugin.id=spinnaker/${name.toLowerCase()}testplugin
+    plugin.id=$pluginId
     plugin.description=A generated TestPlugin named $name
-    plugin.class=$packageName.${name}TestPlugin
-    plugin.version=0.0.1
+    plugin.class=$canonicalPluginClass
+    plugin.version=$version
     plugin.provider=Spinnaker
     plugin.dependencies=
     plugin.requires=*
     plugin.license=Apache 2.0
     plugin.unsafe=false
-    plugin.namespace=spinnaker
     """.trimIndent()
 }

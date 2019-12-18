@@ -13,13 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package com.netflix.spinnaker.kork.plugins.update
 
-package com.netflix.spinnaker.kork.manageddelivery.model;
+import org.pf4j.PluginManager
+import org.pf4j.update.UpdateManager
+import org.pf4j.update.UpdateRepository
 
-import lombok.Data;
-
-@Data
-public class Artifact {
-  String name;
-  String type;
-}
+/**
+ * TODO(rz): Update [hasPluginUpdate] such that it understands the latest plugin is not always the one desired
+ */
+class SpinnakerUpdateManager(
+  pluginManager: PluginManager,
+  repositories: List<UpdateRepository>
+) : UpdateManager(pluginManager, repositories)

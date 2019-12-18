@@ -15,6 +15,8 @@
  */
 package com.netflix.spinnaker.config;
 
+import java.util.HashMap;
+import java.util.Map;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
@@ -24,7 +26,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  */
 @ConfigurationProperties(PluginsConfigurationProperties.CONFIG_NAMESPACE)
 public class PluginsConfigurationProperties {
-  public static final String CONFIG_NAMESPACE = "spinnaker.plugins";
+  public static final String CONFIG_NAMESPACE = "spinnaker.extensibility";
   public static final String DEFAULT_ROOT_PATH = "plugins";
 
   /**
@@ -35,18 +37,29 @@ public class PluginsConfigurationProperties {
   // Note that this property is not bound at PluginManager initialization time,
   // but is retained here for documentation purposes. Later consumers of this property
   // will see the correctly bound value that was used when initializing the plugin subsystem.
-  private String rootPath = DEFAULT_ROOT_PATH;
+  private String pluginsRootPath = DEFAULT_ROOT_PATH;
 
   // If for some reason we change the associated property name ensure this constant
   // is updated to match. This is the actual value we will read from the environment
   // at init time.
-  public static final String ROOT_PATH_CONFIG = CONFIG_NAMESPACE + ".root-path";
+  public static final String ROOT_PATH_CONFIG = CONFIG_NAMESPACE + ".plugins-root-path";
 
-  public String getRootPath() {
-    return rootPath;
+  public String getPluginsRootPath() {
+    return pluginsRootPath;
   }
 
-  public void setRootPath(String rootPath) {
-    this.rootPath = rootPath;
+  public void setPluginsRootPath(String pluginsRootPath) {
+    this.pluginsRootPath = pluginsRootPath;
+  }
+
+  /**
+   * A definition of repositories for use in plugin downloads.
+   *
+   * <p>The key of this map is the name of the repository.
+   */
+  public Map<String, PluginRepositoryProperties> repositories = new HashMap<>();
+
+  public static class PluginRepositoryProperties {
+    public String url;
   }
 }
