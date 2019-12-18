@@ -6,7 +6,8 @@ apply from: "$rootDir/gradle/lombok.gradle"
 dependencies {
   api(platform(project(":spinnaker-dependencies")))
   api project(":kork-exceptions")
-  api "com.netflix.spectator:spectator-api"
+
+  implementation "com.netflix.spectator:spectator-api"
 
   implementation project(":kork-plugins-spring-api")
 
