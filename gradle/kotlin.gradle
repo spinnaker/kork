@@ -53,6 +53,7 @@ compileKotlin {
 detekt {
   parallel = true
   config = files("$rootDir/.detekt.yml")
+  buildUponDefaultConfig = true
   reports {
     xml {
       enabled = false
