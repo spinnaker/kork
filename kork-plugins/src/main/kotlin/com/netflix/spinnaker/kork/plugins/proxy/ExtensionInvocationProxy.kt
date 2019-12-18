@@ -17,7 +17,7 @@
 package com.netflix.spinnaker.kork.plugins.proxy
 
 import com.netflix.spinnaker.kork.plugins.SpinnakerPluginDescriptor
-import com.netflix.spinnaker.kork.plugins.proxy.aspects.InvocationHolder
+import com.netflix.spinnaker.kork.plugins.proxy.aspects.MethodInvocationState
 import com.netflix.spinnaker.kork.plugins.proxy.aspects.InvocationAspect
 import java.lang.RuntimeException
 import java.lang.reflect.InvocationHandler
@@ -27,13 +27,13 @@ import java.lang.reflect.Proxy
 
 class ExtensionInvocationProxy(
   private val target: Any,
-  private val invocationAspects: List<InvocationAspect<InvocationHolder>>,
+  private val invocationAspects: List<InvocationAspect<MethodInvocationState>>,
   private val pluginDescriptor: SpinnakerPluginDescriptor
 ) : InvocationHandler {
 
   override fun invoke(proxy: Any, method: Method, args: Array<out Any>?): Any {
-    val invocationHolders: MutableSet<InvocationHolder> = mutableSetOf()
-    invocationHolders.create(proxy, method, args)
+    val methodInvocationStates: MutableSet<MethodInvocationState> = mutableSetOf()
+    methodInvocationStates.create(proxy, method, args)
 
     val result: Any
     var success = false
@@ -41,19 +41,41 @@ class ExtensionInvocationProxy(
       result = method.invoke(target, *(args ?: arrayOfNulls<Any>(0)))
       success = true
     } catch (e: InvocationTargetException) {
-      invocationHolders.error(e)
+      methodInvocationStates.error(e)
       throw e.cause ?: RuntimeException("Caught invocation target exception without cause.", e)
     } finally {
-      invocationHolders.after(success)
+      methodInvocationStates.after(success)
     }
 
     return result
   }
 
+  private fun MutableSet<MethodInvocationState>.create(proxy: Any, method: Method, args: Array<out Any>?) {
+    invocationAspects.forEach {
+      this.add(it.create(target, proxy, method, args, pluginDescriptor))
+    }
+  }
+
+  private fun MutableSet<MethodInvocationState>.error(e: InvocationTargetException) {
+    this.forEach { methodInvocationState ->
+      invocationAspects.find {
+        it.supports(methodInvocationState.javaClass)
+      }?.error(e, methodInvocationState)
+    }
+  }
+
+  private fun MutableSet<MethodInvocationState>.after(success: Boolean) {
+    this.forEach { methodInvocationState ->
+      invocationAspects.find {
+        it.supports(methodInvocationState.javaClass)
+      }?.after(success, methodInvocationState)
+    }
+  }
+
   companion object {
     fun proxy(
       target: Any,
-      invocationAspects: List<InvocationAspect<InvocationHolder>>,
+      invocationAspects: List<InvocationAspect<MethodInvocationState>>,
       descriptor: SpinnakerPluginDescriptor
     ): Any {
       return Proxy.newProxyInstance(
@@ -61,28 +83,6 @@ class ExtensionInvocationProxy(
         target.javaClass.interfaces,
         ExtensionInvocationProxy(target, invocationAspects, descriptor)
       )
-    }
-  }
-
-  private fun MutableSet<InvocationHolder>.create(proxy: Any, method: Method, args: Array<out Any>?) {
-    invocationAspects.forEach {
-      this.add(it.create(target, proxy, method, args, pluginDescriptor))
-    }
-  }
-
-  private fun MutableSet<InvocationHolder>.error(e: InvocationTargetException) {
-    this.forEach { holder ->
-      invocationAspects.find {
-        it.supports(holder.javaClass)
-      }?.error(e, holder)
-    }
-  }
-
-  private fun MutableSet<InvocationHolder>.after(success: Boolean) {
-    this.forEach { holder ->
-      invocationAspects.find {
-        it.supports(holder.javaClass)
-      }?.after(success, holder)
     }
   }
 }

@@ -20,20 +20,17 @@ import com.netflix.spectator.api.Id
 import com.netflix.spectator.api.Registry
 import com.netflix.spectator.api.histogram.PercentileTimer
 import com.netflix.spinnaker.kork.plugins.SpinnakerPluginDescriptor
-import org.slf4j.LoggerFactory
 import java.lang.reflect.Method
 import java.util.concurrent.TimeUnit
 
 class MetricInvocationAspect(
   private val registry: Registry
-) : InvocationAspect<MetricInvocationHolder> {
+) : InvocationAspect<MetricMethodInvocationState> {
 
   // TODO(jonsie): Add extension name to metricNamespace or to tags??
 
-  private val log by lazy { LoggerFactory.getLogger(javaClass) }
-
-  override fun supports(invocationHolder: Class<InvocationHolder>): Boolean {
-    return invocationHolder == MetricInvocationHolder::class.java
+  override fun supports(methodInvocationState: Class<MethodInvocationState>): Boolean {
+    return methodInvocationState == MetricMethodInvocationState::class.java
   }
 
   override fun create(
@@ -42,21 +39,21 @@ class MetricInvocationAspect(
     method: Method,
     args: Array<out Any>?,
     descriptor: SpinnakerPluginDescriptor
-  ): MetricInvocationHolder {
-    return MetricInvocationHolder(
+  ): MetricMethodInvocationState {
+    return MetricMethodInvocationState(
       System.currentTimeMillis(),
       timingId(method, descriptor.pluginId, mapOf(Pair("pluginVersion", descriptor.version))),
       invocationId(method, descriptor.pluginId, mapOf(Pair("pluginVersion", descriptor.version)))
     )
   }
 
-  override fun after(success: Boolean, invocationHolder: MetricInvocationHolder) {
+  override fun after(success: Boolean, methodInvocationState: MetricMethodInvocationState) {
     val result = if (success) "success" else "failure"
 
     registry
-      .counter(invocationHolder.invocationsId.withTag("result", result))
+      .counter(methodInvocationState.invocationsId.withTag("result", result))
       .increment()
-    recordTiming(invocationHolder.timingId.withTag("result", result), invocationHolder.startTime)
+    recordTiming(methodInvocationState.timingId.withTag("result", result), methodInvocationState.startTime)
   }
 
   private fun recordTiming(id: Id, startTimeMs: Long) {

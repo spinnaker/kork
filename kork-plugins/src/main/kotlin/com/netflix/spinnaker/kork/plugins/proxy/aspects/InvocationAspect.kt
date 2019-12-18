@@ -23,12 +23,12 @@ import java.lang.reflect.Method
 /**
  * An aspect to add to the InvocationHandler invoke lifecycle
  */
-interface InvocationAspect<I : InvocationHolder> {
+interface InvocationAspect<I : MethodInvocationState> {
 
   /**
    * Determines if this instance supports the specified InvocationHandlerAspectHolder type
    */
-  fun supports(invocationHolder: Class<InvocationHolder>): Boolean
+  fun supports(methodInvocationState: Class<MethodInvocationState>): Boolean
 
   /**
    * Creates the InvocationHolder instance, to store state about the invocation
@@ -38,11 +38,11 @@ interface InvocationAspect<I : InvocationHolder> {
   /**
    * After method invocation, runs in a finally block
    */
-  fun after(success: Boolean, invocationHolder: I)
+  fun after(success: Boolean, methodInvocationState: I)
 
   /**
    * If the method ivocation threw an InvocationTargetException, apply some additional processing if
    * desired.
    */
-  fun error(e: InvocationTargetException, invocationHolder: I) { /* default implementation */ }
+  fun error(e: InvocationTargetException, methodInvocationState: I) { /* default implementation */ }
 }

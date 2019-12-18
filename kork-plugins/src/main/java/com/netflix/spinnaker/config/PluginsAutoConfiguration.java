@@ -24,7 +24,7 @@ import com.netflix.spinnaker.kork.plugins.SpringPluginStatusProvider;
 import com.netflix.spinnaker.kork.plugins.config.ConfigResolver;
 import com.netflix.spinnaker.kork.plugins.config.SpringEnvironmentExtensionConfigResolver;
 import com.netflix.spinnaker.kork.plugins.proxy.aspects.InvocationAspect;
-import com.netflix.spinnaker.kork.plugins.proxy.aspects.InvocationHolder;
+import com.netflix.spinnaker.kork.plugins.proxy.aspects.MethodInvocationState;
 import com.netflix.spinnaker.kork.plugins.proxy.aspects.MetricInvocationAspect;
 import com.netflix.spinnaker.kork.plugins.update.PluginUpdateService;
 import com.netflix.spinnaker.kork.plugins.update.SpinnakerUpdateManager;
@@ -117,7 +117,7 @@ public class PluginsAutoConfiguration {
       SpinnakerPluginManager pluginManager,
       PluginUpdateService updateManagerService,
       ApplicationEventPublisher applicationEventPublisher,
-      List<InvocationAspect<? extends InvocationHolder>> invocationAspects) {
+      List<InvocationAspect<? extends MethodInvocationState>> invocationAspects) {
     return new ExtensionBeanDefinitionRegistryPostProcessor(
         pluginManager, updateManagerService, applicationEventPublisher, invocationAspects);
   }
