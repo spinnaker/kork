@@ -22,6 +22,7 @@ import com.netflix.spinnaker.kork.plugins.SpinnakerPluginManager;
 import com.netflix.spinnaker.kork.plugins.SpringPluginStatusProvider;
 import com.netflix.spinnaker.kork.plugins.config.ConfigResolver;
 import com.netflix.spinnaker.kork.plugins.config.SpringEnvironmentExtensionConfigResolver;
+import com.netflix.spinnaker.kork.plugins.spring.actuator.SpinnakerPluginEndPoint;
 import com.netflix.spinnaker.kork.plugins.update.PluginUpdateService;
 import com.netflix.spinnaker.kork.plugins.update.SpinnakerUpdateManager;
 import java.net.MalformedURLException;
@@ -110,5 +111,11 @@ public class PluginsAutoConfiguration {
       ApplicationEventPublisher applicationEventPublisher) {
     return new ExtensionBeanDefinitionRegistryPostProcessor(
         pluginManager, updateManagerService, applicationEventPublisher);
+  }
+
+  @Bean
+  public static SpinnakerPluginEndPoint spinnakerPluginEndPoint(
+      SpinnakerPluginManager pluginManager) {
+    return new SpinnakerPluginEndPoint(pluginManager);
   }
 }
