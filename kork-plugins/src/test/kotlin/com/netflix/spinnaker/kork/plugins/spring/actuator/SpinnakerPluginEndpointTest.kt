@@ -30,14 +30,14 @@ import strikt.api.expectThat
 import strikt.assertions.isA
 import strikt.assertions.isEqualTo
 
-class SpinnakerPluginEndPointTest : JUnit5Minutests {
+class SpinnakerPluginEndpointTest : JUnit5Minutests {
 
   fun tests() = rootContext<Fixture> {
     fixture {
       Fixture()
     }
 
-    test("end point should return list of plugins") {
+    test("endpoint should return list of plugins") {
       expectThat(subject.plugins())
         .isA<List<PluginDescriptor>>()
         .and {
@@ -45,11 +45,11 @@ class SpinnakerPluginEndPointTest : JUnit5Minutests {
         }
     }
 
-    test("end point should throw plugin not found exception") {
-      assertThrows<SpinnakerPluginEndPoint.PluginNotFoundException> { (subject.pluginById("abc")) }
+    test("endpoint should throw plugin not found exception") {
+      assertThrows<SpinnakerPluginEndpoint.PluginNotFoundException> { (subject.pluginById("abc")) }
     }
 
-    test("end point should return plugin with matching pluginId") {
+    test("endpoint should return plugin with matching pluginId") {
       expectThat(subject.pluginById("test"))
         .isA<PluginDescriptor>()
         .and {
@@ -60,7 +60,7 @@ class SpinnakerPluginEndPointTest : JUnit5Minutests {
 
   private inner class Fixture {
     val pluginManager: SpinnakerPluginManager = mockk(relaxed = true)
-    val subject = SpinnakerPluginEndPoint(pluginManager)
+    val subject = SpinnakerPluginEndpoint(pluginManager)
 
     init {
       val pluginWrapper = PluginWrapper(pluginManager, SpinnakerPluginDescriptor(DefaultPluginDescriptor("test", "", "", "", "", "", "")), null, this.javaClass.classLoader)

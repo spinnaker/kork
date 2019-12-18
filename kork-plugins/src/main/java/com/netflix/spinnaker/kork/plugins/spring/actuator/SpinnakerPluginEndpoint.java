@@ -27,12 +27,12 @@ import org.springframework.boot.actuate.endpoint.annotation.Selector;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ResponseStatus;
 
-@Endpoint(id = "spinnakerplugins")
-public class SpinnakerPluginEndPoint {
+@Endpoint(id = "plugins")
+public class SpinnakerPluginEndpoint {
 
   private final SpinnakerPluginManager pluginManager;
 
-  public SpinnakerPluginEndPoint(SpinnakerPluginManager pluginManager) {
+  public SpinnakerPluginEndpoint(SpinnakerPluginManager pluginManager) {
     this.pluginManager = pluginManager;
   }
 
