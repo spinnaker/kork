@@ -17,11 +17,15 @@ package com.netflix.spinnaker.config;
 
 import static java.lang.String.format;
 
+import com.netflix.spectator.api.Registry;
 import com.netflix.spinnaker.kork.plugins.ExtensionBeanDefinitionRegistryPostProcessor;
 import com.netflix.spinnaker.kork.plugins.SpinnakerPluginManager;
 import com.netflix.spinnaker.kork.plugins.SpringPluginStatusProvider;
 import com.netflix.spinnaker.kork.plugins.config.ConfigResolver;
 import com.netflix.spinnaker.kork.plugins.config.SpringEnvironmentExtensionConfigResolver;
+import com.netflix.spinnaker.kork.plugins.proxy.aspects.InvocationAspect;
+import com.netflix.spinnaker.kork.plugins.proxy.aspects.InvocationHolder;
+import com.netflix.spinnaker.kork.plugins.proxy.aspects.MetricInvocationAspect;
 import com.netflix.spinnaker.kork.plugins.update.PluginUpdateService;
 import com.netflix.spinnaker.kork.plugins.update.SpinnakerUpdateManager;
 import java.net.MalformedURLException;
@@ -104,11 +108,17 @@ public class PluginsAutoConfiguration {
   }
 
   @Bean
+  public static MetricInvocationAspect metricInvocationAspect(Registry registry) {
+    return new MetricInvocationAspect(registry);
+  }
+
+  @Bean
   public static ExtensionBeanDefinitionRegistryPostProcessor pluginBeanPostProcessor(
       SpinnakerPluginManager pluginManager,
       PluginUpdateService updateManagerService,
-      ApplicationEventPublisher applicationEventPublisher) {
+      ApplicationEventPublisher applicationEventPublisher,
+      List<InvocationAspect<? extends InvocationHolder>> invocationAspects) {
     return new ExtensionBeanDefinitionRegistryPostProcessor(
-        pluginManager, updateManagerService, applicationEventPublisher);
+        pluginManager, updateManagerService, applicationEventPublisher, invocationAspects);
   }
 }
