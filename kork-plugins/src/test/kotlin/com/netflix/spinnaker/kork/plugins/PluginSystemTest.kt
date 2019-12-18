@@ -16,6 +16,7 @@
 package com.netflix.spinnaker.kork.plugins
 
 import com.netflix.spinnaker.config.PluginsAutoConfiguration
+import com.netflix.spinnaker.config.PluginsConfigurationProperties
 import com.netflix.spinnaker.kork.plugins.finders.SpinnakerPropertiesPluginDescriptorFinder
 import com.netflix.spinnaker.kork.plugins.testplugin.TestPluginBuilder
 import com.netflix.spinnaker.kork.plugins.testplugin.api.TestExtension
@@ -108,12 +109,20 @@ class PluginSystemTest : JUnit5Minutests {
           expectThat(extensions.values.first().testValue).isEqualTo("${testPluginName}TestExtension")
         }
       }
+
+      test("pluginAutoConfiguration not working") {
+        app.run { ctx: AssertableApplicationContext ->
+          val pluginsConfigurationProperties = ctx.getBean(PluginsConfigurationProperties::class.java)
+          expectThat(pluginsConfigurationProperties.repositories).isNotEmpty()
+        }
+      }
     }
   }
 
   private inner class GeneratedPluginFixture {
     val app = ApplicationContextRunner()
       .withPropertyValues(
+        "spinnaker.extensibility.repositories.myRepository.url=repo.org",
         "spinnaker.extensibility.plugins-root-path=${pluginsDir.toAbsolutePath()}",
         "spinnaker.extensibility.plugins.${descriptor.pluginId}.enabled=true")
       .withConfiguration(AutoConfigurations.of(PluginsAutoConfiguration::class.java))
