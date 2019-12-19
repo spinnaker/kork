@@ -25,6 +25,7 @@ import com.netflix.spinnaker.kork.plugins.config.ConfigResolver;
 import com.netflix.spinnaker.kork.plugins.config.SpringEnvironmentExtensionConfigResolver;
 import com.netflix.spinnaker.kork.plugins.proxy.aspects.InvocationAspect;
 import com.netflix.spinnaker.kork.plugins.proxy.aspects.InvocationState;
+import com.netflix.spinnaker.kork.plugins.proxy.aspects.LogInvocationAspect;
 import com.netflix.spinnaker.kork.plugins.proxy.aspects.MetricInvocationAspect;
 import com.netflix.spinnaker.kork.plugins.spring.actuator.SpinnakerPluginEndpoint;
 import com.netflix.spinnaker.kork.plugins.update.PluginUpdateService;
@@ -113,6 +114,11 @@ public class PluginsAutoConfiguration {
   @Bean
   public static MetricInvocationAspect metricInvocationAspect(Registry registry) {
     return new MetricInvocationAspect(registry);
+  }
+
+  @Bean
+  public static LogInvocationAspect logInvocationAspect() {
+    return new LogInvocationAspect();
   }
 
   @Bean

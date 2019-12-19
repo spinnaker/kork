@@ -31,5 +31,6 @@ data class MetricInvocationState(
 ) : InvocationState
 
 data class LogInvocationState(
-  internal val arguments: String
+  internal val extensionName: String,
+  internal val methodName: String
 ) : InvocationState

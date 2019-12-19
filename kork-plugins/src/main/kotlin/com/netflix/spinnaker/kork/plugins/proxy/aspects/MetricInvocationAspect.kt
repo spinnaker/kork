@@ -41,7 +41,7 @@ class MetricInvocationAspect(
     args: Array<out Any>?,
     descriptor: SpinnakerPluginDescriptor
   ): MetricInvocationState {
-    val metricIds = methodMetricIds.getOrCache(target, method, descriptor)
+    val metricIds = methodMetricIds.getOrPut(target, method, descriptor)
 
     return MetricInvocationState(
       startTimeMs = System.currentTimeMillis(),
@@ -80,7 +80,7 @@ class MetricInvocationAspect(
     return String.format("%s.%s.%s", metricNamespace, methodName, metricName)
   }
 
-  private fun ConcurrentHashMap<Method, MetricIds>.getOrCache(
+  private fun ConcurrentHashMap<Method, MetricIds>.getOrPut(
     target: Any,
     method: Method,
     descriptor: SpinnakerPluginDescriptor

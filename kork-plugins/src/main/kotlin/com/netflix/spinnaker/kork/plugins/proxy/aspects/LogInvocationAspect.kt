@@ -21,6 +21,12 @@ import org.slf4j.LoggerFactory
 import java.lang.reflect.InvocationTargetException
 import java.lang.reflect.Method
 
+/**
+ * Logs the invoked extension and method name.
+ *
+ * TODO(jonsie): The logger name could be mapped to the extension class and there could be
+ * additional details logged (like arguments) based on configuration.  Room for improvement.
+ */
 class LogInvocationAspect : InvocationAspect<LogInvocationState> {
   private val log by lazy { LoggerFactory.getLogger(javaClass) }
 
@@ -35,14 +41,26 @@ class LogInvocationAspect : InvocationAspect<LogInvocationState> {
     args: Array<out Any>?,
     descriptor: SpinnakerPluginDescriptor
   ): LogInvocationState {
-    LoggerFactory.getLogger(target.javaClass)
-    TODO("not implemented")
+    val logInvocationState = LogInvocationState(
+      extensionName = target.javaClass.simpleName.toString(),
+      methodName = method.name
+    )
+
+    log.trace("Invoking method={} on extension={}", logInvocationState.methodName,
+      logInvocationState.extensionName)
+
+    return logInvocationState
   }
 
   override fun after(success: Boolean, invocationState: LogInvocationState) {
-    TODO("not implemented")
+    val status = if (success) "Successful" else "Failed"
+
+    log.trace("{} execution of method={} on extension={}", status, invocationState.extensionName,
+      invocationState.methodName)
   }
 
   override fun error(e: InvocationTargetException, invocationState: LogInvocationState) {
+    log.error("Error invoking method={} on extension={}", invocationState.methodName,
+      invocationState.extensionName, e.cause)
   }
 }
