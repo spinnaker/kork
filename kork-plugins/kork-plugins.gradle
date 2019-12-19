@@ -15,6 +15,7 @@ dependencies {
   implementation "org.pf4j:pf4j-update"
 
   implementation "org.springframework.boot:spring-boot-starter-web"
+  implementation "org.springframework.boot:spring-boot-starter-actuator"
   implementation("com.google.guava:guava")
 
   implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml")
@@ -29,4 +30,8 @@ dependencies {
 
   testRuntimeOnly "cglib:cglib-nodep"
   testRuntimeOnly "org.objenesis:objenesis"
+}
+
+compileJava {
+  options.compilerArgs << '-parameters'
 }

@@ -26,6 +26,7 @@ import com.netflix.spinnaker.kork.plugins.config.SpringEnvironmentExtensionConfi
 import com.netflix.spinnaker.kork.plugins.proxy.aspects.InvocationAspect;
 import com.netflix.spinnaker.kork.plugins.proxy.aspects.InvocationState;
 import com.netflix.spinnaker.kork.plugins.proxy.aspects.MetricInvocationAspect;
+import com.netflix.spinnaker.kork.plugins.spring.actuator.SpinnakerPluginEndpoint;
 import com.netflix.spinnaker.kork.plugins.update.PluginUpdateService;
 import com.netflix.spinnaker.kork.plugins.update.SpinnakerUpdateManager;
 import java.net.MalformedURLException;
@@ -103,8 +104,10 @@ public class PluginsAutoConfiguration {
 
   @Bean
   public static PluginUpdateService pluginUpdateManagerAgent(
-      UpdateManager updateManager, SpinnakerPluginManager pluginManager) {
-    return new PluginUpdateService(updateManager, pluginManager);
+      UpdateManager updateManager,
+      SpinnakerPluginManager pluginManager,
+      ApplicationEventPublisher applicationEventPublisher) {
+    return new PluginUpdateService(updateManager, pluginManager, applicationEventPublisher);
   }
 
   @Bean
@@ -120,5 +123,11 @@ public class PluginsAutoConfiguration {
       List<InvocationAspect<? extends InvocationState>> invocationAspects) {
     return new ExtensionBeanDefinitionRegistryPostProcessor(
         pluginManager, updateManagerService, applicationEventPublisher, invocationAspects);
+  }
+
+  @Bean
+  public static SpinnakerPluginEndpoint spinnakerPluginEndPoint(
+      SpinnakerPluginManager pluginManager) {
+    return new SpinnakerPluginEndpoint(pluginManager);
   }
 }
