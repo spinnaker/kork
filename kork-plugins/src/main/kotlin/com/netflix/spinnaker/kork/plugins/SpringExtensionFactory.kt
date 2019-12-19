@@ -26,9 +26,7 @@ import org.pf4j.ExtensionFactory
 import org.pf4j.PluginRuntimeException
 import org.pf4j.PluginWrapper
 import org.slf4j.LoggerFactory
-import org.springframework.context.annotation.AnnotationConfigApplicationContext
 import org.springframework.core.ResolvableType
-import org.springframework.core.env.StandardEnvironment
 import java.lang.reflect.InvocationTargetException
 
 /**
@@ -51,15 +49,13 @@ class SpringExtensionFactory(
     // and we can finalize its loading and return immediately.
     val pluginWrapper = pluginManager.whichPlugin(extensionClass) ?: return finalizeSystemExtension(extension, annot)
 
-    // If the plugin is a SpringPlugin, we'll create an [ApplicationContext] for it and autowire the extension
+    // If the plugin is a safe SpringPlugin, we'll autowire the extension
     val plugin = pluginWrapper.plugin
     if (plugin is SpringPlugin) {
-      val applicationContext = getApplicationContext(pluginWrapper, plugin)
-
-      plugin.applicationContext = applicationContext
-      plugin.initApplicationContext()
-      plugin.applicationContext.refresh()
-      plugin.applicationContext.autowireCapableBeanFactory.autowireBean(extension)
+      if (!!pluginWrapper.isUnsafe()) {
+        plugin.applicationContext.refresh()
+        plugin.applicationContext.autowireCapableBeanFactory.autowireBean(extension)
+      }
     }
 
     // Finally, load the config according to the [SpinnakerExtension] settings
@@ -151,20 +147,6 @@ class SpringExtensionFactory(
       log.error(e.message, e)
     }
     return null
-  }
-
-  private fun getApplicationContext(
-    pluginWrapper: PluginWrapper,
-    plugin: SpringPlugin
-  ): AnnotationConfigApplicationContext {
-    return if (pluginWrapper.isUnsafe()) {
-      TODO("Need to pass the parent application context here")
-    } else {
-      AnnotationConfigApplicationContext().also {
-        it.classLoader = plugin.wrapper.pluginClassLoader
-        it.environment = StandardEnvironment()
-      }
-    }
   }
 
   private fun PluginWrapper.getCoordinates(): PluginCoordinates =

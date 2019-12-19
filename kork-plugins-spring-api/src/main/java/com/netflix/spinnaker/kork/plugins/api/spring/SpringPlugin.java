@@ -20,7 +20,6 @@ import com.netflix.spinnaker.kork.annotations.VisibleForTesting;
 import org.pf4j.Plugin;
 import org.pf4j.PluginWrapper;
 import org.springframework.context.ApplicationContext;
-import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 
 /**
  * Allows a plugin to use its own Spring {@link ApplicationContext}.
@@ -30,7 +29,7 @@ import org.springframework.context.annotation.AnnotationConfigApplicationContext
 @Alpha
 public abstract class SpringPlugin extends Plugin {
 
-  private AnnotationConfigApplicationContext applicationContext;
+  private SpringContextAndRegistry applicationContext;
 
   /**
    * Constructor to be used by plugin manager for plugin instantiation. Your plugins have to provide
@@ -46,12 +45,12 @@ public abstract class SpringPlugin extends Plugin {
   public abstract void initApplicationContext();
 
   /** @param applicationContext The {@link ApplicationContext} for the plugin. */
-  public void setApplicationContext(AnnotationConfigApplicationContext applicationContext) {
+  public void setApplicationContext(SpringContextAndRegistry applicationContext) {
     this.applicationContext = applicationContext;
   }
 
   @VisibleForTesting
-  public AnnotationConfigApplicationContext getApplicationContext() {
+  public SpringContextAndRegistry getApplicationContext() {
     return this.applicationContext;
   }
 

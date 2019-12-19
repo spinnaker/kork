@@ -27,7 +27,9 @@ import org.pf4j.ExtensionPoint
 import org.pf4j.PluginWrapper
 import org.springframework.beans.factory.config.ConfigurableListableBeanFactory
 import org.springframework.context.ApplicationEventPublisher
+import org.springframework.context.annotation.AnnotationConfigApplicationContext
 import org.springframework.context.support.GenericApplicationContext
+import org.springframework.core.env.StandardEnvironment
 
 class ExtensionBeanDefinitionRegistryPostProcessorTest : JUnit5Minutests {
 
@@ -104,7 +106,10 @@ class ExtensionBeanDefinitionRegistryPostProcessorTest : JUnit5Minutests {
     val applicationEventPublisher: ApplicationEventPublisher = mockk(relaxed = true)
     val pluginDescriptor: SpinnakerPluginDescriptor = mockk(relaxed = true)
 
-    val subject = ExtensionBeanDefinitionRegistryPostProcessor(pluginManager, updateService, applicationEventPublisher)
+    val subject = ExtensionBeanDefinitionRegistryPostProcessor(pluginManager, updateService, applicationEventPublisher,
+      SpringContextAndRegistryDelegator(AnnotationConfigApplicationContext().also {
+        it.environment = StandardEnvironment()
+      }))
 
     init {
       every { extensionFactory.create(eq(FooExtension::class.java)) } returns FooExtension()

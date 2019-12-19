@@ -19,7 +19,6 @@ import dev.minutest.junit.JUnit5Minutests
 import dev.minutest.rootContext
 import io.mockk.mockk
 import io.mockk.verify
-import org.springframework.context.annotation.AnnotationConfigApplicationContext
 
 class SpringPluginTest : JUnit5Minutests {
 
@@ -35,7 +34,7 @@ class SpringPluginTest : JUnit5Minutests {
   }
 
   private inner class Fixture {
-    val applicationContext: AnnotationConfigApplicationContext = mockk(relaxed = true)
+    val applicationContext: SpringContextAndRegistry = mockk(relaxed = true)
     val plugin: SpringPlugin = TestSpringPlugin(mockk(relaxed = true)).also {
       it.applicationContext = applicationContext
     }

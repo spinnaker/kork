@@ -16,13 +16,20 @@
 package com.netflix.spinnaker.kork.plugins
 
 import com.netflix.spinnaker.kork.exceptions.IntegrationException
+import com.netflix.spinnaker.kork.plugins.api.spring.SpringPlugin
 import com.netflix.spinnaker.kork.plugins.events.ExtensionLoaded
 import com.netflix.spinnaker.kork.plugins.update.PluginUpdateService
+import org.pf4j.PluginWrapper
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.config.ConfigurableListableBeanFactory
 import org.springframework.beans.factory.support.BeanDefinitionRegistry
 import org.springframework.beans.factory.support.BeanDefinitionRegistryPostProcessor
+import org.springframework.context.ApplicationContext
 import org.springframework.context.ApplicationEventPublisher
+import org.springframework.context.ConfigurableApplicationContext
+import org.springframework.context.annotation.AnnotationConfigApplicationContext
+import org.springframework.context.annotation.AnnotationConfigRegistry
+import org.springframework.core.env.StandardEnvironment
 
 /**
  * The primary point of integration between PF4J and Spring, this class is invoked early
@@ -32,7 +39,8 @@ import org.springframework.context.ApplicationEventPublisher
 class ExtensionBeanDefinitionRegistryPostProcessor(
   private val pluginManager: SpinnakerPluginManager,
   private val updateManagerService: PluginUpdateService,
-  private val applicationEventPublisher: ApplicationEventPublisher
+  private val applicationEventPublisher: ApplicationEventPublisher,
+  private val ctx: ApplicationContext?
 ) : BeanDefinitionRegistryPostProcessor {
 
   private val log by lazy { LoggerFactory.getLogger(javaClass) }
@@ -67,27 +75,45 @@ class ExtensionBeanDefinitionRegistryPostProcessor(
     }
 
     log.debug("Creating plugin extensions")
-    pluginManager.startedPlugins.forEach { plugin ->
-      if (plugin.isUnsafe()) return@forEach
-      log.debug("Creating extensions for plugin '{}'", plugin.pluginId)
-      pluginManager.getExtensionClassNames(plugin.pluginId).forEach {
-        log.debug("Creating extension '{}' for plugin '{}'", it, plugin.pluginId)
-
-        val extensionClass = try {
-          plugin.pluginClassLoader.loadClass(it)
-        } catch (e: ClassNotFoundException) {
-          throw IntegrationException("Could not find extension class '$it' for plugin '${plugin.pluginId}'", e)
-        }
-
-        val bean = pluginManager.extensionFactory.create(extensionClass)
-        val beanName = "${plugin.pluginId.replace(".", "")}${extensionClass.simpleName.capitalize()}"
-
-        beanFactory.registerSingleton(beanName, bean)
-
-        applicationEventPublisher.publishEvent(
-          ExtensionLoaded(this, beanName, extensionClass, plugin.descriptor as SpinnakerPluginDescriptor)
-        )
+    pluginManager.startedPlugins.forEach { pluginWrapper ->
+      val applicationContext = createSpringContext(pluginWrapper)
+      val plugin = pluginWrapper.plugin
+      if (plugin is SpringPlugin) {
+        plugin.applicationContext = applicationContext
+        plugin.initApplicationContext()
       }
+      if (!pluginWrapper.isUnsafe()) {
+        log.debug("Creating extensions for pluginWrapper '{}'", pluginWrapper.pluginId)
+        pluginManager.getExtensionClassNames(pluginWrapper.pluginId).forEach {
+          log.debug("Creating extension '{}' for pluginWrapper '{}'", it, pluginWrapper.pluginId)
+
+          val extensionClass = try {
+            pluginWrapper.pluginClassLoader.loadClass(it)
+          } catch (e: ClassNotFoundException) {
+            throw IntegrationException("Could not find extension class '$it' for pluginWrapper '${pluginWrapper.pluginId}'", e)
+          }
+
+          val bean = pluginManager.extensionFactory.create(extensionClass)
+          val beanName = "${pluginWrapper.pluginId.replace(".", "")}${extensionClass.simpleName.capitalize()}"
+
+          beanFactory.registerSingleton(beanName, bean)
+
+          applicationEventPublisher.publishEvent(
+            ExtensionLoaded(this, beanName, extensionClass, pluginWrapper.descriptor as SpinnakerPluginDescriptor)
+          )
+        }
+      }
+    }
+  }
+
+  private fun createSpringContext(pluginWrapper: PluginWrapper): SpringContextAndRegistryDelegator {
+    return if (pluginWrapper.isUnsafe()) {
+      SpringContextAndRegistryDelegator(ctx as ConfigurableApplicationContext, ctx as AnnotationConfigRegistry)
+    } else {
+      SpringContextAndRegistryDelegator(AnnotationConfigApplicationContext().also {
+        it.classLoader = pluginWrapper.pluginClassLoader
+        it.environment = StandardEnvironment()
+      })
     }
   }
 }

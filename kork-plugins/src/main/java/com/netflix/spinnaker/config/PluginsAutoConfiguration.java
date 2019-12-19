@@ -39,6 +39,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.BeanCreationException;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -110,9 +111,10 @@ public class PluginsAutoConfiguration {
   public static ExtensionBeanDefinitionRegistryPostProcessor pluginBeanPostProcessor(
       SpinnakerPluginManager pluginManager,
       PluginUpdateService updateManagerService,
-      ApplicationEventPublisher applicationEventPublisher) {
+      ApplicationEventPublisher applicationEventPublisher,
+      ApplicationContext ctx) {
     return new ExtensionBeanDefinitionRegistryPostProcessor(
-        pluginManager, updateManagerService, applicationEventPublisher);
+        pluginManager, updateManagerService, applicationEventPublisher, ctx);
   }
 
   @Bean
