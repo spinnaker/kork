@@ -25,6 +25,10 @@ import java.lang.reflect.InvocationTargetException
 import java.lang.reflect.Method
 import java.lang.reflect.Proxy
 
+/**
+ * The invocation proxy for extensions.  Supports a list of [InvocationAspect] objects which
+ * provides a pattern for instrumenting method invocation.
+ */
 class ExtensionInvocationProxy(
   private val target: Any,
   private val invocationAspects: List<InvocationAspect<InvocationState>>,
@@ -52,7 +56,7 @@ class ExtensionInvocationProxy(
 
   private fun MutableSet<InvocationState>.create(proxy: Any, method: Method, args: Array<out Any>?) {
     invocationAspects.forEach {
-      this.add(it.create(target, proxy, method, args, pluginDescriptor))
+      this.add(it.createState(target, proxy, method, args, pluginDescriptor))
     }
   }
 

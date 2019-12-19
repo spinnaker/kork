@@ -18,6 +18,7 @@ package com.netflix.spinnaker.kork.plugins.proxy.aspects
 
 import com.netflix.spinnaker.kork.plugins.SpinnakerPluginDescriptor
 import org.slf4j.LoggerFactory
+import java.lang.reflect.InvocationTargetException
 import java.lang.reflect.Method
 
 class LogInvocationAspect : InvocationAspect<LogInvocationState> {
@@ -27,17 +28,21 @@ class LogInvocationAspect : InvocationAspect<LogInvocationState> {
     return invocationState == LogInvocationState::class.java
   }
 
-  override fun create(
+  override fun createState(
     target: Any,
     proxy: Any,
     method: Method,
     args: Array<out Any>?,
     descriptor: SpinnakerPluginDescriptor
   ): LogInvocationState {
+    LoggerFactory.getLogger(target.javaClass)
     TODO("not implemented")
   }
 
   override fun after(success: Boolean, invocationState: LogInvocationState) {
     TODO("not implemented")
+  }
+
+  override fun error(e: InvocationTargetException, invocationState: LogInvocationState) {
   }
 }

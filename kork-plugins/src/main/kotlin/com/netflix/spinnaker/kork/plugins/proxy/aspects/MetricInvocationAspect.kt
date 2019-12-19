@@ -21,39 +21,41 @@ import com.netflix.spectator.api.Registry
 import com.netflix.spectator.api.histogram.PercentileTimer
 import com.netflix.spinnaker.kork.plugins.SpinnakerPluginDescriptor
 import java.lang.reflect.Method
+import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.TimeUnit
 
 class MetricInvocationAspect(
   private val registry: Registry
 ) : InvocationAspect<MetricInvocationState> {
 
-  // TODO(jonsie): Add extension name to metricNamespace or to tags??
+  private val methodMetricIds: ConcurrentHashMap<Method, MetricIds> = ConcurrentHashMap()
 
   override fun supports(invocationState: Class<InvocationState>): Boolean {
     return invocationState == MetricInvocationState::class.java
   }
 
-  override fun create(
+  override fun createState(
     target: Any,
     proxy: Any,
     method: Method,
     args: Array<out Any>?,
     descriptor: SpinnakerPluginDescriptor
   ): MetricInvocationState {
+    val metricIds = methodMetricIds.getOrCache(target, method, descriptor)
+
     return MetricInvocationState(
-      System.currentTimeMillis(),
-      timingId(method, descriptor.pluginId, mapOf(Pair("pluginVersion", descriptor.version))),
-      invocationId(method, descriptor.pluginId, mapOf(Pair("pluginVersion", descriptor.version)))
+      startTimeMs = System.currentTimeMillis(),
+      timingId = metricIds?.timingId,
+      invocationsId = metricIds?.invocationId
     )
   }
 
   override fun after(success: Boolean, invocationState: MetricInvocationState) {
-    val result = if (success) "success" else "failure"
-
-    registry
-      .counter(invocationState.invocationsId.withTag("result", result))
-      .increment()
-    recordTiming(invocationState.timingId.withTag("result", result), invocationState.startTime)
+    if (invocationState.invocationsId != null && invocationState.timingId != null) {
+      val result = if (success) Result.SUCCESS else Result.FAILURE
+      registry.counter(invocationState.invocationsId.withTag("result", result.status)).increment()
+      recordTiming(invocationState.timingId.withTag("result", result.status), invocationState.startTimeMs)
+    }
   }
 
   private fun recordTiming(id: Id, startTimeMs: Long) {
@@ -62,11 +64,11 @@ class MetricInvocationAspect(
   }
 
   private fun invocationId(method: Method, metricNamespace: String, tags: Map<String, String>): Id {
-    return registry.createId(toMetricId(method, metricNamespace, "invocations"), tags)
+    return registry.createId(toMetricId(method, metricNamespace, INVOCATIONS), tags)
   }
 
   private fun timingId(method: Method, metricNamespace: String, tags: Map<String, String>): Id {
-    return registry.createId(toMetricId(method, metricNamespace, "timing"), tags)
+    return registry.createId(toMetricId(method, metricNamespace, TIMING), tags)
   }
 
   private fun toMetricId(method: Method, metricNamespace: String, metricName: String): String? {
@@ -76,5 +78,57 @@ class MetricInvocationAspect(
 
   private fun toMetricId(metricNamespace: String, methodName: String, metricName: String): String? {
     return String.format("%s.%s.%s", metricNamespace, methodName, metricName)
+  }
+
+  private fun ConcurrentHashMap<Method, MetricIds>.getOrCache(
+    target: Any,
+    method: Method,
+    descriptor: SpinnakerPluginDescriptor
+  ): MetricIds? {
+    if (!this.containsKey(method)) {
+      if (!method.isAllowed()) {
+        return null
+      }
+
+      val metricIds = MetricIds(
+        timingId = timingId(method, descriptor.pluginId, mapOf(
+          Pair("pluginVersion", descriptor.version),
+          Pair("pluginExtension", target.javaClass.simpleName.toString())
+        )),
+        invocationId = invocationId(method, descriptor.pluginId, mapOf(
+          Pair("pluginVersion", descriptor.version),
+          Pair("pluginExtension", target.javaClass.simpleName.toString())
+        ))
+      )
+
+      for ((cachedMethod, cachedMetricIds) in this) {
+        if (cachedMetricIds.invocationId.name() == metricIds.invocationId.name()) {
+          throw MetricNameCollisionException(target, cachedMethod, method)
+        }
+      }
+
+      this[method] = metricIds
+    }
+
+    return this[method]
+  }
+
+  private class MetricNameCollisionException(target: Any, method1: Method, method2: Method) :
+    IllegalStateException(String.format(
+    "Metric name collision detected between methods '%s' and '%s' in '%s'",
+    method1.toGenericString(),
+    method2.toGenericString(),
+    target.javaClass.simpleName))
+
+  private data class MetricIds(val timingId: Id, val invocationId: Id)
+
+  companion object {
+    private const val INVOCATIONS = "invocations"
+    private const val TIMING = "timing"
+
+    enum class Result(val status: String) {
+      SUCCESS("success"),
+      FAILURE("failure")
+    }
   }
 }

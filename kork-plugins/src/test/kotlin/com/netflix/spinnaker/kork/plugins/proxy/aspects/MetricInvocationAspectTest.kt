@@ -16,20 +16,6 @@
 
 package com.netflix.spinnaker.kork.plugins.proxy.aspects
 
-import com.netflix.spectator.api.Id
+import dev.minutest.junit.JUnit5Minutests
 
-/**
- * Interface representing invocation state, used with [InvocationAspect] to process method
- * invocation.
- */
-interface InvocationState
-
-data class MetricInvocationState(
-  internal val startTimeMs: Long,
-  internal val timingId: Id?,
-  internal val invocationsId: Id?
-) : InvocationState
-
-data class LogInvocationState(
-  internal val arguments: String
-) : InvocationState
+class MetricInvocationAspectTest : JUnit5Minutests

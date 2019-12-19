@@ -16,20 +16,15 @@
 
 package com.netflix.spinnaker.kork.plugins.proxy.aspects
 
-import com.netflix.spectator.api.Id
+import java.lang.reflect.Method
+import java.lang.reflect.Modifier
+import java.util.Arrays
 
-/**
- * Interface representing invocation state, used with [InvocationAspect] to process method
- * invocation.
- */
-interface InvocationState
-
-data class MetricInvocationState(
-  internal val startTimeMs: Long,
-  internal val timingId: Id?,
-  internal val invocationsId: Id?
-) : InvocationState
-
-data class LogInvocationState(
-  internal val arguments: String
-) : InvocationState
+internal fun Method.isAllowed(): Boolean {
+  // Only public methods and ignore any methods from the root Object class
+  return (
+    Modifier.isPublic(this.modifiers) ||
+      Arrays.stream(Any::class.java.declaredMethods)
+        .noneMatch { m: Method -> m.name == this.name }
+    )
+}
