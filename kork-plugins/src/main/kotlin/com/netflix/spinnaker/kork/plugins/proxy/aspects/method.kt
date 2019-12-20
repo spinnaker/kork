@@ -18,13 +18,7 @@ package com.netflix.spinnaker.kork.plugins.proxy.aspects
 
 import java.lang.reflect.Method
 import java.lang.reflect.Modifier
-import java.util.Arrays
 
 internal fun Method.isAllowed(): Boolean {
-  // Only public methods and ignore any methods from the root Object class
-  return (
-    Modifier.isPublic(this.modifiers) ||
-      Arrays.stream(Any::class.java.declaredMethods)
-        .noneMatch { m: Method -> m.name == this.name }
-    )
+  return Modifier.isPublic(this.modifiers)
 }

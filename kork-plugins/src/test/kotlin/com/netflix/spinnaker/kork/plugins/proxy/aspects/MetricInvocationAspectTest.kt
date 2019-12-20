@@ -16,56 +16,102 @@
 
 package com.netflix.spinnaker.kork.plugins.proxy.aspects
 
-import com.netflix.spectator.api.Registry
+import com.netflix.spectator.api.*
 import com.netflix.spinnaker.kork.plugins.SpinnakerPluginDescriptor
 import dev.minutest.junit.JUnit5Minutests
 import dev.minutest.rootContext
 import io.mockk.every
 import io.mockk.mockk
-import org.pf4j.PluginDescriptor
+import org.springframework.beans.factory.ObjectProvider
+import strikt.api.expectThat
+import strikt.assertions.isA
+import strikt.assertions.isEqualTo
+import strikt.assertions.isFalse
+import strikt.assertions.isNull
+import strikt.assertions.isTrue
 import java.lang.reflect.Method
+import java.util.stream.Collectors
 
 class MetricInvocationAspectTest : JUnit5Minutests {
 
   fun tests() = rootContext<Fixture> {
     fixture { Fixture() }
 
-    test("creates the MetricInvocationState object with Spectator IDs") {
-      val target: Any = mockk(relaxed = true)
-      val proxy: Any = mockk(relaxed = true)
-      val method: Method = mockk(relaxed = true)
-      val args: Array<out Any> = mockk(relaxed = true)
-      val spinnakerPluginDescriptor: SpinnakerPluginDescriptor = mockk(relaxed = true) // createPluginDescriptor("netflix.foo", "0.0.1")
+    test("creates MetricInvocationState object with meter IDs") {
+      val state = subject.createState(target, proxy, method, args, spinnakerPluginDescriptor)
 
-      val state = subject.createState(target,
-        proxy, method, args, spinnakerPluginDescriptor)
-//      expectThat(state).isA<MetricInvocationState>()
+      expectThat(state).isA<MetricInvocationState>()
+        .and {
+          get { startTimeMs }.isA<Long>()
+          get { timingId }.isA<Id>().and {
+            get { name() }.isEqualTo("$pluginId.helloWorld.$timing")
+            get { tags().iterator().asSequence().toList() }.isEqualTo(
+              listOf(BasicTag("pluginExtension", target.javaClass.simpleName.toString()),
+                BasicTag("pluginVersion", pluginVersion)))
+          }
+          get { invocationsId }.isA<Id>().and {
+            get { name() }.isEqualTo("$pluginId.helloWorld.$invocations")
+            get { tags().iterator().asSequence().toList() }.isEqualTo(
+              listOf(BasicTag("pluginExtension", target.javaClass.simpleName.toString()),
+                BasicTag("pluginVersion", pluginVersion)))
+          }
+          get { extensionName }.isA<String>().isEqualTo(target.javaClass.simpleName.toString())
+        }
     }
 
-    test("This is a test and it does something") {
-      assert(true)
+    test("Private method is not instrumented with meters") {
+      val state = subject.createState(target, proxy, privateMethod, args, spinnakerPluginDescriptor)
+      expectThat(state).isA<MetricInvocationState>().
+        and {
+          get { timingId }.isNull()
+          get { invocationsId }.isNull()
+        }
+    }
+
+    test("Processes MetricInvocationState object after method invocations, meters are correct") {
+      //One method invocation
+      val state1 = subject.createState(target, proxy, method, args, spinnakerPluginDescriptor)
+      subject.after(true, state1)
+
+      //Another method invocation
+      val state2 = subject.createState(target, proxy, method, args, spinnakerPluginDescriptor)
+      subject.after(true, state2)
+
+      val counterSummary = registry.counters().filter(Functions.nameEquals("$pluginId.helloWorld.$invocations")).collect(Collectors.summarizingLong(Counter::count))
+      val timerCountSummary = registry.timers().filter(Functions.nameEquals("$pluginId.helloWorld.$timing")).collect(Collectors.summarizingLong(Timer::count))
+
+      //There should be two metric points for each meter type
+      expectThat(counterSummary).get { sum }.isEqualTo(2)
+      expectThat(timerCountSummary).get { sum }.isEqualTo(2)
+    }
+
+    test("MetricInvocationAspect supports MetricInvocationState") {
+      val state = subject.createState(target, proxy, method, args, spinnakerPluginDescriptor)
+      val logState = LogInvocationState("foo", "bar")
+      expectThat(subject.supports(state.javaClass)).isTrue()
+      expectThat(subject.supports(logState.javaClass)).isFalse()
     }
   }
 
   private inner class Fixture {
-    val registry: Registry = mockk(relaxed = true)
-    val subject = MetricInvocationAspect(registry)
-  }
+    val timing: String = "timing"
+    val invocations: String = "invocations"
+    val pluginId: String = "netflix.plugin"
+    val pluginVersion: String = "0.0.1"
 
-  private fun createMethod(): Method {
-    return SomeExtension::class.java.getMethod("helloWorld")
-  }
+    val registry: Registry = DefaultRegistry(Clock.SYSTEM)
+    val registryProvider: ObjectProvider<Registry> = mockk(relaxed = true)
+    val subject = MetricInvocationAspect(registryProvider)
 
-  private fun createPluginDescriptor(pluginId: String, version: String): SpinnakerPluginDescriptor {
-    val descriptor: PluginDescriptor = mockk(relaxed = true)
-    every { descriptor.pluginId } returns pluginId
-    every { descriptor.version } returns version
-    return SpinnakerPluginDescriptor(descriptor)
-  }
+    val target: Any = SomeExtension()
+    val proxy: Any = mockk(relaxed = true)
+    val method: Method = createMethod()
+    val privateMethod: Method = createPrivateMethod()
+    val args: Array<out Any> = arrayOf()
+    val spinnakerPluginDescriptor: SpinnakerPluginDescriptor = createPluginDescriptor(pluginId, pluginVersion)
 
-  private class SomeExtension {
-    fun helloWorld(): String {
-      return "Hello World!"
+    init {
+      every { registryProvider.ifAvailable } returns registry
     }
   }
 }
