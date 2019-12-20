@@ -17,6 +17,8 @@ package com.netflix.spinnaker.config;
 
 import static java.lang.String.format;
 
+import com.netflix.spectator.api.Clock;
+import com.netflix.spectator.api.DefaultRegistry;
 import com.netflix.spectator.api.Registry;
 import com.netflix.spinnaker.kork.plugins.ExtensionBeanDefinitionRegistryPostProcessor;
 import com.netflix.spinnaker.kork.plugins.SpinnakerPluginManager;
@@ -109,6 +111,12 @@ public class PluginsAutoConfiguration {
       SpinnakerPluginManager pluginManager,
       ApplicationEventPublisher applicationEventPublisher) {
     return new PluginUpdateService(updateManager, pluginManager, applicationEventPublisher);
+  }
+
+  @Bean
+  @ConditionalOnMissingBean(Registry.class)
+  public static Registry registry() {
+    return new DefaultRegistry(Clock.SYSTEM);
   }
 
   @Bean

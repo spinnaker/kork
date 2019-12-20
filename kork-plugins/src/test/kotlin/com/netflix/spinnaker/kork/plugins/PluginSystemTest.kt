@@ -16,7 +16,6 @@
 package com.netflix.spinnaker.kork.plugins
 
 import com.netflix.spinnaker.config.PluginsAutoConfiguration
-import com.netflix.spinnaker.kork.metrics.SpectatorConfiguration
 import com.netflix.spinnaker.kork.plugins.finders.SpinnakerPropertiesPluginDescriptorFinder
 import com.netflix.spinnaker.kork.plugins.testplugin.TestPluginBuilder
 import com.netflix.spinnaker.kork.plugins.testplugin.api.TestExtension
@@ -45,7 +44,6 @@ class PluginSystemTest : JUnit5Minutests {
       fixture {
         ApplicationContextRunner()
           .withConfiguration(AutoConfigurations.of(
-            SpectatorConfiguration::class.java,
             PluginsAutoConfiguration::class.java
           ))
       }
@@ -119,7 +117,6 @@ class PluginSystemTest : JUnit5Minutests {
         "spinnaker.extensibility.plugins-root-path=${pluginsDir.toAbsolutePath()}",
         "spinnaker.extensibility.plugins.${descriptor.pluginId}.enabled=true")
       .withConfiguration(AutoConfigurations.of(
-        SpectatorConfiguration::class.java,
         PluginsAutoConfiguration::class.java
       ))
   }
