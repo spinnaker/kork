@@ -72,11 +72,12 @@ class MetricInvocationAspect(
     args: Array<out Any>?,
     descriptor: SpinnakerPluginDescriptor
   ): MetricInvocationState {
-    val registry = registryProvider.getOrFallback(target.javaClass.simpleName.toString())
+    val extensionName = target.javaClass.simpleName.toString()
+    val registry = registryProvider.getOrFallback(extensionName)
     val metricIds = methodMetricIds.getOrPut(target, method, descriptor, registry)
 
     return MetricInvocationState(
-      registry = registry,
+      extensionName = extensionName,
       startTimeMs = System.currentTimeMillis(),
       timingId = metricIds?.timingId,
       invocationsId = metricIds?.invocationId
@@ -85,8 +86,8 @@ class MetricInvocationAspect(
 
   override fun after(success: Boolean, invocationState: MetricInvocationState) {
     if (invocationState.invocationsId != null && invocationState.timingId != null) {
+      val registry = registryProvider.getOrFallback(invocationState.extensionName)
       val result = if (success) Result.SUCCESS else Result.FAILURE
-      val registry = invocationState.registry
 
       registry.counter(invocationState.invocationsId.withTag("result", result.status)).increment()
       PercentileTimer.get(registry, invocationState.timingId.withTag("result", result.status))
