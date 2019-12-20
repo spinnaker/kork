@@ -16,7 +16,14 @@
 
 package com.netflix.spinnaker.kork.plugins.proxy.aspects
 
-import com.netflix.spectator.api.*
+import com.netflix.spectator.api.BasicTag
+import com.netflix.spectator.api.Counter
+import com.netflix.spectator.api.Clock
+import com.netflix.spectator.api.DefaultRegistry
+import com.netflix.spectator.api.Functions
+import com.netflix.spectator.api.Id
+import com.netflix.spectator.api.Registry
+import com.netflix.spectator.api.Timer
 import com.netflix.spinnaker.kork.plugins.SpinnakerPluginDescriptor
 import dev.minutest.junit.JUnit5Minutests
 import dev.minutest.rootContext
@@ -61,26 +68,26 @@ class MetricInvocationAspectTest : JUnit5Minutests {
 
     test("Private method is not instrumented with meters") {
       val state = subject.createState(target, proxy, privateMethod, args, spinnakerPluginDescriptor)
-      expectThat(state).isA<MetricInvocationState>().
-        and {
+      expectThat(state).isA<MetricInvocationState>()
+        .and {
           get { timingId }.isNull()
           get { invocationsId }.isNull()
         }
     }
 
     test("Processes MetricInvocationState object after method invocations, meters are correct") {
-      //One method invocation
+      // One method invocation
       val state1 = subject.createState(target, proxy, method, args, spinnakerPluginDescriptor)
       subject.after(true, state1)
 
-      //Another method invocation
+      // Another method invocation
       val state2 = subject.createState(target, proxy, method, args, spinnakerPluginDescriptor)
       subject.after(true, state2)
 
       val counterSummary = registry.counters().filter(Functions.nameEquals("$pluginId.helloWorld.$invocations")).collect(Collectors.summarizingLong(Counter::count))
       val timerCountSummary = registry.timers().filter(Functions.nameEquals("$pluginId.helloWorld.$timing")).collect(Collectors.summarizingLong(Timer::count))
 
-      //There should be two metric points for each meter type
+      // There should be two metric points for each meter type
       expectThat(counterSummary).get { sum }.isEqualTo(2)
       expectThat(timerCountSummary).get { sum }.isEqualTo(2)
     }
