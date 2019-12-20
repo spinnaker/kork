@@ -34,6 +34,8 @@ interface InvocationAspect<I : InvocationState> {
   fun supports(invocationState: Class<InvocationState>): Boolean
 
   /**
+   * Called prior to method invocation.
+   *
    * The params [proxy], [method], and [args] are documented at [java.lang.reflect.InvocationHandler]
    *
    * @param target The target object that is being proxied
@@ -44,7 +46,7 @@ interface InvocationAspect<I : InvocationState> {
   fun createState(target: Any, proxy: Any, method: Method, args: Array<out Any>?, descriptor: SpinnakerPluginDescriptor): I
 
   /**
-   * After method invocation, runs in a finally block.
+   * After method invocation. Called in a finally block.
    *
    * @param success If the method was invoked without exception this will be `true`, otherwise `false`
    * @param invocationState The state object created via [createState]
@@ -53,7 +55,7 @@ interface InvocationAspect<I : InvocationState> {
 
   /**
    * If the method invocation threw an InvocationTargetException, apply some additional processing if
-   * desired.
+   * desired.  Called in a catch block.
    *
    * @param e InvocationTargetException which is thrown via
    * @param invocationState The invocationState object created via [createState]

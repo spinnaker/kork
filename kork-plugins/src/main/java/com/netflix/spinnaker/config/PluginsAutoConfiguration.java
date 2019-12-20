@@ -17,8 +17,6 @@ package com.netflix.spinnaker.config;
 
 import static java.lang.String.format;
 
-import com.netflix.spectator.api.Clock;
-import com.netflix.spectator.api.DefaultRegistry;
 import com.netflix.spectator.api.Registry;
 import com.netflix.spinnaker.kork.plugins.ExtensionBeanDefinitionRegistryPostProcessor;
 import com.netflix.spinnaker.kork.plugins.SpinnakerPluginManager;
@@ -44,6 +42,7 @@ import org.pf4j.update.UpdateRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.BeanCreationException;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.ApplicationEventPublisher;
@@ -114,13 +113,7 @@ public class PluginsAutoConfiguration {
   }
 
   @Bean
-  @ConditionalOnMissingBean(Registry.class)
-  public static Registry registry() {
-    return new DefaultRegistry(Clock.SYSTEM);
-  }
-
-  @Bean
-  public static MetricInvocationAspect metricInvocationAspect(Registry registry) {
+  public static MetricInvocationAspect metricInvocationAspect(ObjectProvider<Registry> registry) {
     return new MetricInvocationAspect(registry);
   }
 

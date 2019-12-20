@@ -24,8 +24,8 @@ import java.lang.reflect.Method
 /**
  * Logs the invoked extension and method name.
  *
- * TODO(jonsie): The logger name could be mapped to the extension class and there could be
- * additional details logged (like arguments) based on configuration.  Room for improvement.
+ * There is room for improvement here: The logger name could be mapped to the extension class and
+ * there could be additional details logged (like arguments) based on configuration.
  */
 class LogInvocationAspect : InvocationAspect<LogInvocationState> {
   private val log by lazy { LoggerFactory.getLogger(javaClass) }
