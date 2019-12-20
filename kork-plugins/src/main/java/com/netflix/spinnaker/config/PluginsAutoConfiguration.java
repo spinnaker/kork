@@ -113,8 +113,9 @@ public class PluginsAutoConfiguration {
   }
 
   @Bean
-  public static MetricInvocationAspect metricInvocationAspect(ObjectProvider<Registry> registry) {
-    return new MetricInvocationAspect(registry);
+  public static MetricInvocationAspect metricInvocationAspect(
+      ObjectProvider<Registry> registryProvider) {
+    return new MetricInvocationAspect(registryProvider);
   }
 
   @Bean

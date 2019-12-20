@@ -22,6 +22,7 @@ import com.netflix.spectator.api.Id
 import com.netflix.spectator.api.Registry
 import com.netflix.spectator.api.histogram.PercentileTimer
 import com.netflix.spinnaker.kork.plugins.SpinnakerPluginDescriptor
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.ObjectProvider
 import java.lang.reflect.Method
 import java.util.concurrent.ConcurrentHashMap
@@ -38,10 +39,26 @@ class MetricInvocationAspect(
   private val registryProvider: ObjectProvider<Registry>
 ) : InvocationAspect<MetricInvocationState> {
 
+  private val log by lazy { LoggerFactory.getLogger(javaClass) }
   private val methodMetricIds: ConcurrentHashMap<Method, MetricIds> = ConcurrentHashMap()
 
-  private fun ObjectProvider<Registry>.getOrDefault(): Registry {
-    return this.getIfAvailable { DefaultRegistry(Clock.SYSTEM) }
+  /**
+   * Extensions are loaded early in the Spring application lifecycle, and there's a chance that the
+   * Spectator [Registry] does not yet exist when an extension method is invoked.  This allows us to
+   * fallback to a temporary registry.  Metrics collected in the fallback registry are discarded.
+   *
+   * Open question - If a fallback registry is returned, can we collect those metrics and then dump
+   * them onto the main registry once that exists?
+   */
+  private fun ObjectProvider<Registry>.getOrFallback(extensionName: String): Registry {
+    val registry = this.ifAvailable
+
+    if (registry == null) {
+      log.warn("Returning fallback registry for extension={}; metrics collected in fallback are discarded.", extensionName)
+      return DefaultRegistry(Clock.SYSTEM)
+    }
+
+    return registry
   }
 
   override fun supports(invocationState: Class<InvocationState>): Boolean {
@@ -55,10 +72,11 @@ class MetricInvocationAspect(
     args: Array<out Any>?,
     descriptor: SpinnakerPluginDescriptor
   ): MetricInvocationState {
-    val registry = registryProvider.getOrDefault()
+    val registry = registryProvider.getOrFallback(target.javaClass.simpleName.toString())
     val metricIds = methodMetricIds.getOrPut(target, method, descriptor, registry)
 
     return MetricInvocationState(
+      registry = registry,
       startTimeMs = System.currentTimeMillis(),
       timingId = metricIds?.timingId,
       invocationsId = metricIds?.invocationId
@@ -66,9 +84,9 @@ class MetricInvocationAspect(
   }
 
   override fun after(success: Boolean, invocationState: MetricInvocationState) {
-    val registry = registryProvider.getOrDefault()
     if (invocationState.invocationsId != null && invocationState.timingId != null) {
       val result = if (success) Result.SUCCESS else Result.FAILURE
+      val registry = invocationState.registry
 
       registry.counter(invocationState.invocationsId.withTag("result", result.status)).increment()
       PercentileTimer.get(registry, invocationState.timingId.withTag("result", result.status))

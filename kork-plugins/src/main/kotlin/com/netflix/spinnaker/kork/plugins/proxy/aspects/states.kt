@@ -17,6 +17,7 @@
 package com.netflix.spinnaker.kork.plugins.proxy.aspects
 
 import com.netflix.spectator.api.Id
+import com.netflix.spectator.api.Registry
 
 /**
  * Interface representing invocation state, used with [InvocationAspect] to process method
@@ -26,6 +27,7 @@ import com.netflix.spectator.api.Id
 interface InvocationState
 
 data class MetricInvocationState(
+  internal val registry: Registry,
   internal val startTimeMs: Long,
   internal val timingId: Id?,
   internal val invocationsId: Id?
