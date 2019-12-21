@@ -40,15 +40,12 @@ class ExtensionInvocationProxy(
     invocationStates.create(proxy, method, args)
 
     val result: Any
-    var success = false
     try {
       result = method.invoke(target, *(args ?: arrayOfNulls<Any>(0)))
-      success = true
+      invocationStates.after()
     } catch (e: InvocationTargetException) {
       invocationStates.error(e)
       throw e.cause ?: RuntimeException("Caught invocation target exception without cause.", e)
-    } finally {
-      invocationStates.after(success)
     }
 
     return result
@@ -56,7 +53,7 @@ class ExtensionInvocationProxy(
 
   private fun MutableSet<InvocationState>.create(proxy: Any, method: Method, args: Array<out Any>?) {
     invocationAspects.forEach {
-      this.add(it.createState(target, proxy, method, args, pluginDescriptor))
+      this.add(it.before(target, proxy, method, args, pluginDescriptor))
     }
   }
 
@@ -70,11 +67,11 @@ class ExtensionInvocationProxy(
     }
   }
 
-  private fun MutableSet<InvocationState>.after(success: Boolean) {
+  private fun MutableSet<InvocationState>.after() {
     this.forEach { invocationState ->
       invocationAspects.forEach { invocationAspect ->
         if (invocationAspect.supports((invocationState.javaClass))) {
-          invocationAspect.after(success, invocationState)
+          invocationAspect.after(invocationState)
         }
       }
     }

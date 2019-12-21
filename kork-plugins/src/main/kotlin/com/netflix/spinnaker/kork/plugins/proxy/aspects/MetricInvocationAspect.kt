@@ -24,7 +24,9 @@ import com.netflix.spectator.api.histogram.PercentileTimer
 import com.netflix.spinnaker.kork.plugins.SpinnakerPluginDescriptor
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.ObjectProvider
+import java.lang.reflect.InvocationTargetException
 import java.lang.reflect.Method
+import java.lang.reflect.Modifier
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.TimeUnit
 
@@ -32,7 +34,7 @@ import java.util.concurrent.TimeUnit
  * Adds metric instrumentation to extension method invocations.
  *
  * Two metrics will be recorded for any extension: timing and invocations, with an additional tag
- * for "success", having either the value "success" or "failure".
+ * for "result", having either the value "success" or "failure".
  *
  */
 class MetricInvocationAspect(
@@ -65,7 +67,7 @@ class MetricInvocationAspect(
     return invocationState == MetricInvocationState::class.java
   }
 
-  override fun createState(
+  override fun before(
     target: Any,
     proxy: Any,
     method: Method,
@@ -84,13 +86,20 @@ class MetricInvocationAspect(
     )
   }
 
-  override fun after(success: Boolean, invocationState: MetricInvocationState) {
+  override fun after(invocationState: MetricInvocationState) {
+    recordMetrics(Result.SUCCESS, invocationState)
+  }
+
+  override fun error(e: InvocationTargetException, invocationState: MetricInvocationState) {
+    recordMetrics(Result.FAILURE, invocationState)
+  }
+
+  private fun recordMetrics(result: Result, invocationState: MetricInvocationState) {
     if (invocationState.invocationsId != null && invocationState.timingId != null) {
       val registry = registryProvider.getOrFallback(invocationState.extensionName)
-      val result = if (success) Result.SUCCESS else Result.FAILURE
 
-      registry.counter(invocationState.invocationsId.withTag("result", result.status)).increment()
-      PercentileTimer.get(registry, invocationState.timingId.withTag("result", result.status))
+      registry.counter(invocationState.invocationsId.withTag("result", result.toString())).increment()
+      PercentileTimer.get(registry, invocationState.timingId.withTag("result", result.toString()))
         .record(System.currentTimeMillis() - invocationState.startTimeMs, TimeUnit.MILLISECONDS)
     }
   }
@@ -102,7 +111,7 @@ class MetricInvocationAspect(
     registry: Registry
   ): MetricIds? {
     if (!this.containsKey(method)) {
-      if (!method.isAllowed()) {
+      if (!Modifier.isPublic(method.modifiers)) {
         return null
       }
 
@@ -151,9 +160,10 @@ class MetricInvocationAspect(
     private const val INVOCATIONS = "invocations"
     private const val TIMING = "timing"
 
-    enum class Result(val status: String) {
-      SUCCESS("success"),
-      FAILURE("failure")
+    enum class Result {
+      SUCCESS, FAILURE;
+
+      override fun toString(): String = name.toLowerCase()
     }
   }
 }

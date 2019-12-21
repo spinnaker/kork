@@ -45,7 +45,7 @@ class MetricInvocationAspectTest : JUnit5Minutests {
     fixture { Fixture() }
 
     test("creates MetricInvocationState object with meter IDs") {
-      val state = subject.createState(target, proxy, method, args, spinnakerPluginDescriptor)
+      val state = subject.before(target, proxy, method, args, spinnakerPluginDescriptor)
 
       expectThat(state).isA<MetricInvocationState>()
         .and {
@@ -67,7 +67,7 @@ class MetricInvocationAspectTest : JUnit5Minutests {
     }
 
     test("Private method is not instrumented with meters") {
-      val state = subject.createState(target, proxy, privateMethod, args, spinnakerPluginDescriptor)
+      val state = subject.before(target, proxy, privateMethod, args, spinnakerPluginDescriptor)
       expectThat(state).isA<MetricInvocationState>()
         .and {
           get { timingId }.isNull()
@@ -77,12 +77,12 @@ class MetricInvocationAspectTest : JUnit5Minutests {
 
     test("Processes MetricInvocationState object after method invocations, meters are correct") {
       // One method invocation
-      val state1 = subject.createState(target, proxy, method, args, spinnakerPluginDescriptor)
-      subject.after(true, state1)
+      val state1 = subject.before(target, proxy, method, args, spinnakerPluginDescriptor)
+      subject.after(state1)
 
       // Another method invocation
-      val state2 = subject.createState(target, proxy, method, args, spinnakerPluginDescriptor)
-      subject.after(true, state2)
+      val state2 = subject.before(target, proxy, method, args, spinnakerPluginDescriptor)
+      subject.after(state2)
 
       val counterSummary = registry.counters().filter(Functions.nameEquals("$pluginId.helloWorld.$invocations")).collect(Collectors.summarizingLong(Counter::count))
       val timerCountSummary = registry.timers().filter(Functions.nameEquals("$pluginId.helloWorld.$timing")).collect(Collectors.summarizingLong(Timer::count))
@@ -93,7 +93,7 @@ class MetricInvocationAspectTest : JUnit5Minutests {
     }
 
     test("MetricInvocationAspect supports MetricInvocationState") {
-      val state = subject.createState(target, proxy, method, args, spinnakerPluginDescriptor)
+      val state = subject.before(target, proxy, method, args, spinnakerPluginDescriptor)
       val logState = LogInvocationState("foo", "bar")
       expectThat(subject.supports(state.javaClass)).isTrue()
       expectThat(subject.supports(logState.javaClass)).isFalse()

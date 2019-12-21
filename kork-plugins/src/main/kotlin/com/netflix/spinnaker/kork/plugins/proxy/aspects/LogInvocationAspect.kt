@@ -34,7 +34,7 @@ class LogInvocationAspect : InvocationAspect<LogInvocationState> {
     return invocationState == LogInvocationState::class.java
   }
 
-  override fun createState(
+  override fun before(
     target: Any,
     proxy: Any,
     method: Method,
@@ -52,10 +52,8 @@ class LogInvocationAspect : InvocationAspect<LogInvocationState> {
     return logInvocationState
   }
 
-  override fun after(success: Boolean, invocationState: LogInvocationState) {
-    val status = if (success) "Successful" else "Failed"
-
-    log.trace("{} execution of method={} on extension={}", status, invocationState.extensionName,
+  override fun after(invocationState: LogInvocationState) {
+    log.trace("Successful execution of method={} on extension={}", invocationState.extensionName,
       invocationState.methodName)
   }
 

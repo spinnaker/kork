@@ -32,7 +32,7 @@ class LogInvocationAspectTest : JUnit5Minutests {
     fixture { Fixture() }
 
     test("creates LogInvocationState object with extension IDs") {
-      val state = subject.createState(target, proxy, method, args, spinnakerPluginDescriptor)
+      val state = subject.before(target, proxy, method, args, spinnakerPluginDescriptor)
       expectThat(state).isA<LogInvocationState>()
         .and {
           get { extensionName }.isEqualTo(target.javaClass.simpleName.toString())
@@ -41,7 +41,7 @@ class LogInvocationAspectTest : JUnit5Minutests {
     }
 
     test("LogInvocationAspect supports LogInvocationState") {
-      val state = subject.createState(target, proxy, method, args, spinnakerPluginDescriptor)
+      val state = subject.before(target, proxy, method, args, spinnakerPluginDescriptor)
       val metricInvocationState = MetricInvocationState("Extension", 123, mockk(), mockk())
       expectThat(subject.supports(state.javaClass)).isTrue()
       expectThat(subject.supports(metricInvocationState.javaClass)).isFalse()

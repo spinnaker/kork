@@ -43,22 +43,21 @@ interface InvocationAspect<I : InvocationState> {
    *
    * @return I The [InvocationState] instance, which is used to store state about the invocation.
    */
-  fun createState(target: Any, proxy: Any, method: Method, args: Array<out Any>?, descriptor: SpinnakerPluginDescriptor): I
+  fun before(target: Any, proxy: Any, method: Method, args: Array<out Any>?, descriptor: SpinnakerPluginDescriptor): I
 
   /**
-   * After method invocation. Called in a finally block.
+   * After method invocation. Called immediately after invoking the method.
    *
-   * @param success If the method was invoked without exception this will be `true`, otherwise `false`
-   * @param invocationState The state object created via [createState]
+   * @param invocationState The state object created via [before]
    */
-  fun after(success: Boolean, invocationState: I)
+  fun after(invocationState: I)
 
   /**
    * If the method invocation threw an InvocationTargetException, apply some additional processing if
    * desired.  Called in a catch block.
    *
    * @param e InvocationTargetException which is thrown via
-   * @param invocationState The invocationState object created via [createState]
+   * @param invocationState The invocationState object created via [before]
    */
-  fun error(e: InvocationTargetException, invocationState: I) { /* default implementation */ }
+  fun error(e: InvocationTargetException, invocationState: I)
 }
