@@ -110,7 +110,7 @@ class MetricInvocationAspect(
   }
 
   /**
-   * Skips public methods, otherwise performs a [Cache] `get` which retrieves the cached data or
+   * Skips private methods, otherwise performs a [Cache] `get` which retrieves the cached data or
    * else creates the data and then inserts it into the cache.
    */
   private fun Cache<Method, MetricIds>.getOrPut(
