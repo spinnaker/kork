@@ -109,6 +109,10 @@ class MetricInvocationAspect(
     }
   }
 
+  /**
+   * Skips public methods, otherwise performs a [Cache] `get` which retrieves the cached data or
+   * else creates the data and then inserts it into the cache.
+   */
   private fun Cache<Method, MetricIds>.getOrPut(
     target: Any,
     method: Method,
@@ -142,7 +146,8 @@ class MetricInvocationAspect(
   }
 
   private fun toMetricId(method: Method, metricNamespace: String, metricName: String): String? {
-    val methodName = if (method.parameterCount == 0) method.name else String.format("%s%d", method.name, method.parameterCount)
+    val methodName = if (method.parameterCount == 0) method.name else String.format("%s%d",
+      method.name, method.parameterCount)
     return toMetricId(metricNamespace, methodName, metricName)
   }
 
