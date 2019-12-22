@@ -19,6 +19,7 @@ package com.netflix.spinnaker.kork.plugins.proxy.aspects
 import com.netflix.spinnaker.kork.plugins.SpinnakerPluginDescriptor
 import io.mockk.every
 import io.mockk.mockk
+import org.pf4j.ExtensionPoint
 import org.pf4j.PluginDescriptor
 import java.lang.reflect.Method
 
@@ -37,11 +38,18 @@ internal fun createPrivateMethod(): Method {
   return SomeExtension::class.java.getDeclaredMethod("privateHelloWorld")
 }
 
-internal class SomeExtension {
+internal class SomeExtension : ExtensionPoint {
+
+  /**
+   * Public helloWorld method, exists to test public method instrumentation.
+   */
   fun helloWorld(): String {
     return "Hello Public World!"
   }
 
+  /**
+   * Private helloWorld method, exists to test private method instrumentation (or lack thereof).
+   */
   private fun privateHelloWorld(): String {
     return "Hello Private World!"
   }

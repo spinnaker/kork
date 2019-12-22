@@ -16,6 +16,8 @@
 
 package com.netflix.spinnaker.kork.plugins.proxy.aspects
 
+import com.github.benmanes.caffeine.cache.Cache
+import com.github.benmanes.caffeine.cache.Caffeine
 import com.netflix.spectator.api.Clock
 import com.netflix.spectator.api.DefaultRegistry
 import com.netflix.spectator.api.Id
@@ -27,7 +29,6 @@ import org.springframework.beans.factory.ObjectProvider
 import java.lang.reflect.InvocationTargetException
 import java.lang.reflect.Method
 import java.lang.reflect.Modifier
-import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.TimeUnit
 
 /**
@@ -42,7 +43,11 @@ class MetricInvocationAspect(
 ) : InvocationAspect<MetricInvocationState> {
 
   private val log by lazy { LoggerFactory.getLogger(javaClass) }
-  private val methodMetricIds: ConcurrentHashMap<Method, MetricIds> = ConcurrentHashMap()
+
+  private val methodMetricIds: Cache<Method, MetricIds> = Caffeine.newBuilder()
+    .maximumSize(1000)
+    .expireAfterWrite(1, TimeUnit.HOURS)
+    .build<Method, MetricIds>()
 
   /**
    * Extensions are loaded early in the Spring application lifecycle, and there's a chance that the
@@ -104,38 +109,36 @@ class MetricInvocationAspect(
     }
   }
 
-  private fun ConcurrentHashMap<Method, MetricIds>.getOrPut(
+  private fun Cache<Method, MetricIds>.getOrPut(
     target: Any,
     method: Method,
     descriptor: SpinnakerPluginDescriptor,
     registry: Registry
   ): MetricIds? {
-    if (!this.containsKey(method)) {
-      if (!Modifier.isPublic(method.modifiers)) {
-        return null
-      }
+    if (!Modifier.isPublic(method.modifiers)) {
+      return null
+    } else {
+      return this.get(method) { m ->
+        val metricIds = MetricIds(
+          timingId = registry.createId(toMetricId(m, descriptor.pluginId, TIMING), mapOf(
+            Pair("pluginVersion", descriptor.version),
+            Pair("pluginExtension", target.javaClass.simpleName.toString())
+          )),
+          invocationId = registry.createId(toMetricId(m, descriptor.pluginId, INVOCATIONS), mapOf(
+            Pair("pluginVersion", descriptor.version),
+            Pair("pluginExtension", target.javaClass.simpleName.toString())
+          ))
+        )
 
-      val metricIds = MetricIds(
-        timingId = registry.createId(toMetricId(method, descriptor.pluginId, TIMING), mapOf(
-          Pair("pluginVersion", descriptor.version),
-          Pair("pluginExtension", target.javaClass.simpleName.toString())
-        )),
-        invocationId = registry.createId(toMetricId(method, descriptor.pluginId, INVOCATIONS), mapOf(
-          Pair("pluginVersion", descriptor.version),
-          Pair("pluginExtension", target.javaClass.simpleName.toString())
-        ))
-      )
-
-      for ((cachedMethod, cachedMetricIds) in this) {
-        if (cachedMetricIds.invocationId.name() == metricIds.invocationId.name()) {
-          throw MetricNameCollisionException(target, cachedMethod, method)
+        for (mutableEntry in this.asMap()) {
+          if (mutableEntry.value.invocationId.name() == metricIds.invocationId.name()) {
+            throw MetricNameCollisionException(target, mutableEntry.key, m)
+          }
         }
+
+        metricIds
       }
-
-      this[method] = metricIds
     }
-
-    return this[method]
   }
 
   private fun toMetricId(method: Method, metricNamespace: String, metricName: String): String? {

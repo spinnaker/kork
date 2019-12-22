@@ -7,6 +7,8 @@ dependencies {
   api(platform(project(":spinnaker-dependencies")))
   api project(":kork-exceptions")
 
+  implementation "com.github.ben-manes.caffeine:caffeine"
+
   implementation "com.netflix.spectator:spectator-api"
 
   implementation project(":kork-plugins-spring-api")

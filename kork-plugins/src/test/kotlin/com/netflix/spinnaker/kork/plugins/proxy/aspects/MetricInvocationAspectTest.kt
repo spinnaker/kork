@@ -51,13 +51,13 @@ class MetricInvocationAspectTest : JUnit5Minutests {
         .and {
           get { startTimeMs }.isA<Long>()
           get { timingId }.isA<Id>().and {
-            get { name() }.isEqualTo("$pluginId.helloWorld.$timing")
+            get { name() }.isEqualTo("$pluginId.helloWorld.timing")
             get { tags().iterator().asSequence().toList() }.isEqualTo(
               listOf(BasicTag("pluginExtension", target.javaClass.simpleName.toString()),
                 BasicTag("pluginVersion", pluginVersion)))
           }
           get { invocationsId }.isA<Id>().and {
-            get { name() }.isEqualTo("$pluginId.helloWorld.$invocations")
+            get { name() }.isEqualTo("$pluginId.helloWorld.invocations")
             get { tags().iterator().asSequence().toList() }.isEqualTo(
               listOf(BasicTag("pluginExtension", target.javaClass.simpleName.toString()),
                 BasicTag("pluginVersion", pluginVersion)))
@@ -84,8 +84,8 @@ class MetricInvocationAspectTest : JUnit5Minutests {
       val state2 = subject.before(target, proxy, method, args, spinnakerPluginDescriptor)
       subject.after(state2)
 
-      val counterSummary = registry.counters().filter(Functions.nameEquals("$pluginId.helloWorld.$invocations")).collect(Collectors.summarizingLong(Counter::count))
-      val timerCountSummary = registry.timers().filter(Functions.nameEquals("$pluginId.helloWorld.$timing")).collect(Collectors.summarizingLong(Timer::count))
+      val counterSummary = registry.counters().filter(Functions.nameEquals("$pluginId.helloWorld.invocations")).collect(Collectors.summarizingLong(Counter::count))
+      val timerCountSummary = registry.timers().filter(Functions.nameEquals("$pluginId.helloWorld.timing")).collect(Collectors.summarizingLong(Timer::count))
 
       // There should be two metric points for each meter type
       expectThat(counterSummary).get { sum }.isEqualTo(2)
@@ -101,8 +101,6 @@ class MetricInvocationAspectTest : JUnit5Minutests {
   }
 
   private inner class Fixture {
-    val timing: String = "timing"
-    val invocations: String = "invocations"
     val pluginId: String = "netflix.plugin"
     val pluginVersion: String = "0.0.1"
 
