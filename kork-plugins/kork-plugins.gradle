@@ -6,12 +6,18 @@ apply from: "$rootDir/gradle/lombok.gradle"
 dependencies {
   api(platform(project(":spinnaker-dependencies")))
   api project(":kork-exceptions")
+
+  implementation "com.github.ben-manes.caffeine:caffeine"
+
+  implementation "com.netflix.spectator:spectator-api"
+
   implementation project(":kork-plugins-spring-api")
 
   implementation "org.pf4j:pf4j"
   implementation "org.pf4j:pf4j-update"
 
   implementation "org.springframework.boot:spring-boot-starter-web"
+  implementation "org.springframework.boot:spring-boot-starter-actuator"
   implementation("com.google.guava:guava")
 
   implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml")
@@ -25,4 +31,8 @@ dependencies {
 
   testRuntimeOnly "cglib:cglib-nodep"
   testRuntimeOnly "org.objenesis:objenesis"
+}
+
+compileJava {
+  options.compilerArgs << '-parameters'
 }
