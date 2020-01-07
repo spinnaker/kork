@@ -38,7 +38,7 @@ import org.springframework.core.io.Resource;
 import org.springframework.core.io.support.ResourcePropertySource;
 
 @Configuration
-@ConditionalOnExpression("${archaius.enabled:true}")
+@ConditionalOnProperty(value = "archaius.enabled", matchIfMissing = true)
 public class ArchaiusConfiguration {
 
   /** This is a BeanPostProcessor to ensure early initialization only. */
