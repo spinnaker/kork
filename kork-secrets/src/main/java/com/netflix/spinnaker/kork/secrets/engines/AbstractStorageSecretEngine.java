@@ -35,8 +35,6 @@ public abstract class AbstractStorageSecretEngine implements SecretEngine {
 
   protected Map<String, Map<String, Object>> cache = new HashMap<>();
 
-  protected Yaml yamlParser = new Yaml();
-
   public byte[] decrypt(EncryptedSecret encryptedSecret) {
     String fileUri = encryptedSecret.getParams().get(STORAGE_FILE_URI);
     String key = encryptedSecret.getParams().get(STORAGE_PROP_KEY);
@@ -92,6 +90,12 @@ public abstract class AbstractStorageSecretEngine implements SecretEngine {
     throw new UnsupportedOperationException("This operation is not supported");
   }
 
+  protected Yaml getYamlParser() {
+    // Yaml parser is not thread safe, we need separate instances for each thread
+    // https://bitbucket.org/asomov/snakeyaml/wiki/Documentation#markdown-header-threading
+    return new Yaml();
+  }
+
   protected abstract InputStream downloadRemoteFile(EncryptedSecret encryptedSecret)
       throws IOException;
 
@@ -110,7 +114,7 @@ public abstract class AbstractStorageSecretEngine implements SecretEngine {
   }
 
   protected void parseAsYaml(String fileURI, InputStream inputStream) {
-    Map<String, Object> parsed = yamlParser.load(inputStream);
+    Map<String, Object> parsed = getYamlParser().load(inputStream);
     cache.put(fileURI, parsed);
   }
 
