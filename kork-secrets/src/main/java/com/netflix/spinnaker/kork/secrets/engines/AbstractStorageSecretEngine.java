@@ -35,6 +35,9 @@ public abstract class AbstractStorageSecretEngine implements SecretEngine {
 
   protected Map<String, Map<String, Object>> cache = new HashMap<>();
 
+  /** Use {@link AbstractStorageSecretEngine#getYamlParser()} instead. */
+  @Deprecated protected Yaml yamlParser = new Yaml();
+
   public byte[] decrypt(EncryptedSecret encryptedSecret) {
     String fileUri = encryptedSecret.getParams().get(STORAGE_FILE_URI);
     String key = encryptedSecret.getParams().get(STORAGE_PROP_KEY);
