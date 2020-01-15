@@ -41,7 +41,7 @@ class UpdateRepositoryFactoryTest : JUnit5Minutests {
       }
 
       test("creates update repository with configured custom file downloader") {
-        expectThat(create())
+        expectThat(get())
           .isA<ConfigurableUpdateRepository>()
           .get { fileDownloader }
           .describedAs("file downloader")
