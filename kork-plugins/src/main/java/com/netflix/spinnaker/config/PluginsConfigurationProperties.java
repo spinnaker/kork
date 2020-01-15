@@ -64,8 +64,8 @@ public class PluginsConfigurationProperties {
   /** Definition of a single {@link org.pf4j.update.UpdateRepository}. */
   public static class PluginRepositoryProperties {
 
-    /** */
-    private boolean enabled;
+    /** Flag to determine if repository is enabled. */
+    private boolean enabled = true;
 
     /** The base URL to the repository. */
     private String url;

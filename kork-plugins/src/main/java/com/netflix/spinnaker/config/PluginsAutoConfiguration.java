@@ -33,8 +33,6 @@ import com.netflix.spinnaker.kork.plugins.update.ConfigurableUpdateRepository;
 import com.netflix.spinnaker.kork.plugins.update.PluginUpdateService;
 import com.netflix.spinnaker.kork.plugins.update.SpinnakerUpdateManager;
 import com.netflix.spinnaker.kork.plugins.update.downloader.FileDownloaderProvider;
-import com.netflix.spinnaker.kork.plugins.update.front50.Front50Service;
-import com.netflix.spinnaker.kork.plugins.update.front50.Front50UpdateRepository;
 import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.List;
@@ -48,9 +46,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
-import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -103,25 +99,6 @@ public class PluginsAutoConfiguration {
   public static UpdateManager pluginUpdateManager(
       SpinnakerPluginManager pluginManager, List<UpdateRepository> updateRepositories) {
     return new SpinnakerUpdateManager(pluginManager, updateRepositories);
-  }
-
-  @Bean
-  @ConditionalOnProperty("spinnaker.extensibility.repositories.front50.enabled")
-  public static UpdateRepository pluginFront50UpdateRepository(
-      Front50Service pluginFront50Service,
-      ApplicationContext applicationContext,
-      Map<String, PluginRepositoryProperties> pluginRepositoriesConfig) {
-
-    PluginRepositoryProperties front50RepositoryProps =
-        pluginRepositoriesConfig.get(PluginsConfigurationProperties.FRONT5O_REPOSITORY);
-
-    return new Front50UpdateRepository(
-        PluginsConfigurationProperties.FRONT5O_REPOSITORY,
-        applicationContext.getApplicationName(),
-        front50RepositoryProps.getUrl(),
-        FileDownloaderProvider.get(front50RepositoryProps.fileDownloader),
-        new CompoundVerifier(),
-        pluginFront50Service);
   }
 
   @Bean

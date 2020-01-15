@@ -17,25 +17,24 @@
 package com.netflix.spinnaker.config;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
-import com.netflix.spinnaker.kork.plugins.config.ConfigResolver;
-import com.netflix.spinnaker.kork.plugins.config.RepositoryConfigCoordinates;
-import com.netflix.spinnaker.kork.plugins.config.SpringEnvironmentConfigResolver;
+import com.netflix.spinnaker.config.PluginsConfigurationProperties.PluginRepositoryProperties;
+import com.netflix.spinnaker.kork.plugins.update.downloader.FileDownloaderProvider;
 import com.netflix.spinnaker.kork.plugins.update.front50.Front50Service;
+import com.netflix.spinnaker.kork.plugins.update.front50.Front50UpdateRepository;
 import com.netflix.spinnaker.okhttp.OkHttpClientConfigurationProperties;
-import java.util.HashMap;
 import java.util.Map;
 import okhttp3.OkHttpClient;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.pf4j.update.UpdateRepository;
+import org.pf4j.update.verifier.CompoundVerifier;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.bind.Bindable;
 import org.springframework.boot.context.properties.bind.Binder;
+import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.core.env.Environment;
 import retrofit2.Retrofit;
 import retrofit2.converter.jackson.JacksonConverterFactory;
@@ -43,13 +42,6 @@ import retrofit2.converter.jackson.JacksonConverterFactory;
 @Configuration
 @ConditionalOnProperty("spinnaker.extensibility.repositories.front50.enabled")
 public class Front50UpdateRepositoryConfiguration {
-
-  @Bean
-  @ConditionalOnMissingBean(ConfigResolver.class)
-  public static ConfigResolver springEnvironmentConfigResolver(
-      ConfigurableEnvironment environment) {
-    return new SpringEnvironmentConfigResolver(environment);
-  }
 
   @Bean
   public static OkHttpClientConfigurationProperties pluginOkHttpClientProperties(
@@ -78,18 +70,12 @@ public class Front50UpdateRepositoryConfiguration {
 
   @Bean
   public static Front50Service pluginFront50Service(
-      ConfigResolver configResolver,
+      Map<String, PluginRepositoryProperties> pluginRepositoriesConfig,
       OkHttpClient pluginOkHttpClient,
       ObjectMapper pluginRetrofitObjectMapper) {
 
-    Map<String, PluginsConfigurationProperties.PluginRepositoryProperties> repositoriesConfig =
-        configResolver.resolve(
-            new RepositoryConfigCoordinates(),
-            new TypeReference<
-                HashMap<String, PluginsConfigurationProperties.PluginRepositoryProperties>>() {});
-
-    PluginsConfigurationProperties.PluginRepositoryProperties front50RepositoryProps =
-        repositoriesConfig.get(PluginsConfigurationProperties.FRONT5O_REPOSITORY);
+    PluginRepositoryProperties front50RepositoryProps =
+        pluginRepositoriesConfig.get(PluginsConfigurationProperties.FRONT5O_REPOSITORY);
 
     return new Retrofit.Builder()
         .addConverterFactory(JacksonConverterFactory.create(pluginRetrofitObjectMapper))
@@ -97,5 +83,23 @@ public class Front50UpdateRepositoryConfiguration {
         .client(pluginOkHttpClient)
         .build()
         .create(Front50Service.class);
+  }
+
+  @Bean
+  public static UpdateRepository pluginFront50UpdateRepository(
+      Front50Service pluginFront50Service,
+      ApplicationContext applicationContext,
+      Map<String, PluginRepositoryProperties> pluginRepositoriesConfig) {
+
+    PluginRepositoryProperties front50RepositoryProps =
+        pluginRepositoriesConfig.get(PluginsConfigurationProperties.FRONT5O_REPOSITORY);
+
+    return new Front50UpdateRepository(
+        PluginsConfigurationProperties.FRONT5O_REPOSITORY,
+        applicationContext.getApplicationName(),
+        front50RepositoryProps.getUrl(),
+        FileDownloaderProvider.get(front50RepositoryProps.fileDownloader),
+        new CompoundVerifier(),
+        pluginFront50Service);
   }
 }
