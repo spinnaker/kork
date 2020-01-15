@@ -24,7 +24,7 @@ import org.pf4j.update.FileDownloader
 import org.pf4j.update.SimpleFileDownloader
 import org.pf4j.update.UpdateRepository
 
-object FileDownloaderProvder {
+object FileDownloaderProvider {
 
   private val mapper: ObjectMapper = ObjectMapper()
 

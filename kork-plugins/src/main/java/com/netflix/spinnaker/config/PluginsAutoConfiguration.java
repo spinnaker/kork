@@ -32,7 +32,7 @@ import com.netflix.spinnaker.kork.plugins.spring.actuator.SpinnakerPluginEndpoin
 import com.netflix.spinnaker.kork.plugins.update.ConfigurableUpdateRepository;
 import com.netflix.spinnaker.kork.plugins.update.PluginUpdateService;
 import com.netflix.spinnaker.kork.plugins.update.SpinnakerUpdateManager;
-import com.netflix.spinnaker.kork.plugins.update.downloader.FileDownloaderProvder;
+import com.netflix.spinnaker.kork.plugins.update.downloader.FileDownloaderProvider;
 import com.netflix.spinnaker.kork.plugins.update.front50.Front50Service;
 import com.netflix.spinnaker.kork.plugins.update.front50.Front50UpdateRepository;
 import java.nio.file.Paths;
@@ -119,7 +119,7 @@ public class PluginsAutoConfiguration {
         PluginsConfigurationProperties.FRONT5O_REPOSITORY,
         applicationContext.getApplicationName(),
         front50RepositoryProps.getUrl(),
-        FileDownloaderProvder.get(front50RepositoryProps.fileDownloader),
+        FileDownloaderProvider.get(front50RepositoryProps.fileDownloader),
         new CompoundVerifier(),
         pluginFront50Service);
   }
@@ -138,7 +138,7 @@ public class PluginsAutoConfiguration {
                     new ConfigurableUpdateRepository(
                         entry.getKey(),
                         entry.getValue().getUrl(),
-                        FileDownloaderProvder.get(entry.getValue().fileDownloader),
+                        FileDownloaderProvider.get(entry.getValue().fileDownloader),
                         new CompoundVerifier()))
             .collect(Collectors.toList());
 
