@@ -17,6 +17,7 @@
 package com.netflix.spinnaker.kork.secrets.engines;
 
 import com.amazonaws.AmazonClientException;
+import com.amazonaws.client.builder.AwsClientBuilder;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3ClientBuilder;
 import com.amazonaws.services.s3.model.AmazonS3Exception;
@@ -31,6 +32,12 @@ import org.springframework.stereotype.Component;
 public class S3SecretEngine extends AbstractStorageSecretEngine {
   private static String IDENTIFIER = "s3";
 
+  protected S3Configuration s3Configuration;
+
+  public S3SecretEngine(S3Configuration s3Configuration) {
+    this.s3Configuration = s3Configuration;
+  }
+
   public String identifier() {
     return S3SecretEngine.IDENTIFIER;
   }
@@ -41,7 +48,14 @@ public class S3SecretEngine extends AbstractStorageSecretEngine {
     String bucket = encryptedSecret.getParams().get(STORAGE_BUCKET);
     String objName = encryptedSecret.getParams().get(STORAGE_FILE_URI);
 
-    AmazonS3ClientBuilder s3ClientBuilder = AmazonS3ClientBuilder.standard().withRegion(region);
+    AmazonS3ClientBuilder s3ClientBuilder = AmazonS3ClientBuilder.standard();
+    if (s3Configuration.getS3Url().isEmpty()) {
+      s3ClientBuilder = s3ClientBuilder.withRegion(region);
+    } else {
+      s3ClientBuilder.setEndpointConfiguration(
+          new AwsClientBuilder.EndpointConfiguration(s3Configuration.getS3Url(), region));
+      s3ClientBuilder.setPathStyleAccessEnabled(s3Configuration.isPathStyleAccessEnabled());
+    }
 
     AmazonS3 s3Client = s3ClientBuilder.build();
 
