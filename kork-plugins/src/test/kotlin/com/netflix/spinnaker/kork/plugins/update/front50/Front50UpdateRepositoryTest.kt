@@ -18,6 +18,8 @@ package com.netflix.spinnaker.kork.plugins.update.front50
 
 import com.netflix.spinnaker.kork.exceptions.SystemException
 import com.netflix.spinnaker.kork.plugins.update.SpinnakerPluginInfo
+import com.netflix.spinnaker.kork.plugins.update.SpinnakerPluginInfo.SpinnakerPluginRelease
+import com.netflix.spinnaker.kork.plugins.update.SpinnakerPluginInfo.SpinnakerPluginRelease.State
 import dev.minutest.junit.JUnit5Minutests
 import dev.minutest.rootContext
 import io.mockk.every
@@ -45,11 +47,14 @@ class Front50UpdateRepositoryTest : JUnit5Minutests {
       expectThat(plugins)
         .isA<MutableMap<String, SpinnakerPluginInfo>>()[pluginId]
         .get { plugin.id }.isEqualTo(pluginId)
+        .get { plugin.spinnakerReleases[0].state == pluginReleaseState }
 
       val plugin = subject.getPlugin(pluginId)
 
       expectThat(plugin)
         .isA<SpinnakerPluginInfo>()
+        .get { plugin.id }.isEqualTo(pluginId)
+        .get { plugin.spinnakerReleases[0].state == pluginReleaseState }
     }
 
     test("HttpException results in thrown SystemException") {
@@ -69,6 +74,7 @@ class Front50UpdateRepositoryTest : JUnit5Minutests {
     val applicationName = "orca"
     val repositoryName = "front50"
     val front50Url = URL("https://front50.com")
+    val pluginReleaseState = State.CANDIDATE
 
     val subject = Front50UpdateRepository(
       repositoryName,
@@ -79,7 +85,7 @@ class Front50UpdateRepositoryTest : JUnit5Minutests {
       front50Service
     )
 
-    val plugin = SpinnakerPluginInfo(SpinnakerPluginInfo.State.RELEASE)
+    val plugin = SpinnakerPluginInfo(listOf(SpinnakerPluginRelease(pluginReleaseState)))
 
     init {
       plugin.id = pluginId

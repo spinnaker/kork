@@ -16,13 +16,16 @@
 
 package com.netflix.spinnaker.kork.plugins.update
 
+import com.fasterxml.jackson.annotation.JsonProperty
 import org.pf4j.update.PluginInfo
 
 data class SpinnakerPluginInfo(
-  val state: State
+  @JsonProperty("releases") val spinnakerReleases: List<SpinnakerPluginRelease>
 ) : PluginInfo() {
 
-  enum class State {
-    CANDIDATE, RELEASE
+  data class SpinnakerPluginRelease(val state: State) : PluginRelease() {
+    enum class State {
+      CANDIDATE, RELEASE
+    }
   }
 }
