@@ -54,10 +54,10 @@ class Front50UpdateRepository(
         log.debug("Populating plugin info cache from front50.")
         front50Service.list(applicationName)
       } catch (e: HttpException) {
-        throw SystemException("Unable to load the list of plugins from front50", e)
+        throw SystemException("Unable to list front50 plugin info", e)
       }
 
-      plugins = front50Plugins.associateByTo(plugins) { it.name }
+      plugins = front50Plugins.associateByTo(plugins) { it.id }
       return plugins
     }
 
