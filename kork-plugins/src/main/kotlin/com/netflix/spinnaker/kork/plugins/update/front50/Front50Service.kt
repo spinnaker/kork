@@ -24,9 +24,9 @@ import retrofit2.http.Query
 
 interface Front50Service {
 
-  @GET("/pluginArtifacts/{id}")
+  @GET("/pluginInfo/{id}")
   fun getById(@Path("id") id: String): SpinnakerPluginInfo
 
-  @GET("/pluginArtifacts")
+  @GET("/pluginInfo")
   fun list(@Query("service") service: String): Collection<SpinnakerPluginInfo>
 }

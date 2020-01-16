@@ -40,59 +40,42 @@ import retrofit2.Retrofit;
 import retrofit2.converter.jackson.JacksonConverterFactory;
 
 @Configuration
-@ConditionalOnProperty("spinnaker.extensibility.repositories.front50.enabled")
+@ConditionalOnProperty(value = "spinnaker.extensibility.repositories.front50.enabled")
 public class Front50UpdateRepositoryConfiguration {
 
   @Bean
-  public static OkHttpClientConfigurationProperties pluginOkHttpClientProperties(
-      Environment environment) {
-    return Binder.get(environment)
-        .bind("ok-http-client", Bindable.of(OkHttpClientConfigurationProperties.class))
-        .orElseThrow(IllegalStateException::new);
-  }
-
-  @Bean
-  public static OkHttpClient pluginOkHttpClient(
-      OkHttpClientConfigurationProperties pluginOkHttpClientProperties) {
-    return new OkHttp3ClientConfiguration(pluginOkHttpClientProperties)
-        .create()
-        .retryOnConnectionFailure(pluginOkHttpClientProperties.isRetryOnConnectionFailure())
-        .build();
-  }
-
-  @Bean
-  ObjectMapper pluginRetrofitObjectMapper() {
-    return new ObjectMapper()
-        .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
-        .configure(SerializationFeature.INDENT_OUTPUT, true)
-        .setSerializationInclusion(JsonInclude.Include.NON_NULL);
-  }
-
-  @Bean
-  public static Front50Service pluginFront50Service(
-      Map<String, PluginRepositoryProperties> pluginRepositoriesConfig,
-      OkHttpClient pluginOkHttpClient,
-      ObjectMapper pluginRetrofitObjectMapper) {
-
-    PluginRepositoryProperties front50RepositoryProps =
-        pluginRepositoriesConfig.get(PluginsConfigurationProperties.FRONT5O_REPOSITORY);
-
-    return new Retrofit.Builder()
-        .addConverterFactory(JacksonConverterFactory.create(pluginRetrofitObjectMapper))
-        .baseUrl(front50RepositoryProps.getUrl())
-        .client(pluginOkHttpClient)
-        .build()
-        .create(Front50Service.class);
-  }
-
-  @Bean
   public static UpdateRepository pluginFront50UpdateRepository(
-      Front50Service pluginFront50Service,
+      Environment environment,
       ApplicationContext applicationContext,
       Map<String, PluginRepositoryProperties> pluginRepositoriesConfig) {
 
+    OkHttpClientConfigurationProperties okHttpClientProperties =
+        Binder.get(environment)
+            .bind("ok-http-client", Bindable.of(OkHttpClientConfigurationProperties.class))
+            .orElseThrow(IllegalStateException::new);
+
+    OkHttpClient okHttpClient =
+        new OkHttp3ClientConfiguration(okHttpClientProperties)
+            .create()
+            .retryOnConnectionFailure(okHttpClientProperties.isRetryOnConnectionFailure())
+            .build();
+
+    ObjectMapper objectMapper =
+        new ObjectMapper()
+            .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+            .configure(SerializationFeature.INDENT_OUTPUT, true)
+            .setSerializationInclusion(JsonInclude.Include.NON_NULL);
+
     PluginRepositoryProperties front50RepositoryProps =
         pluginRepositoriesConfig.get(PluginsConfigurationProperties.FRONT5O_REPOSITORY);
+
+    Front50Service front50Service =
+        new Retrofit.Builder()
+            .addConverterFactory(JacksonConverterFactory.create(objectMapper))
+            .baseUrl(front50RepositoryProps.getUrl())
+            .client(okHttpClient)
+            .build()
+            .create(Front50Service.class);
 
     return new Front50UpdateRepository(
         PluginsConfigurationProperties.FRONT5O_REPOSITORY,
@@ -100,6 +83,6 @@ public class Front50UpdateRepositoryConfiguration {
         front50RepositoryProps.getUrl(),
         FileDownloaderProvider.get(front50RepositoryProps.fileDownloader),
         new CompoundVerifier(),
-        pluginFront50Service);
+        front50Service);
   }
 }
