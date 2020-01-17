@@ -26,6 +26,7 @@ import com.netflix.spinnaker.kork.secrets.EncryptedSecret;
 import com.netflix.spinnaker.kork.secrets.SecretException;
 import java.io.IOException;
 import java.io.InputStream;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -49,7 +50,7 @@ public class S3SecretEngine extends AbstractStorageSecretEngine {
     String objName = encryptedSecret.getParams().get(STORAGE_FILE_URI);
 
     AmazonS3ClientBuilder s3ClientBuilder = AmazonS3ClientBuilder.standard();
-    if (s3Configuration.getS3Url().isEmpty()) {
+    if (StringUtils.isBlank(s3Configuration.getS3Url())) {
       s3ClientBuilder = s3ClientBuilder.withRegion(region);
     } else {
       s3ClientBuilder.setEndpointConfiguration(

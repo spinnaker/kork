@@ -36,8 +36,8 @@ public class S3Configuration {
 
   @Autowired
   public S3Configuration(
-      @Value("${secrets.s3.endpointUrl:}") String s3Url,
-      @Value("${secrets.s3.pathStyleAccessEnabled:}") String pathStyleAccessEnabled) {
+      @Value("${secrets.s3.endpoint-url:}") String s3Url,
+      @Value("${secrets.s3.path-style-access-enabled:}") String pathStyleAccessEnabled) {
     this.s3Url = s3Url;
     this.pathStyleAccessEnabled = Boolean.parseBoolean(pathStyleAccessEnabled);
   }
