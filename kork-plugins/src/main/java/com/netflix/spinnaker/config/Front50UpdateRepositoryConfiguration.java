@@ -20,6 +20,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.module.kotlin.KotlinModule;
 import com.netflix.spinnaker.config.PluginsConfigurationProperties.PluginRepositoryProperties;
 import com.netflix.spinnaker.kork.plugins.update.downloader.FileDownloaderProvider;
 import com.netflix.spinnaker.kork.plugins.update.front50.Front50Service;
@@ -54,11 +55,10 @@ public class Front50UpdateRepositoryConfiguration {
         Binder.get(environment)
             .bind("ok-http-client", Bindable.of(OkHttpClientConfigurationProperties.class))
             .orElseThrow(
-                () -> {
-                  throw new BeanCreationException(
-                      "Unable to bind ok-http-client property to "
-                          + OkHttpClientConfigurationProperties.class.getSimpleName());
-                });
+                () ->
+                    new BeanCreationException(
+                        "Unable to bind ok-http-client property to "
+                            + OkHttpClientConfigurationProperties.class.getSimpleName()));
 
     OkHttpClient okHttpClient =
         new OkHttp3ClientConfiguration(okHttpClientProperties)
@@ -68,6 +68,7 @@ public class Front50UpdateRepositoryConfiguration {
 
     ObjectMapper objectMapper =
         new ObjectMapper()
+            .registerModule(new KotlinModule())
             .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
             .configure(SerializationFeature.INDENT_OUTPUT, true)
             .setSerializationInclusion(JsonInclude.Include.NON_NULL);
