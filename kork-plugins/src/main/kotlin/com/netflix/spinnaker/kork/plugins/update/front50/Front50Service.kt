@@ -22,6 +22,10 @@ import retrofit2.http.GET
 import retrofit2.http.Path
 import retrofit2.http.Query
 
+/**
+ * List and get plugin info objects from Front50. Used in conjunction with [Front50UpdateRepository]
+ * to populate a services plugin info cache to determine which plugins to load.
+ */
 interface Front50Service {
 
   @GET("/pluginInfo/{id}")

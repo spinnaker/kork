@@ -27,6 +27,13 @@ import org.slf4j.LoggerFactory
 import retrofit2.HttpException
 import java.net.URL
 
+/**
+ * Optional [UpdateRepository].
+ *
+ * Wired up if the property `spinnaker.extensibility.repositories.front50.enabled` is `true`.
+ * Pulls Front50 plugin info objects for the relevant service and populates the available plugin
+ * info cache in [org.pf4j.update.UpdateManager].
+ */
 class Front50UpdateRepository(
   private val repositoryName: String,
   private val applicationName: String,
@@ -49,36 +56,24 @@ class Front50UpdateRepository(
   }
 
   override fun getPlugins(): MutableMap<String, SpinnakerPluginInfo> {
-    if (plugins.isEmpty()) {
-      val front50Plugins = try {
+    return plugins.ifEmpty {
+      try {
         log.debug("Populating plugin info cache from front50.")
-        front50Service.list(applicationName)
+        front50Service.list(applicationName).associateByTo(plugins) { it.id }
       } catch (e: HttpException) {
         throw SystemException("Unable to list front50 plugin info", e)
       }
-
-      plugins = front50Plugins.associateByTo(plugins) { it.id }
-      return plugins
     }
-
-    return plugins
   }
 
   override fun getPlugin(id: String): SpinnakerPluginInfo {
-    val pluginInfo = plugins[id]
-
-    if (pluginInfo == null) {
-      val front50PluginInfo = try {
+    return plugins.getOrPut(id, {
+      try {
         front50Service.getById(id)
       } catch (e: HttpException) {
         throw SystemException("Unable to get the requested plugin info `$id` from front50", e)
       }
-
-      plugins[id] = front50PluginInfo
-      return front50PluginInfo
-    }
-
-    return pluginInfo
+    })
   }
 
   override fun getFileVerifier(): FileVerifier {

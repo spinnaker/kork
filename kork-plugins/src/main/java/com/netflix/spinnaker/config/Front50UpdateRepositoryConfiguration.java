@@ -29,6 +29,7 @@ import java.util.Map;
 import okhttp3.OkHttpClient;
 import org.pf4j.update.UpdateRepository;
 import org.pf4j.update.verifier.CompoundVerifier;
+import org.springframework.beans.factory.BeanCreationException;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.bind.Bindable;
 import org.springframework.boot.context.properties.bind.Binder;
@@ -52,7 +53,12 @@ public class Front50UpdateRepositoryConfiguration {
     OkHttpClientConfigurationProperties okHttpClientProperties =
         Binder.get(environment)
             .bind("ok-http-client", Bindable.of(OkHttpClientConfigurationProperties.class))
-            .orElseThrow(IllegalStateException::new);
+            .orElseThrow(
+                () -> {
+                  throw new BeanCreationException(
+                      "Unable to bind ok-http-client property to "
+                          + OkHttpClientConfigurationProperties.class.getSimpleName());
+                });
 
     OkHttpClient okHttpClient =
         new OkHttp3ClientConfiguration(okHttpClientProperties)
