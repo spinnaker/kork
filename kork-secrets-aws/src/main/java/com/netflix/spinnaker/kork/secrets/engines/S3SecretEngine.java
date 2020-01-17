@@ -50,11 +50,11 @@ public class S3SecretEngine extends AbstractStorageSecretEngine {
     String objName = encryptedSecret.getParams().get(STORAGE_FILE_URI);
 
     AmazonS3ClientBuilder s3ClientBuilder = AmazonS3ClientBuilder.standard();
-    if (StringUtils.isBlank(s3Configuration.getS3Url())) {
+    if (StringUtils.isBlank(s3Configuration.getEndpointUrl())) {
       s3ClientBuilder = s3ClientBuilder.withRegion(region);
     } else {
       s3ClientBuilder.setEndpointConfiguration(
-          new AwsClientBuilder.EndpointConfiguration(s3Configuration.getS3Url(), region));
+          new AwsClientBuilder.EndpointConfiguration(s3Configuration.getEndpointUrl(), region));
       s3ClientBuilder.setPathStyleAccessEnabled(s3Configuration.isPathStyleAccessEnabled());
     }
 

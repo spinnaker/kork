@@ -20,25 +20,25 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.stereotype.Component;
 
 @Getter
 @Component
 @Configuration
-@ConditionalOnExpression("${secrets.s3.enabled:false}")
+@ConditionalOnProperty("secrets.s3.enabled")
 @Slf4j
 public class S3Configuration {
 
-  private String s3Url;
+  private String endpointUrl;
   private boolean pathStyleAccessEnabled;
 
   @Autowired
   public S3Configuration(
-      @Value("${secrets.s3.endpoint-url:}") String s3Url,
-      @Value("${secrets.s3.path-style-access-enabled:}") String pathStyleAccessEnabled) {
-    this.s3Url = s3Url;
-    this.pathStyleAccessEnabled = Boolean.parseBoolean(pathStyleAccessEnabled);
+      @Value("${secrets.s3.endpoint-url}") String endpointUrl,
+      @Value("${secrets.s3.path-style-access-enabled}") boolean pathStyleAccessEnabled) {
+    this.endpointUrl = endpointUrl;
+    this.pathStyleAccessEnabled = pathStyleAccessEnabled;
   }
 }
