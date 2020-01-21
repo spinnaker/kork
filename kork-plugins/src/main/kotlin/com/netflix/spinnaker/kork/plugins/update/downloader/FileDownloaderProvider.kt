@@ -33,8 +33,8 @@ object FileDownloaderProvider {
    * Get a [FileDownloader] for the [UpdateRepository].
    */
   @JvmStatic
-  fun get(fileDownloaderProperties: FileDownloaderProperties): FileDownloader {
-    if (fileDownloaderProperties.className == null) {
+  fun get(fileDownloaderProperties: FileDownloaderProperties?): FileDownloader {
+    if (fileDownloaderProperties?.className == null) {
       return SimpleFileDownloader()
     }
 
