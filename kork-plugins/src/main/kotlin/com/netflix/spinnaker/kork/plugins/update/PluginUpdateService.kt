@@ -41,15 +41,11 @@ import java.nio.file.Path
  *
  * TODO(rz): Look to a local config or front50 (depending on spinnaker setup) to determine if there are specific
  *  plugin versions to use. We may not want the most recent release of a plugin.
- * TODO(rz): The front50 integration will need to be smart enough to understand what service is asking for plugins
- *  from the repository, and return only the plugins that are supposed to be installed on that service.
- * TODO(rz): Consider not loading the plugins and deferring this to the PluginManager so that no errors are raised when
- *  trying to load the same plugin twice.
  */
 class PluginUpdateService(
   internal val updateManager: SpinnakerUpdateManager,
   internal val pluginManager: SpinnakerPluginManager,
-  internal val applicationEventPublisher: ApplicationEventPublisher
+  private val applicationEventPublisher: ApplicationEventPublisher
 ) {
 
   private val log by lazy { LoggerFactory.getLogger(javaClass) }
@@ -59,6 +55,9 @@ class PluginUpdateService(
     installNewPlugins()
   }
 
+  /**
+   * This is used in Gate to download Deck plugin artifacts - do not remove.
+   */
   fun download(pluginId: String, version: String): Path {
     return updateManager.downloadPluginRelease(pluginId, version)
   }

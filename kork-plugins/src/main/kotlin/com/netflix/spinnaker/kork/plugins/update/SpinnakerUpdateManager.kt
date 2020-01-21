@@ -20,7 +20,6 @@ import java.nio.file.Files
 import java.nio.file.StandardCopyOption
 import org.pf4j.PluginManager
 import org.pf4j.PluginRuntimeException
-import org.pf4j.PluginState
 import org.pf4j.update.UpdateManager
 import org.pf4j.update.UpdateRepository
 import org.slf4j.LoggerFactory
@@ -43,30 +42,19 @@ class SpinnakerUpdateManager(
   private val systemVersion: String = pluginManager.systemVersion
 
   /**
-   * TODO(rz): Remove once PF4J releases a new version with REPLACE_EXISTING fix.
-   */
+   * This will only download and write the plugin to the file system.  Calls to load and start
+   * plugins occur once via [com.netflix.spinnaker.kork.plugins.ExtensionBeanDefinitionRegistryPostProcessor].
+  */
   @Synchronized
   override fun installPlugin(id: String?, version: String?): Boolean {
     // Download to temporary location
     val downloaded = downloadPlugin(id, version)
-
-    val pluginsRoot = pluginManager.pluginsRoot
-    val file = pluginsRoot.resolve(downloaded.fileName)
-    File(pluginsRoot.toString()).mkdirs()
-    try {
-      Files.move(downloaded, file, StandardCopyOption.REPLACE_EXISTING)
-    } catch (e: IOException) {
-      throw PluginRuntimeException(e, "Failed to write file '{}' to plugins folder", file)
-    }
-
-    val pluginId = pluginManager.loadPlugin(file)
-    val state = pluginManager.startPlugin(pluginId)
-
-    return PluginState.STARTED == state
+    return pluginManager.pluginsRoot.write(downloaded)
   }
 
   /**
-   * TODO(rz): Remove once PF4J releases a new version with REPLACE_EXISTING fix.
+   * This will only download and write the plugin to the file system.  Calls to load and start
+   * plugins occur once via [com.netflix.spinnaker.kork.plugins.ExtensionBeanDefinitionRegistryPostProcessor].
    */
   override fun updatePlugin(id: String?, version: String?): Boolean {
     if (pluginManager.getPlugin(id) == null) {
@@ -85,21 +73,24 @@ class SpinnakerUpdateManager(
       return false
     }
 
-    val pluginsRoot = pluginManager.pluginsRoot
-    val file = pluginsRoot.resolve(downloaded.fileName)
-    try {
-      Files.move(downloaded, file, StandardCopyOption.REPLACE_EXISTING)
-    } catch (e: IOException) {
-      throw PluginRuntimeException("Failed to write plugin file {} to plugin folder", file)
-    }
-
-    val newPluginId = pluginManager.loadPlugin(file)
-    val state = pluginManager.startPlugin(newPluginId)
-
-    return PluginState.STARTED == state
+    return pluginManager.pluginsRoot.write(downloaded)
   }
 
+  /**
+   * Exists to expose protected [downloadPlugin]
+   */
   fun downloadPluginRelease(pluginId: String, version: String): Path {
     return downloadPlugin(pluginId, version)
+  }
+
+  private fun Path.write(downloaded: Path): Boolean {
+    val file = this.resolve(downloaded.fileName)
+    File(this.toString()).mkdirs()
+    try {
+      return Files.move(downloaded, file, StandardCopyOption.REPLACE_EXISTING)
+        .contains(downloaded.fileName)
+    } catch (e: IOException) {
+      throw PluginRuntimeException(e, "Failed to write file '{}' to plugins folder", file)
+    }
   }
 }

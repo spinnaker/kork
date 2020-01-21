@@ -26,6 +26,7 @@ import com.netflix.spinnaker.kork.plugins.update.downloader.FileDownloaderProvid
 import com.netflix.spinnaker.kork.plugins.update.front50.Front50Service;
 import com.netflix.spinnaker.kork.plugins.update.front50.Front50UpdateRepository;
 import com.netflix.spinnaker.okhttp.OkHttpClientConfigurationProperties;
+import java.net.URL;
 import java.util.Map;
 import okhttp3.OkHttpClient;
 import org.pf4j.update.UpdateRepository;
@@ -60,6 +61,21 @@ public class Front50UpdateRepositoryConfiguration {
                         "Unable to bind ok-http-client property to "
                             + OkHttpClientConfigurationProperties.class.getSimpleName()));
 
+    URL defaultFront50Url =
+        Binder.get(environment)
+            .bind("front50.base-url", Bindable.of(URL.class))
+            .orElseThrow(
+                () ->
+                    new BeanCreationException(
+                        "Unable to bind front50.base-url property to "
+                            + URL.class.getSimpleName()));
+
+    PluginRepositoryProperties front50RepositoryProps =
+        pluginRepositoriesConfig.get(PluginsConfigurationProperties.FRONT5O_REPOSITORY);
+
+    URL front50Url =
+        defaultFront50Url != null ? defaultFront50Url : front50RepositoryProps.getUrl();
+
     OkHttpClient okHttpClient =
         new OkHttp3ClientConfiguration(okHttpClientProperties)
             .create()
@@ -73,13 +89,10 @@ public class Front50UpdateRepositoryConfiguration {
             .configure(SerializationFeature.INDENT_OUTPUT, true)
             .setSerializationInclusion(JsonInclude.Include.NON_NULL);
 
-    PluginRepositoryProperties front50RepositoryProps =
-        pluginRepositoriesConfig.get(PluginsConfigurationProperties.FRONT5O_REPOSITORY);
-
     Front50Service front50Service =
         new Retrofit.Builder()
             .addConverterFactory(JacksonConverterFactory.create(objectMapper))
-            .baseUrl(front50RepositoryProps.getUrl())
+            .baseUrl(front50Url)
             .client(okHttpClient)
             .build()
             .create(Front50Service.class);
@@ -87,7 +100,7 @@ public class Front50UpdateRepositoryConfiguration {
     return new Front50UpdateRepository(
         PluginsConfigurationProperties.FRONT5O_REPOSITORY,
         applicationContext.getApplicationName(),
-        front50RepositoryProps.getUrl(),
+        front50Url,
         FileDownloaderProvider.get(front50RepositoryProps.fileDownloader),
         new CompoundVerifier(),
         front50Service);
