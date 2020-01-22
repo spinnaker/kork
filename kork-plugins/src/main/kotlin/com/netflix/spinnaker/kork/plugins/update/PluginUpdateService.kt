@@ -21,9 +21,15 @@ import com.netflix.spinnaker.kork.plugins.events.PluginDownloaded.Operation.INST
 import com.netflix.spinnaker.kork.plugins.events.PluginDownloaded.Operation.UPDATE
 import com.netflix.spinnaker.kork.plugins.events.PluginDownloaded.Status.FAILED
 import com.netflix.spinnaker.kork.plugins.events.PluginDownloaded.Status.SUCCEEDED
+import org.pf4j.PluginRuntimeException
 import org.slf4j.LoggerFactory
 import org.springframework.context.ApplicationEventPublisher
+import java.io.File
+import java.io.IOException
+import java.lang.UnsupportedOperationException
+import java.nio.file.Files
 import java.nio.file.Path
+import java.nio.file.StandardCopyOption
 
 /**
  * The [PluginUpdateService] is responsible for sourcing plugin updates from a plugin repository on startup.
@@ -56,7 +62,7 @@ class PluginUpdateService(
   }
 
   /**
-   * This is used in Gate to download Deck plugin artifacts - do not remove.
+   * This is used in Gate to download Deck plugin artifacts - do not remove and must remain public.
    */
   fun download(pluginId: String, version: String): Path {
     return updateManager.downloadPluginRelease(pluginId, version)
@@ -79,7 +85,25 @@ class PluginUpdateService(
 
       log.debug("Update plugin '{}' from version {} to {}", plugin.id, installedVersion, lastRelease.version)
 
-      val updated = updateManager.updatePlugin(plugin.id, lastRelease.version)
+      if (pluginManager.getPlugin(plugin.id) == null) {
+        throw PluginRuntimeException("Plugin {} cannot be updated since it is not installed", plugin.id)
+      }
+
+      val hasUpdate = updateManager.hasPluginUpdate(plugin.id)
+      val updated : Boolean = if (hasUpdate) {
+        val downloaded = download(plugin.id, lastRelease.version)
+
+        if (!pluginManager.deletePlugin(plugin.id)) {
+           false
+        } else {
+          pluginManager.pluginsRoot.write(downloaded)
+        }
+      } else {
+        log.warn("Plugin {} does not have an update available which is compatible with system version {}",
+          plugin.id, pluginManager.systemVersion)
+        false
+      }
+
       if (updated) {
         log.debug("Updated plugin '{}'", plugin.id)
         applicationEventPublisher.publishEvent(
@@ -109,7 +133,11 @@ class PluginUpdateService(
       val lastRelease = updateManager.getLastPluginRelease(plugin.id)
       log.debug("Installing plugin '{}' with version {}", plugin.id, lastRelease.version)
 
-      val installed = updateManager.installPlugin(plugin.id, lastRelease.version)
+      // Download to temporary location
+      val downloaded = download(plugin.id, lastRelease.version)
+
+      val installed = pluginManager.pluginsRoot.write(downloaded)
+
       if (installed) {
         log.debug("Installed plugin '{}'", plugin.id)
         applicationEventPublisher.publishEvent(
@@ -121,6 +149,25 @@ class PluginUpdateService(
           PluginDownloaded(this, INSTALL, FAILED, plugin.id, lastRelease.version)
         )
       }
+    }
+  }
+
+  /**
+   * Write the plugin, creating the the plugins root directory defined in [pluginManager] if
+   * necessary.
+   */
+  private fun Path.write(downloaded: Path): Boolean {
+    if (pluginManager.pluginsRoot == this) {
+      val file = this.resolve(downloaded.fileName)
+      File(this.toString()).mkdirs()
+      try {
+        return Files.move(downloaded, file, StandardCopyOption.REPLACE_EXISTING)
+          .contains(downloaded.fileName)
+      } catch (e: IOException) {
+        throw PluginRuntimeException(e, "Failed to write file '{}' to plugins folder", file)
+      }
+    } else {
+     throw UnsupportedOperationException("This operation is only supported on the specified plugins root directory.")
     }
   }
 }

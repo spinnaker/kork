@@ -57,7 +57,7 @@ class Front50UpdateRepositoryTest : JUnit5Minutests {
         .get { plugin.getReleases()[0].state == pluginReleaseState }
     }
 
-    test("HttpException results in thrown SystemException") {
+    test("Response error results in thrown SystemException") {
       every { front50Service.list(applicationName).execute() } returns Response.error(500, mockk(relaxed = true))
       assertThrows<SystemException> { (subject.getPlugins()) }
     }

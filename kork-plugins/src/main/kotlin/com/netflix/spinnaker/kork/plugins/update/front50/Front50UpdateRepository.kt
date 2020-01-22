@@ -56,7 +56,7 @@ class Front50UpdateRepository(
 
   override fun getPlugins(): MutableMap<String, SpinnakerPluginInfo> {
     return plugins.ifEmpty {
-      log.debug("Populating plugin info cache from front50.")
+      log.debug("Populating plugin info cache from front50")
       val response = front50Service.list(applicationName).execute()
 
       if (!response.isSuccessful) {

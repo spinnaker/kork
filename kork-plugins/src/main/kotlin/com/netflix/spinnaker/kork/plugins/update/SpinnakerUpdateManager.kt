@@ -15,65 +15,40 @@
  */
 package com.netflix.spinnaker.kork.plugins.update
 
-import java.io.IOException
-import java.nio.file.Files
-import java.nio.file.StandardCopyOption
 import org.pf4j.PluginManager
-import org.pf4j.PluginRuntimeException
 import org.pf4j.update.UpdateManager
 import org.pf4j.update.UpdateRepository
 import org.slf4j.LoggerFactory
-import java.io.File
+import java.lang.UnsupportedOperationException
 import java.nio.file.Path
 
 /**
  * TODO(rz): Update [hasPluginUpdate] such that it understands the latest plugin is not always the one desired
  */
 class SpinnakerUpdateManager(
-  private val pluginManager: PluginManager,
+  pluginManager: PluginManager,
   repositories: List<UpdateRepository>
 ) : UpdateManager(pluginManager, repositories) {
 
   private val log by lazy { LoggerFactory.getLogger(javaClass) }
 
   /**
-   * TODO(rz): PF4J made this private, so it's gotta be duplicated here.
+   * This method is not supported as it calls pluginManager.loadPlugin and pluginManager.startPlugin.
+   * Instead, we only want to install the plugins (see [PluginUpdateService]) and leave loading
+   * and starting to [com.netflix.spinnaker.kork.plugins.ExtensionBeanDefinitionRegistryPostProcessor].
    */
-  private val systemVersion: String = pluginManager.systemVersion
-
-  /**
-   * This will only download and write the plugin to the file system.  Calls to load and start
-   * plugins occur once via [com.netflix.spinnaker.kork.plugins.ExtensionBeanDefinitionRegistryPostProcessor].
-  */
   @Synchronized
   override fun installPlugin(id: String?, version: String?): Boolean {
-    // Download to temporary location
-    val downloaded = downloadPlugin(id, version)
-    return pluginManager.pluginsRoot.write(downloaded)
+    throw UnsupportedOperationException("UpdateManager installPlugin is not supported")
   }
 
   /**
-   * This will only download and write the plugin to the file system.  Calls to load and start
-   * plugins occur once via [com.netflix.spinnaker.kork.plugins.ExtensionBeanDefinitionRegistryPostProcessor].
+   * This method is not supported as it calls pluginManager.loadPlugin and pluginManager.startPlugin.
+   * Instead, we only want to install the plugins (see [PluginUpdateService]) and leave loading
+   * and starting to [com.netflix.spinnaker.kork.plugins.ExtensionBeanDefinitionRegistryPostProcessor].
    */
   override fun updatePlugin(id: String?, version: String?): Boolean {
-    if (pluginManager.getPlugin(id) == null) {
-      throw PluginRuntimeException("Plugin {} cannot be updated since it is not installed", id)
-    }
-
-    if (!hasPluginUpdate(id)) {
-      log.warn("Plugin {} does not have an update available which is compatible with system version {}", id, systemVersion)
-      return false
-    }
-
-    // Download to temp folder
-    val downloaded = downloadPlugin(id, version)
-
-    if (!pluginManager.deletePlugin(id)) {
-      return false
-    }
-
-    return pluginManager.pluginsRoot.write(downloaded)
+    throw UnsupportedOperationException("UpdateManager updatePlugin is not supported")
   }
 
   /**
@@ -81,16 +56,5 @@ class SpinnakerUpdateManager(
    */
   fun downloadPluginRelease(pluginId: String, version: String): Path {
     return downloadPlugin(pluginId, version)
-  }
-
-  private fun Path.write(downloaded: Path): Boolean {
-    val file = this.resolve(downloaded.fileName)
-    File(this.toString()).mkdirs()
-    try {
-      return Files.move(downloaded, file, StandardCopyOption.REPLACE_EXISTING)
-        .contains(downloaded.fileName)
-    } catch (e: IOException) {
-      throw PluginRuntimeException(e, "Failed to write file '{}' to plugins folder", file)
-    }
   }
 }
