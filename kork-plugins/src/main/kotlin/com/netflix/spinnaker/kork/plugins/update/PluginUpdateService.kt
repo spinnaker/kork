@@ -87,7 +87,7 @@ class PluginUpdateService(
       }
 
       val hasUpdate = updateManager.hasPluginUpdate(plugin.id)
-      val updated : Boolean = if (hasUpdate) {
+      val updated: Boolean = if (hasUpdate) {
         val downloaded = download(plugin.id, lastRelease.version)
 
         if (!pluginManager.deletePlugin(plugin.id)) {
@@ -164,7 +164,7 @@ class PluginUpdateService(
         throw PluginRuntimeException(e, "Failed to write file '{}' to plugins folder", file)
       }
     } else {
-     throw UnsupportedOperationException("This operation is only supported on the specified plugins root directory.")
+      throw UnsupportedOperationException("This operation is only supported on the specified plugins root directory.")
     }
   }
 }
