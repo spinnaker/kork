@@ -39,11 +39,8 @@ import java.nio.file.StandardCopyOption
  *
  * All plugins that are returned by the repository will be downloaded and installed.
  *
- * While it's possible that this could be used after the application has started up, there is no guarantee that the
- * extensions a plugin exposes will be correctly refreshed within the Spring context at this point. Therefore, it is
- * strongly advised that if a plugin update needs to occur, the service should be redeployed. If live updates are
- * desired in the future, we'll need to proxy extensions so that the real implementing object is delegated to, allowing
- * Spring injection to continue working.
+ * Plugins will not be loaded or started from this service.  All plugin loading and starting occurs
+ * via [com.netflix.spinnaker.kork.plugins.ExtensionBeanDefinitionRegistryPostProcessor].
  *
  * TODO(rz): Look to a local config or front50 (depending on spinnaker setup) to determine if there are specific
  *  plugin versions to use. We may not want the most recent release of a plugin.
