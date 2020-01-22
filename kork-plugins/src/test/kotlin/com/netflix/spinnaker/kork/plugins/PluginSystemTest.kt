@@ -109,9 +109,19 @@ class PluginSystemTest : JUnit5Minutests {
           expectThat(extensions.values.first().testValue).isEqualTo("${testPluginName}TestExtension")
         }
       }
+    }
+    derivedContext<ApplicationContextRunner>("plugin loading tests - repository") {
+      fixture {
+        ApplicationContextRunner()
+          .withPropertyValues(
+        "spinnaker.extensibility.repositories.myRepository.url=http://repo.org")
+          .withConfiguration(AutoConfigurations.of(
+            PluginsAutoConfiguration::class.java
+          ))
+      }
 
       test("pluginAutoConfiguration not working") {
-        app.run { ctx: AssertableApplicationContext ->
+        run { ctx: AssertableApplicationContext ->
           val pluginsConfigurationProperties = ctx.getBean(PluginsConfigurationProperties::class.java)
           expectThat(pluginsConfigurationProperties.repositories).isNotEmpty()
         }
@@ -122,7 +132,6 @@ class PluginSystemTest : JUnit5Minutests {
   private inner class GeneratedPluginFixture {
     val app = ApplicationContextRunner()
       .withPropertyValues(
-        "spinnaker.extensibility.repositories.myRepository.url=repo.org",
         "spinnaker.extensibility.plugins-root-path=${pluginsDir.toAbsolutePath()}",
         "spinnaker.extensibility.plugins.${descriptor.pluginId}.enabled=true")
       .withConfiguration(AutoConfigurations.of(
