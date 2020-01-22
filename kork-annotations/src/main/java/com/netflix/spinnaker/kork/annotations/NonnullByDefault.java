@@ -23,8 +23,8 @@ import javax.annotation.Nonnull;
 import javax.annotation.meta.TypeQualifierDefault;
 
 /**
- * Defaults all fields, methods, and method parameters within annotation's scope to @Nonnull by
- * default, unless a more tightly-scoped annotation is applied.
+ * Defaults all fields, methods, and method parameters within annotation's scope to @Nonnull, unless
+ * a more tightly-scoped annotation is applied.
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Nonnull

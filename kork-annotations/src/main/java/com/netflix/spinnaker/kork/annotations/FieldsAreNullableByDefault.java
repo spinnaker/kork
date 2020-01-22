@@ -23,8 +23,8 @@ import javax.annotation.Nullable;
 import javax.annotation.meta.TypeQualifierDefault;
 
 /**
- * Defaults all fields within annotation's scope to @Nullable by default, unless a more
- * tightly-scoped annotation is applied.
+ * Defaults all fields within annotation's scope to @Nullable, unless a more tightly-scoped
+ * annotation is applied.
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Nullable
