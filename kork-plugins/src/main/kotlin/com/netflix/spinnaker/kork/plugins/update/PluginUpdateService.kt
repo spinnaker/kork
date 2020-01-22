@@ -91,7 +91,7 @@ class PluginUpdateService(
         val downloaded = download(plugin.id, lastRelease.version)
 
         if (!pluginManager.deletePlugin(plugin.id)) {
-           false
+          false
         } else {
           pluginManager.pluginsRoot.write(downloaded)
         }
