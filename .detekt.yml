@@ -1,0 +1,5 @@
+style:
+  ThrowsCount:
+    active: false
+  MaxLineLength:
+    active: false

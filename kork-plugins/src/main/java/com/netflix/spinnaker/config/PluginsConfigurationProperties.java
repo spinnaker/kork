@@ -15,8 +15,11 @@
  */
 package com.netflix.spinnaker.config;
 
+import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
+import javax.annotation.Nullable;
+import lombok.SneakyThrows;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
@@ -28,6 +31,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 public class PluginsConfigurationProperties {
   public static final String CONFIG_NAMESPACE = "spinnaker.extensibility";
   public static final String DEFAULT_ROOT_PATH = "plugins";
+  public static final String FRONT5O_REPOSITORY = "front50";
 
   /**
    * The root filepath to the directory containing all plugins.
@@ -59,7 +63,39 @@ public class PluginsConfigurationProperties {
    */
   public Map<String, PluginRepositoryProperties> repositories = new HashMap<>();
 
+  /** Definition of a single {@link org.pf4j.update.UpdateRepository}. */
   public static class PluginRepositoryProperties {
-    public String url;
+    /** Flag to determine if repository is enabled. */
+    private boolean enabled = true;
+
+    /** The base URL to the repository. */
+    private String url;
+
+    /** Configuration for an optional override of {@link org.pf4j.update.FileDownloader}. */
+    @Nullable public FileDownloaderProperties fileDownloader;
+
+    /** Custom {@link org.pf4j.update.FileDownloader} configuration. */
+    public static class FileDownloaderProperties {
+      /** The fully qualified class name of the FileDownloader to use. */
+      public String className;
+
+      /**
+       * The configuration for the FileDownloader.
+       *
+       * <p>If defined, the FileDownloader must use the {@link
+       * com.netflix.spinnaker.kork.plugins.config.Configurable} annotation to inform the plugin
+       * framework how to cast the configuration for injection.
+       */
+      public Object config;
+    }
+
+    @SneakyThrows
+    public URL getUrl() {
+      return new URL(url);
+    }
+
+    public boolean isEnabled() {
+      return enabled;
+    }
   }
 }

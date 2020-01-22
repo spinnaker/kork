@@ -21,6 +21,7 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import org.pf4j.CompoundPluginDescriptorFinder
+import org.pf4j.RuntimeMode
 import strikt.api.expectThat
 import strikt.assertions.isEqualTo
 import strikt.assertions.isTrue
@@ -45,6 +46,6 @@ class SpinnakerPluginDescriptorFinderTest : JUnit5Minutests {
 
   private inner class Fixture {
     val finder: CompoundPluginDescriptorFinder = mockk(relaxed = true)
-    val subject = SpinnakerPluginDescriptorFinder(finder)
+    val subject = SpinnakerPluginDescriptorFinder(RuntimeMode.DEPLOYMENT, finder)
   }
 }
