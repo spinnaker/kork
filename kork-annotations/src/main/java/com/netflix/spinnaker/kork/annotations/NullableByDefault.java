@@ -24,7 +24,7 @@ import javax.annotation.meta.TypeQualifierDefault;
 
 /**
  * Defaults all fields, methods, and method parameters within annotation's scope to @Nullable by
- * default.
+ * default, unless a more tightly-scoped annotation is applied.
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Nullable
