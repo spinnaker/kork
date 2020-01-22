@@ -17,28 +17,18 @@
 package com.netflix.spinnaker.kork.secrets.engines;
 
 import lombok.Getter;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
+import lombok.Setter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.stereotype.Component;
 
 @Getter
-@Component
+@Setter
 @Configuration
-@ConditionalOnProperty("secrets.s3.enabled")
-@Slf4j
-public class S3Configuration {
+@ConfigurationProperties("secrets.s3")
+@ConditionalOnProperty(value = "secrets.s3.enabled")
+public class S3ConfigurationProperties {
 
   private String endpointUrl;
   private boolean pathStyleAccessEnabled;
-
-  @Autowired
-  public S3Configuration(
-      @Value("${secrets.s3.endpoint-url}") String endpointUrl,
-      @Value("${secrets.s3.path-style-access-enabled}") boolean pathStyleAccessEnabled) {
-    this.endpointUrl = endpointUrl;
-    this.pathStyleAccessEnabled = pathStyleAccessEnabled;
-  }
 }
