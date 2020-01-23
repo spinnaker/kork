@@ -22,20 +22,20 @@ import java.util.regex.Pattern;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Data;
+import lombok.Value;
 import org.apache.commons.lang3.StringUtils;
 
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
-@Data
 @Builder(toBuilder = true)
 @JsonDeserialize(builder = ExpectedArtifact.ExpectedArtifactBuilder.class)
-public class ExpectedArtifact {
-  Artifact matchArtifact;
-  boolean usePriorArtifact;
-  boolean useDefaultArtifact;
-  Artifact defaultArtifact;
-  String id; // UUID to use this ExpectedArtifact by reference in Pipelines.
-  Artifact boundArtifact;
+@Value
+public final class ExpectedArtifact {
+  private final Artifact matchArtifact;
+  private final boolean usePriorArtifact;
+  private final boolean useDefaultArtifact;
+  private final Artifact defaultArtifact;
+  private final String id; // UUID to use this ExpectedArtifact by reference in Pipelines.
+  private final Artifact boundArtifact;
 
   /**
    * Decide if the "matchArtifact" matches the incoming artifact. Any fields not specified in the
@@ -89,5 +89,5 @@ public class ExpectedArtifact {
   }
 
   @JsonPOJOBuilder(withPrefix = "")
-  public static class ExpectedArtifactBuilder {}
+  public static final class ExpectedArtifactBuilder {}
 }
