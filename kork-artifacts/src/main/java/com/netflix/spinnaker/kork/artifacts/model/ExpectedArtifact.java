@@ -18,7 +18,9 @@ package com.netflix.spinnaker.kork.artifacts.model;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
+import com.netflix.spinnaker.kork.annotations.NonnullByDefault;
 import java.util.regex.Pattern;
+import javax.annotation.Nullable;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -28,14 +30,15 @@ import org.apache.commons.lang3.StringUtils;
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 @Builder(toBuilder = true)
 @JsonDeserialize(builder = ExpectedArtifact.ExpectedArtifactBuilder.class)
+@NonnullByDefault
 @Value
 public final class ExpectedArtifact {
   private final Artifact matchArtifact;
   private final boolean usePriorArtifact;
   private final boolean useDefaultArtifact;
-  private final Artifact defaultArtifact;
+  @Nullable private final Artifact defaultArtifact;
   private final String id; // UUID to use this ExpectedArtifact by reference in Pipelines.
-  private final Artifact boundArtifact;
+  @Nullable private final Artifact boundArtifact;
 
   /**
    * Decide if the "matchArtifact" matches the incoming artifact. Any fields not specified in the
@@ -80,7 +83,7 @@ public final class ExpectedArtifact {
     return true;
   }
 
-  private boolean matches(String us, String other) {
+  private boolean matches(@Nullable String us, @Nullable String other) {
     return StringUtils.isEmpty(us) || (other != null && patternMatches(us, other));
   }
 
