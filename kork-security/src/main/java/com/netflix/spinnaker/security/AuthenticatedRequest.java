@@ -67,6 +67,11 @@ public class AuthenticatedRequest {
     public static String makeCustomHeader(String header) {
       return XSpinnakerPrefix + header.toUpperCase();
     }
+
+    @Override
+    public String toString() {
+      return "Header{" + "header='" + header + '\'' + '}';
+    }
   }
 
   /**
@@ -244,7 +249,7 @@ public class AuthenticatedRequest {
   }
 
   public static void set(Header header, String value) {
-    set(header.toString(), value);
+    set(header.getHeader(), value);
   }
 
   public static void set(String header, String value) {
