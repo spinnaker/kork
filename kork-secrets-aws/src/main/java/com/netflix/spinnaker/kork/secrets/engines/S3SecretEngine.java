@@ -26,16 +26,19 @@ import com.netflix.spinnaker.kork.secrets.EncryptedSecret;
 import com.netflix.spinnaker.kork.secrets.SecretException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Optional;
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 @Component
 public class S3SecretEngine extends AbstractStorageSecretEngine {
   private static String IDENTIFIER = "s3";
 
-  @Autowired(required = false)
-  private S3ConfigurationProperties s3ConfigurationProperties;
+  public S3SecretEngine(Optional<S3ConfigurationProperties> s3ConfigurationProperties) {
+    this.s3ConfigurationProperties = s3ConfigurationProperties;
+  }
+
+  private final Optional<S3ConfigurationProperties> s3ConfigurationProperties;
 
   public String identifier() {
     return S3SecretEngine.IDENTIFIER;
@@ -48,9 +51,8 @@ public class S3SecretEngine extends AbstractStorageSecretEngine {
     String objName = encryptedSecret.getParams().get(STORAGE_FILE_URI);
 
     AmazonS3ClientBuilder s3ClientBuilder = AmazonS3ClientBuilder.standard();
-    if (s3ConfigurationProperties == null) {
-      s3ClientBuilder = s3ClientBuilder.withRegion(region);
-    } else {
+    if (this.s3ConfigurationProperties.isPresent()) {
+      S3ConfigurationProperties s3ConfigurationProperties = this.s3ConfigurationProperties.get();
       if (!StringUtils.isBlank(s3ConfigurationProperties.getEndpointUrl())) {
         s3ClientBuilder.setEndpointConfiguration(
             new AwsClientBuilder.EndpointConfiguration(
@@ -61,6 +63,9 @@ public class S3SecretEngine extends AbstractStorageSecretEngine {
         throw new SecretException(
             String.format("Endpoint not found in properties: s3.secret.endpoint-url"));
       }
+
+    } else {
+      s3ClientBuilder = s3ClientBuilder.withRegion(region);
     }
 
     AmazonS3 s3Client = s3ClientBuilder.build();
