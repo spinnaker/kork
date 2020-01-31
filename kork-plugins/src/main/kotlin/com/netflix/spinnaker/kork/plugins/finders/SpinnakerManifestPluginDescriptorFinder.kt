@@ -20,6 +20,8 @@ import com.netflix.spinnaker.kork.plugins.validate
 import org.pf4j.DefaultPluginDescriptor
 import org.pf4j.ManifestPluginDescriptorFinder
 import org.pf4j.PluginDescriptor
+import java.io.File
+import java.nio.file.Path
 import java.util.jar.Manifest
 
 /**
@@ -34,6 +36,14 @@ internal class SpinnakerManifestPluginDescriptorFinder : ManifestPluginDescripto
       }
       it.validate()
     }
+
+  override fun getManifestPath(pluginPath: Path?): Path {
+    var manifest = File(pluginPath.toString() + "/classes/META-INF/MANIFEST.MF")
+    if (manifest.exists()) {
+      return manifest.toPath()
+    }
+    return super.getManifestPath(pluginPath)
+  }
 
   override fun createPluginDescriptorInstance(): DefaultPluginDescriptor = SpinnakerPluginDescriptor()
 
