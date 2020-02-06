@@ -18,7 +18,6 @@ package com.netflix.spinnaker.kork.plugins
 import com.netflix.spinnaker.kork.exceptions.IntegrationException
 import com.netflix.spinnaker.kork.exceptions.SystemException
 import com.netflix.spinnaker.kork.plugins.api.ConfigurableExtension
-import com.netflix.spinnaker.kork.plugins.api.SpinnakerExtension
 import com.netflix.spinnaker.kork.plugins.api.spring.SpringPlugin
 import com.netflix.spinnaker.kork.plugins.config.ConfigCoordinates
 import com.netflix.spinnaker.kork.plugins.config.ConfigResolver
@@ -47,11 +46,9 @@ class SpringExtensionFactory(
     val extension = createWithoutSpring(extensionClass)
       ?: throw PluginRuntimeException("Failed to create object of extension class: $extensionClass")
 
-    val annot = getSpinnakerExtensionAnnotation(extension)
-
     // Locate the plugin that provides this extension, if no plugin exists, then we know it's a system extension
     // and we can finalize its loading and return immediately.
-    val pluginWrapper = pluginManager.whichPlugin(extensionClass) ?: return finalizeSystemExtension(extension, annot)
+    val pluginWrapper = pluginManager.whichPlugin(extensionClass) ?: return finalizeSystemExtension(extension, extensionClass)
 
     // If the plugin is a SpringPlugin, we'll create an [ApplicationContext] for it and autowire the extension
     val plugin = pluginWrapper.plugin
@@ -64,12 +61,12 @@ class SpringExtensionFactory(
       plugin.applicationContext.autowireCapableBeanFactory.autowireBean(extension)
     }
 
-    // Finally, load the config according to the [SpinnakerExtension] settings
+    // Finally, load the config
     val coordinates = pluginWrapper.getCoordinates()
 
     loadConfig(extension, PluginConfigCoordinates(
       coordinates.id,
-      annot.id
+      extensionClass.simpleName
     ))
 
     return extension
@@ -78,28 +75,16 @@ class SpringExtensionFactory(
   /**
    * Finalizes the creation of a system extension by loading any config that may exist for it.
    */
-  private fun <T> finalizeSystemExtension(extension: T, annot: SpinnakerExtension): T {
+  private fun <T> finalizeSystemExtension(extension: T, extensionClass: Class<T>): T {
     if (extension == null) {
       // This should never happen
       throw SystemException("Extension instance is null, but contract expected non-null")
     }
 
-    loadConfig(extension, SystemExtensionConfigCoordinates(
-      annot.id
-    ))
+    loadConfig(extension, SystemExtensionConfigCoordinates(extensionClass.simpleName))
 
     return extension
   }
-
-  /**
-   * Retrieve the [SpinnakerExtension] annotation from an extension.
-   *
-   * Extensions within Spinnaker MUST use the [SpinnakerExtension] annotation, rather than the default PF4J
-   * [org.pf4j.Extension] annotation.
-   */
-  private fun getSpinnakerExtensionAnnotation(extension: Any): SpinnakerExtension =
-    extension.javaClass.getAnnotation(SpinnakerExtension::class.java)
-      ?: throw IntegrationException("Extensions must be defined using @SpinnakerExtension")
 
   /**
    * Load an extension config, provided a set of [ConfigCoordinates].

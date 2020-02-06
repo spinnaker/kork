@@ -26,13 +26,13 @@ sealed class ConfigCoordinates {
  */
 class PluginConfigCoordinates(
   val pluginId: String,
-  val extensionId: String
+  private val extensionName: String
 ) : ConfigCoordinates() {
   override fun toPointer(): String =
     listOf(
       pluginId,
       "extensions",
-      extensionId
+      extensionName
     ).let {
       "$ROOT_PATH/plugins/${it.joinToString("/").replace(".", "/")}/config"
     }
@@ -42,10 +42,10 @@ class PluginConfigCoordinates(
  * Config coordinates for a system extension.
  */
 class SystemExtensionConfigCoordinates(
-  val extensionId: String
+  private val extensionName: String
 ) : ConfigCoordinates() {
   override fun toPointer(): String =
-    "$ROOT_PATH/extensions/${extensionId.replace(".", "/")}/config"
+    "$ROOT_PATH/extensions/${extensionName.replace(".", "/")}/config"
 }
 
 /**

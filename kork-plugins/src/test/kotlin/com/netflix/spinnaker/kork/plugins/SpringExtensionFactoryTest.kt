@@ -15,20 +15,16 @@
  */
 package com.netflix.spinnaker.kork.plugins
 
-import com.netflix.spinnaker.kork.exceptions.IntegrationException
 import com.netflix.spinnaker.kork.plugins.api.ConfigurableExtension
-import com.netflix.spinnaker.kork.plugins.api.SpinnakerExtension
 import com.netflix.spinnaker.kork.plugins.config.ConfigResolver
 import dev.minutest.junit.JUnit5Minutests
 import dev.minutest.rootContext
 import io.mockk.every
 import io.mockk.mockk
-import org.pf4j.Extension
 import org.pf4j.ExtensionPoint
 import org.pf4j.Plugin
 import org.pf4j.PluginWrapper
 import strikt.api.expectThat
-import strikt.api.expectThrows
 import strikt.assertions.isA
 import strikt.assertions.isEqualTo
 
@@ -79,12 +75,6 @@ class SpringExtensionFactoryTest : JUnit5Minutests {
           .get { config }.isEqualTo(config)
       }
     }
-
-    test("extension with pf4j annotation fails to load") {
-      expectThrows<IntegrationException> {
-        subject.create(WrongExtensionAnno::class.java)
-      }
-    }
   }
 
   private inner class Fixture {
@@ -102,10 +92,8 @@ class SpringExtensionFactoryTest : JUnit5Minutests {
 
   interface TheExtensionPoint : ExtensionPoint
 
-  @SpinnakerExtension(id = "kork.noconfig")
   class NoConfigSystemExtension : TheExtensionPoint
 
-  @SpinnakerExtension(id = "kork.configured")
   class ConfiguredSystemExtension : TheExtensionPoint, ConfigurableExtension<ConfiguredSystemExtension.TheConfig> {
     lateinit var config: Any
     override fun setConfiguration(configuration: TheConfig) {
@@ -115,15 +103,10 @@ class SpringExtensionFactoryTest : JUnit5Minutests {
     class TheConfig
   }
 
-  @Extension
-  class WrongExtensionAnno : TheExtensionPoint
-
   class MyPlugin(wrapper: PluginWrapper) : Plugin(wrapper) {
 
-    @SpinnakerExtension(id = "plugin.noconfig")
     class NoConfigExtension : TheExtensionPoint
 
-    @SpinnakerExtension(id = "plugin.configured")
     class ConfiguredExtension : TheExtensionPoint, ConfigurableExtension<ConfiguredExtension.TheConfig> {
       lateinit var config: Any
       override fun setConfiguration(configuration: TheConfig) {

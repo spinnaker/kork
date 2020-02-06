@@ -167,12 +167,10 @@ class TestPluginBuilder(
     """
     package $packageName;
 
-    import com.netflix.spinnaker.kork.plugins.api.SpinnakerExtension;
     import com.netflix.spinnaker.kork.plugins.testplugin.api.TestExtension;
     import org.pf4j.Extension;
 
     @Extension
-    @SpinnakerExtension(id = "spinnaker.${name.toLowerCase()}-test-extension")
     public class ${name}TestExtension implements TestExtension {
       @Override
       public String getTestValue() {

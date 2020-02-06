@@ -16,7 +16,6 @@
 package com.netflix.spinnaker.kork.plugins
 
 import com.netflix.spinnaker.kork.plugins.api.ConfigurableExtension
-import com.netflix.spinnaker.kork.plugins.api.SpinnakerExtension
 import com.netflix.spinnaker.kork.plugins.api.spring.PrivilegedSpringPlugin
 import com.netflix.spinnaker.kork.plugins.events.ExtensionLoaded
 import com.netflix.spinnaker.kork.plugins.proxy.aspects.InvocationAspect
@@ -26,6 +25,7 @@ import dev.minutest.rootContext
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
+import org.pf4j.Extension
 import org.pf4j.ExtensionFactory
 import org.pf4j.ExtensionPoint
 import org.pf4j.PluginWrapper
@@ -134,7 +134,7 @@ class ExtensionBeanDefinitionRegistryPostProcessorTest : JUnit5Minutests {
     }
   }
 
-  @SpinnakerExtension(id = "netflix.foo")
+  @Extension
   private class FooExtension : ExampleExtensionPoint, ConfigurableExtension<FooExtension.FooExtensionConfig> {
     lateinit var config: FooExtensionConfig
 
