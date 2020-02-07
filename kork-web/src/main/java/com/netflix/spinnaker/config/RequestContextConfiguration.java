@@ -12,22 +12,21 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
-package com.netflix.spinnaker.config
+package com.netflix.spinnaker.config;
 
-import com.netflix.spinnaker.kork.web.context.AuthenticatedRequestContextProvider
-import com.netflix.spinnaker.kork.web.context.RequestContextProvider
-import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
-import org.springframework.context.annotation.Bean
-import org.springframework.context.annotation.Configuration
+import com.netflix.spinnaker.kork.web.context.AuthenticatedRequestContextProvider;
+import com.netflix.spinnaker.kork.web.context.RequestContextProvider;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 
 @Configuration
-class RequestContextConfiguration {
+public class RequestContextConfiguration {
   @Bean
   @ConditionalOnMissingBean
-  RequestContextProvider requestContextProvider() {
-    return new AuthenticatedRequestContextProvider()
+  public RequestContextProvider requestContextProvider() {
+    return new AuthenticatedRequestContextProvider();
   }
 }
