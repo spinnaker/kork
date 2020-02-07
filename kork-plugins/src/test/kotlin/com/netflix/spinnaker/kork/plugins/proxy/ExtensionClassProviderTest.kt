@@ -33,14 +33,15 @@ class ExtensionClassProviderTest : JUnit5Minutests {
     fixture { Fixture() }
 
     test("Provides the proxied class") {
-      val proxiedClass = ExtensionClassProvider.getExtensionClass(extension)
-      expectThat(proxiedClass.simpleName == "SomeExtension")
+      val proxiedClass = ExtensionClassProvider.getExtensionClass(proxiedExtension)
+      expectThat(proxiedClass == extension.javaClass)
     }
   }
 
   private inner class Fixture {
     val invocationAspects: List<InvocationAspect<InvocationState>> = mockk(relaxed = true)
     val spinnakerPluginDescriptor: SpinnakerPluginDescriptor = createPluginDescriptor("netflix.plugin", "0.0.1")
-    val extension = ExtensionInvocationProxy.proxy(SomeExtension(), invocationAspects, spinnakerPluginDescriptor) as ExtensionPoint
+    val extension = SomeExtension()
+    val proxiedExtension = ExtensionInvocationProxy.proxy(extension, invocationAspects, spinnakerPluginDescriptor) as ExtensionPoint
   }
 }
