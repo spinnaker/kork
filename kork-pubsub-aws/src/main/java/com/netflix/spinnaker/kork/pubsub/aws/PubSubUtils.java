@@ -1,7 +1,7 @@
 /*
- * Copyright 2018 Netflix, Inc.
+ * Copyright 2020 Netflix, Inc.
  *
- * Licensed under the Apache License, Version 2.0 (the "License")
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
@@ -14,15 +14,21 @@
  * limitations under the License.
  */
 
-package com.netflix.spinnaker.kork.aws.pubsub;
+package com.netflix.spinnaker.kork.pubsub.aws;
 
 import com.amazonaws.auth.policy.*;
+import com.amazonaws.auth.policy.actions.SNSActions;
 import com.amazonaws.auth.policy.actions.SQSActions;
 import com.amazonaws.services.sns.AmazonSNS;
+import com.amazonaws.services.sns.model.SetTopicAttributesRequest;
 import com.amazonaws.services.sqs.AmazonSQS;
+import com.amazonaws.services.sqs.model.QueueDoesNotExistException;
 import com.netflix.spinnaker.kork.aws.ARN;
+import com.netflix.spinnaker.kork.pubsub.aws.config.AmazonPubsubProperties.AmazonPubsubSubscription;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
+import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -30,10 +36,22 @@ import org.slf4j.LoggerFactory;
 public class PubSubUtils {
   private static final Logger log = LoggerFactory.getLogger(PubSubUtils.class);
 
+  private static String getQueueUrl(AmazonSQS amazonSQS, ARN queueARN) {
+    String queueUrl;
+    try {
+      queueUrl = amazonSQS.getQueueUrl(queueARN.getName()).getQueueUrl();
+      log.debug("Reusing existing queue {}", queueUrl);
+    } catch (QueueDoesNotExistException e) {
+      queueUrl = amazonSQS.createQueue(queueARN.getName()).getQueueUrl();
+      log.debug("Created queue {}", queueUrl);
+    }
+
+    return queueUrl;
+  }
+
   public static String ensureQueueExists(
       AmazonSQS amazonSQS, ARN queueARN, ARN topicARN, int sqsMessageRetentionPeriodSeconds) {
-    String queueUrl = amazonSQS.createQueue(queueARN.getName()).getQueueUrl();
-    log.debug("Created queue " + queueUrl);
+    String queueUrl = getQueueUrl(amazonSQS, queueARN);
 
     HashMap<String, String> attributes = new HashMap<>();
     attributes.put("Policy", buildSQSPolicy(queueARN, topicARN).toJson());
@@ -62,5 +80,38 @@ public class PubSubUtils {
                 .withValues(topic.getArn())));
 
     return new Policy("allow-sns-send", Collections.singletonList(snsStatement));
+  }
+
+  /**
+   * Ensure that the topic exists and has a policy granting the specified accounts permission to
+   * publish messages to it
+   */
+  public static String ensureTopicExists(
+      AmazonSNS amazonSNS, ARN topicARN, AmazonPubsubSubscription subscription) {
+    String createdTopicARN = amazonSNS.createTopic(topicARN.getName()).getTopicArn();
+    log.debug(
+        (createdTopicARN.equals(topicARN.getArn()))
+            ? "Reusing existing topic {}"
+            : "Created topic {}",
+        createdTopicARN);
+
+    if (!subscription.getAccountIds().isEmpty()) {
+      amazonSNS.setTopicAttributes(
+          new SetTopicAttributesRequest()
+              .withTopicArn(createdTopicARN)
+              .withAttributeName("Policy")
+              .withAttributeValue(
+                  buildSNSPolicy(new ARN(createdTopicARN), subscription.getAccountIds()).toJson()));
+    }
+
+    return createdTopicARN;
+  }
+
+  public static Policy buildSNSPolicy(ARN topicARN, List<String> accountIds) {
+    Statement statement = new Statement(Statement.Effect.Allow).withActions(SNSActions.Publish);
+    statement.setPrincipals(accountIds.stream().map(Principal::new).collect(Collectors.toList()));
+    statement.setResources(Collections.singletonList(new Resource(topicARN.getArn())));
+
+    return new Policy("allow-remote-account-send", Collections.singletonList(statement));
   }
 }
