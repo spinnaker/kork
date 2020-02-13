@@ -22,7 +22,6 @@ import com.amazonaws.services.secretsmanager.model.AWSSecretsManagerException;
 import com.amazonaws.services.secretsmanager.model.GetSecretValueRequest;
 import com.amazonaws.services.secretsmanager.model.GetSecretValueResult;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.netflix.spinnaker.kork.secrets.EncryptedSecret;
 import com.netflix.spinnaker.kork.secrets.InvalidSecretFormatException;
@@ -43,7 +42,8 @@ public class SecretsManagerSecretEngine implements SecretEngine {
 
   private static String IDENTIFIER = "secrets-manager";
 
-  private Map<String, Map<String, Object>> cache = new HashMap<>();
+  private Map<String, Map<String, String>> cache = new HashMap<>();
+  private static final ObjectMapper mapper = new ObjectMapper();
 
   @Override
   public String identifier() {
@@ -52,55 +52,22 @@ public class SecretsManagerSecretEngine implements SecretEngine {
 
   @Override
   public byte[] decrypt(EncryptedSecret encryptedSecret) {
-    String secretName = encryptedSecret.getParams().get(SECRET_NAME);
     String secretRegion = encryptedSecret.getParams().get(SECRET_REGION);
+    String secretName = encryptedSecret.getParams().get(SECRET_NAME);
     String secretKey = encryptedSecret.getParams().get(SECRET_KEY);
 
-    AWSSecretsManager client =
-        AWSSecretsManagerClientBuilder.standard().withRegion(secretRegion).build();
-
-    byte[] binarySecret;
-    GetSecretValueRequest getSecretValueRequest =
-        new GetSecretValueRequest().withSecretId(secretName);
-    GetSecretValueResult getSecretValueResult;
-
-    try {
-      getSecretValueResult = client.getSecretValue(getSecretValueRequest);
-    } catch (AWSSecretsManagerException e) {
-      throw new SecretException(
-          String.format(
-              "An error occurred when using AWS Secrets Manager to fetch: [secretName: %s, secretRegion: %s, secretKey: %s]",
-              secretName, secretRegion, secretKey),
-          e);
-    }
-
-    if (getSecretValueResult.getSecretString() != null) {
-      String secret = getSecretValueResult.getSecretString();
-      ObjectMapper mapper = new ObjectMapper();
-      JsonNode secretNode;
-      try {
-        secretNode = mapper.readTree(secret);
-      } catch (JsonProcessingException e) {
-        throw new SecretException(
-            String.format(
-                "Failed to parse secret when using AWS Secrets Manager to fetch: [secretName: %s, secretRegion: %s, secretKey: %s]",
-                secretName, secretRegion, secretKey),
-            e);
-      }
-      binarySecret =
-          Optional.ofNullable(secretNode.get(secretKey))
-              .orElseThrow(
-                  () ->
-                      new SecretException(
-                          String.format(
-                              "Specified key not found in AWS Secrets Manager: [secretName: %s, secretRegion: %s, secretKey: %s]",
-                              secretName, secretRegion, secretKey)))
-              .textValue()
-              .getBytes(StandardCharsets.UTF_8);
+    if (secretKey != null) {
+      return getSecretString(secretRegion, secretName, secretKey);
     } else {
-      binarySecret = getSecretValueResult.getSecretBinary().array(); // it's binary
+      return Optional.ofNullable(getSecretValue(secretRegion, secretName).getSecretBinary())
+          .orElseThrow(
+              () ->
+                  new SecretException(
+                      String.format(
+                          "Binary secret not found in AWS Secrets Manager: [secretName: %s, secretRegion: %s]",
+                          secretName, secretRegion)))
+          .array(); // it's binary;
     }
-    return binarySecret;
   }
 
   @Override
@@ -119,5 +86,47 @@ public class SecretsManagerSecretEngine implements SecretEngine {
   @Override
   public void clearCache() {
     cache.clear();
+  }
+
+  private byte[] getSecretString(String secretRegion, String secretName, String secretKey) {
+    if (!cache.containsKey(secretName)) {
+      String secretString = getSecretValue(secretRegion, secretName).getSecretString();
+      try {
+        Map<String, String> map = mapper.readValue(secretString, Map.class);
+        cache.put(secretName, map);
+      } catch (JsonProcessingException | IllegalArgumentException e) {
+        throw new SecretException(
+            String.format(
+                "Failed to parse secret when using AWS Secrets Manager to fetch: [secretName: %s, secretRegion: %s, secretKey: %s]",
+                secretName, secretRegion, secretKey),
+            e);
+      }
+    }
+    return Optional.ofNullable(cache.get(secretName).get(secretKey))
+        .orElseThrow(
+            () ->
+                new SecretException(
+                    String.format(
+                        "Specified key not found in AWS Secrets Manager: [secretName: %s, secretRegion: %s, secretKey: %s]",
+                        secretName, secretRegion, secretKey)))
+        .getBytes(StandardCharsets.UTF_8);
+  }
+
+  private GetSecretValueResult getSecretValue(String secretRegion, String secretName) {
+    AWSSecretsManager client =
+        AWSSecretsManagerClientBuilder.standard().withRegion(secretRegion).build();
+
+    GetSecretValueRequest getSecretValueRequest =
+        new GetSecretValueRequest().withSecretId(secretName);
+
+    try {
+      return client.getSecretValue(getSecretValueRequest);
+    } catch (AWSSecretsManagerException e) {
+      throw new SecretException(
+          String.format(
+              "An error occurred when using AWS Secrets Manager to fetch: [secretName: %s, secretRegion: %s]",
+              secretName, secretRegion),
+          e);
+    }
   }
 }
