@@ -19,6 +19,7 @@ package com.netflix.spinnaker.kork.pubsub.aws.config;
 import com.amazonaws.auth.AWSCredentialsProvider;
 import com.netflix.spectator.api.Registry;
 import com.netflix.spinnaker.kork.aws.bastion.BastionConfig;
+import com.netflix.spinnaker.kork.core.RetrySupport;
 import com.netflix.spinnaker.kork.pubsub.PubsubPublishers;
 import com.netflix.spinnaker.kork.pubsub.PubsubSubscribers;
 import com.netflix.spinnaker.kork.pubsub.aws.SNSPublisherProvider;
@@ -26,17 +27,19 @@ import com.netflix.spinnaker.kork.pubsub.aws.SQSSubscriberProvider;
 import com.netflix.spinnaker.kork.pubsub.aws.api.AmazonPubsubMessageHandlerFactory;
 import javax.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 
 @Configuration
-@ConditionalOnExpression("${pubsub.enabled:false} && ${pubsub.amazon.enabled:false}")
+@ConditionalOnProperty({"pubsub.enabled", "pubsub.amazon.enabled"})
 @EnableConfigurationProperties(AmazonPubsubProperties.class)
 @Import(BastionConfig.class)
 public class AmazonPubsubConfig {
+  public static final String SYSTEM = "amazon";
+
   @Valid @Autowired private AmazonPubsubProperties amazonPubsubProperties;
 
   @Bean
@@ -55,7 +58,9 @@ public class AmazonPubsubConfig {
       AWSCredentialsProvider awsCredentialsProvider,
       AmazonPubsubProperties properties,
       PubsubPublishers pubsubPublishers,
-      Registry registry) {
-    return new SNSPublisherProvider(awsCredentialsProvider, properties, pubsubPublishers, registry);
+      Registry registry,
+      RetrySupport retrySupport) {
+    return new SNSPublisherProvider(
+        awsCredentialsProvider, properties, pubsubPublishers, registry, retrySupport);
   }
 }

@@ -20,6 +20,7 @@ import com.amazonaws.ClientConfiguration;
 import com.amazonaws.auth.AWSCredentialsProvider;
 import com.amazonaws.services.sns.AmazonSNSClientBuilder;
 import com.amazonaws.services.sqs.AmazonSQSClientBuilder;
+import com.google.common.base.Preconditions;
 import com.netflix.spectator.api.Registry;
 import com.netflix.spinnaker.kork.aws.ARN;
 import com.netflix.spinnaker.kork.eureka.EurekaActivated;
@@ -36,12 +37,12 @@ import javax.annotation.PostConstruct;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
-/** * Starts the individual SQS workers (one for each subscription) */
+/** Starts the individual SQS workers (one for each subscription) */
 @Component
-@ConditionalOnExpression("${pubsub.enabled:false} && ${pubsub.amazon.enabled:false}")
+@ConditionalOnProperty({"pubsub.enabled", "pubsub.amazon.enabled"})
 public class SQSSubscriberProvider implements EurekaActivated {
   private static final Logger log = LoggerFactory.getLogger(SQSSubscriberProvider.class);
 
@@ -67,9 +68,7 @@ public class SQSSubscriberProvider implements EurekaActivated {
 
   @PostConstruct
   public void start() {
-    if (properties == null) {
-      return;
-    }
+    Preconditions.checkNotNull(properties, "Can't initialize SQSSubscriberProvider with null properties");
 
     ExecutorService executorService =
         Executors.newFixedThreadPool(properties.getSubscriptions().size());

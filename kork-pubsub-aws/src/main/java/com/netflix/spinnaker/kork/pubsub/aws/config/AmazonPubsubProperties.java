@@ -21,8 +21,6 @@ import java.util.List;
 import javax.validation.Valid;
 import javax.validation.constraints.NotEmpty;
 import lombok.Data;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 @Data
@@ -33,8 +31,6 @@ public class AmazonPubsubProperties {
 
   @Data
   public static class AmazonPubsubSubscription {
-    private static final Logger log = LoggerFactory.getLogger(AmazonPubsubSubscription.class);
-
     @NotEmpty private String name;
 
     @NotEmpty private String topicARN;
@@ -47,14 +43,5 @@ public class AmazonPubsubProperties {
     int sqsMessageRetentionPeriodSeconds = 120;
     int waitTimeSeconds = 5;
     int maxNumberOfMessages = 1;
-
-    // TODO: why the constructors?
-    public AmazonPubsubSubscription() {}
-
-    public AmazonPubsubSubscription(String name, String topicARN, String queueARN) {
-      this.name = name;
-      this.topicARN = topicARN;
-      this.queueARN = queueARN;
-    }
   }
 }

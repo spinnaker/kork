@@ -17,7 +17,6 @@
 package com.netflix.spinnaker.kork.pubsub;
 
 import com.netflix.spinnaker.kork.pubsub.model.PubsubSubscriber;
-import com.netflix.spinnaker.kork.pubsub.model.PubsubSystem;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -34,7 +33,7 @@ public class PubsubSubscribers {
     return Collections.unmodifiableList(subscribers);
   }
 
-  public List<PubsubSubscriber> withType(PubsubSystem pubsubSystem) {
+  public List<PubsubSubscriber> withType(String pubsubSystem) {
     return subscribers.stream()
         .filter(subscriber -> subscriber.getPubsubSystem().equals(pubsubSystem))
         .collect(Collectors.toList());

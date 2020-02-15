@@ -19,13 +19,25 @@ package com.netflix.spinnaker.kork.pubsub.model;
 import java.util.Collections;
 import java.util.Map;
 
+/**
+ * An abstraction over specific pubsub systems, each subscription will have one publisher associated with it
+ * It is possible that some subscriptions only allow reading from the subscriber, for instance if the topic is owned
+ * by a different entity. In this case, calls to {@link #publish(String, Map)} would be expected to fail.
+ */
 public interface PubsubPublisher {
-  PubsubSystem getPubsubSystem();
+  String getPubsubSystem();
 
   String getTopicName();
 
   String getName();
 
+  /**
+   * The system-agnostic way to publish messages to a topic. Concrete implementations may offer more detailed
+   * publish methods that expose features of their particular pubsub system.
+   *
+   * @param message the body of the message to send
+   * @param attributes key/value attribute pairs, if that pubsub system supports it
+   */
   void publish(String message, Map<String, String> attributes);
 
   default void publish(String message) {

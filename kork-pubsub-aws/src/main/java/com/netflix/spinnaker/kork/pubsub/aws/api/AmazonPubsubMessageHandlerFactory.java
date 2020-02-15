@@ -18,6 +18,15 @@ package com.netflix.spinnaker.kork.pubsub.aws.api;
 
 import com.netflix.spinnaker.kork.pubsub.aws.config.AmazonPubsubProperties;
 
+/**
+ * To support SNS/SQS subscriptions, users of kork-pubsub-aws are expected to register a
+ * AmazonPubsubMessageHandlerFactory bean so that an AmazonPubsubMessageHandlers can be associated with a given
+ * subscription
+ */
 public interface AmazonPubsubMessageHandlerFactory {
+  /**
+   * @param subscription the configuration for a given SNS/SQS subscription
+   * @return the AmazonPubsubMessageHandler instance that will handle messages coming from that queue
+   */
   AmazonPubsubMessageHandler create(AmazonPubsubProperties.AmazonPubsubSubscription subscription);
 }

@@ -18,9 +18,11 @@ package com.netflix.spinnaker.kork.pubsub.aws;
 
 import com.amazonaws.ClientConfiguration;
 import com.amazonaws.auth.AWSCredentialsProvider;
+import com.amazonaws.services.sns.AmazonSNS;
 import com.amazonaws.services.sns.AmazonSNSClientBuilder;
 import com.netflix.spectator.api.Registry;
 import com.netflix.spinnaker.kork.aws.ARN;
+import com.netflix.spinnaker.kork.core.RetrySupport;
 import com.netflix.spinnaker.kork.eureka.EurekaActivated;
 import com.netflix.spinnaker.kork.pubsub.PubsubPublishers;
 import com.netflix.spinnaker.kork.pubsub.aws.config.AmazonPubsubProperties;
@@ -31,12 +33,12 @@ import javax.annotation.PostConstruct;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
 /** Creates one SNSPublisher per subscription */
 @Component
-@ConditionalOnExpression("${pubsub.enabled:false} && ${pubsub.amazon.enabled:false}")
+@ConditionalOnProperty({"pubsub.enabled", "pubsub.amazon.enabled"})
 public class SNSPublisherProvider implements EurekaActivated {
   private static final Logger log = LoggerFactory.getLogger(SNSPublisherProvider.class);
 
@@ -44,17 +46,20 @@ public class SNSPublisherProvider implements EurekaActivated {
   private final AmazonPubsubProperties properties;
   private final PubsubPublishers pubsubPublishers;
   private final Registry registry;
+  private final RetrySupport retrySupport;
 
   @Autowired
   public SNSPublisherProvider(
       AWSCredentialsProvider awsCredentialsProvider,
       AmazonPubsubProperties properties,
       PubsubPublishers pubsubPublishers,
-      Registry registry) {
+      Registry registry,
+      RetrySupport retrySupport) {
     this.awsCredentialsProvider = awsCredentialsProvider;
     this.properties = properties;
     this.pubsubPublishers = pubsubPublishers;
     this.registry = registry;
+    this.retrySupport = retrySupport;
   }
 
   @PostConstruct
@@ -72,16 +77,15 @@ public class SNSPublisherProvider implements EurekaActivated {
               ARN topicARN = new ARN(subscription.getTopicARN());
               log.info("Bootstrapping SNS topic: {}", topicARN);
 
+              AmazonSNS amazonSNS =
+                  AmazonSNSClientBuilder.standard()
+                      .withCredentials(awsCredentialsProvider)
+                      .withClientConfiguration(new ClientConfiguration())
+                      .withRegion(topicARN.getRegion())
+                      .build();
+
               SNSPublisher publisher =
-                  new SNSPublisher(
-                      subscription,
-                      AmazonSNSClientBuilder.standard()
-                          .withCredentials(awsCredentialsProvider)
-                          .withClientConfiguration(new ClientConfiguration())
-                          .withRegion(topicARN.getRegion())
-                          .build(),
-                      enabled::get,
-                      registry);
+                  new SNSPublisher(subscription, amazonSNS, enabled::get, registry, retrySupport);
 
               publishers.add(publisher);
             });

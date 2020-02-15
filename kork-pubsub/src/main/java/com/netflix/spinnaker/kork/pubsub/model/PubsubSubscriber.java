@@ -21,7 +21,7 @@ package com.netflix.spinnaker.kork.pubsub.model;
  * subscription.
  */
 public interface PubsubSubscriber {
-  PubsubSystem getPubsubSystem();
+  String getPubsubSystem();
 
   String getSubscriptionName();
 

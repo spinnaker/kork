@@ -22,9 +22,11 @@ import com.amazonaws.services.sns.model.PublishResult;
 import com.netflix.spectator.api.Counter;
 import com.netflix.spectator.api.Registry;
 import com.netflix.spinnaker.kork.aws.ARN;
+import com.netflix.spinnaker.kork.core.RetrySupport;
+import com.netflix.spinnaker.kork.pubsub.aws.config.AmazonPubsubConfig;
 import com.netflix.spinnaker.kork.pubsub.aws.config.AmazonPubsubProperties;
 import com.netflix.spinnaker.kork.pubsub.model.PubsubPublisher;
-import com.netflix.spinnaker.kork.pubsub.model.PubsubSystem;
+import java.time.Duration;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Supplier;
@@ -41,24 +43,30 @@ public class SNSPublisher implements PubsubPublisher {
   private final Supplier<Boolean> isEnabled;
 
   private final ARN topicARN;
+  private final RetrySupport retrySupport;
+  private Counter successCounter;
 
   public SNSPublisher(
       AmazonPubsubProperties.AmazonPubsubSubscription subscription,
       AmazonSNS amazonSNS,
       Supplier<Boolean> isEnabled,
-      Registry registry) {
+      Registry registry,
+      RetrySupport retrySupport) {
     this.subscription = subscription;
     this.amazonSNS = amazonSNS;
     this.isEnabled = isEnabled;
     this.registry = registry;
     this.topicARN = new ARN(subscription.getTopicARN());
+    this.successCounter =
+        registry.counter("pubsub.amazon.published", "name", getName(), "topic", getTopicName());
+    this.retrySupport = retrySupport;
 
     initializeTopic();
   }
 
   @Override
-  public PubsubSystem getPubsubSystem() {
-    return PubsubSystem.AMAZON;
+  public String getPubsubSystem() {
+    return AmazonPubsubConfig.SYSTEM;
   }
 
   @Override
@@ -88,7 +96,10 @@ public class SNSPublisher implements PubsubPublisher {
 
     try {
       PublishRequest publishRequest = new PublishRequest(topicARN.getArn(), message);
-      PublishResult publishResponse = amazonSNS.publish(publishRequest);
+      PublishResult publishResponse =
+          retrySupport.retry(
+              () -> amazonSNS.publish(publishRequest), 5, Duration.ofMillis(200), false);
+
       log.debug(
           "Published message {} with id {} to topic {}",
           message,
@@ -104,7 +115,7 @@ public class SNSPublisher implements PubsubPublisher {
   }
 
   private Counter getSuccessCounter() {
-    return registry.counter("pubsub.amazon.published", "name", getName(), "topic", getTopicName());
+    return successCounter;
   }
 
   private Counter getErrorCounter(Exception e) {

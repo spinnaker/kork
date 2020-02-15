@@ -26,9 +26,9 @@ import com.netflix.spectator.api.Counter;
 import com.netflix.spectator.api.Registry;
 import com.netflix.spinnaker.kork.aws.ARN;
 import com.netflix.spinnaker.kork.pubsub.aws.api.AmazonPubsubMessageHandler;
+import com.netflix.spinnaker.kork.pubsub.aws.config.AmazonPubsubConfig;
 import com.netflix.spinnaker.kork.pubsub.aws.config.AmazonPubsubProperties;
 import com.netflix.spinnaker.kork.pubsub.model.PubsubSubscriber;
-import com.netflix.spinnaker.kork.pubsub.model.PubsubSystem;
 import java.util.function.Supplier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -39,7 +39,6 @@ import org.slf4j.LoggerFactory;
  */
 public class SQSSubscriber implements Runnable, PubsubSubscriber {
   private static final Logger log = LoggerFactory.getLogger(SQSSubscriber.class);
-  private static final PubsubSystem pubsubSystem = PubsubSystem.AMAZON;
 
   private final AmazonSNS amazonSNS;
   private final AmazonSQS amazonSQS;
@@ -75,8 +74,8 @@ public class SQSSubscriber implements Runnable, PubsubSubscriber {
   }
 
   @Override
-  public PubsubSystem getPubsubSystem() {
-    return pubsubSystem;
+  public String getPubsubSystem() {
+    return AmazonPubsubConfig.SYSTEM;
   }
 
   @Override

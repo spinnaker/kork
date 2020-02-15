@@ -24,7 +24,9 @@ import com.amazonaws.services.sns.model.SetTopicAttributesRequest;
 import com.amazonaws.services.sqs.AmazonSQS;
 import com.amazonaws.services.sqs.model.QueueDoesNotExistException;
 import com.netflix.spinnaker.kork.aws.ARN;
+import com.netflix.spinnaker.kork.core.RetrySupport;
 import com.netflix.spinnaker.kork.pubsub.aws.config.AmazonPubsubProperties.AmazonPubsubSubscription;
+import java.time.Duration;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -35,9 +37,14 @@ import org.slf4j.LoggerFactory;
 /** Utils for working with AWS SNS and SQS across services */
 public class PubSubUtils {
   private static final Logger log = LoggerFactory.getLogger(PubSubUtils.class);
+  private static final RetrySupport retrySupport = new RetrySupport();
+  private static final int MAX_RETRIES = 5;
+  private static final Duration RETRY_BACKOFF = Duration.ofSeconds(1);
+  private static final boolean EXPONENTIAL = true;
 
   private static String getQueueUrl(AmazonSQS amazonSQS, ARN queueARN) {
     String queueUrl;
+
     try {
       queueUrl = amazonSQS.getQueueUrl(queueARN.getName()).getQueueUrl();
       log.debug("Reusing existing queue {}", queueUrl);
@@ -51,7 +58,9 @@ public class PubSubUtils {
 
   public static String ensureQueueExists(
       AmazonSQS amazonSQS, ARN queueARN, ARN topicARN, int sqsMessageRetentionPeriodSeconds) {
-    String queueUrl = getQueueUrl(amazonSQS, queueARN);
+    String queueUrl =
+        retrySupport.retry(
+            () -> getQueueUrl(amazonSQS, queueARN), MAX_RETRIES, RETRY_BACKOFF, EXPONENTIAL);
 
     HashMap<String, String> attributes = new HashMap<>();
     attributes.put("Policy", buildSQSPolicy(queueARN, topicARN).toJson());
@@ -63,7 +72,11 @@ public class PubSubUtils {
 
   /** Returns the subscription arn resulting from subscribing the queueARN to the topicARN */
   public static String subscribeToTopic(AmazonSNS amazonSNS, ARN topicARN, ARN queueARN) {
-    return amazonSNS.subscribe(topicARN.getArn(), "sqs", queueARN.getArn()).getSubscriptionArn();
+    return retrySupport.retry(
+        () -> amazonSNS.subscribe(topicARN.getArn(), "sqs", queueARN.getArn()).getSubscriptionArn(),
+        MAX_RETRIES,
+        RETRY_BACKOFF,
+        EXPONENTIAL);
   }
 
   /** This policy allows messages to be sent from an SNS topic. */
@@ -88,7 +101,13 @@ public class PubSubUtils {
    */
   public static String ensureTopicExists(
       AmazonSNS amazonSNS, ARN topicARN, AmazonPubsubSubscription subscription) {
-    String createdTopicARN = amazonSNS.createTopic(topicARN.getName()).getTopicArn();
+    String createdTopicARN =
+        retrySupport.retry(
+            () -> amazonSNS.createTopic(topicARN.getName()).getTopicArn(),
+            MAX_RETRIES,
+            RETRY_BACKOFF,
+            EXPONENTIAL);
+
     log.debug(
         (createdTopicARN.equals(topicARN.getArn()))
             ? "Reusing existing topic {}"

@@ -17,21 +17,15 @@
 package com.netflix.spinnaker.kork.pubsub.aws;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.AllArgsConstructor;
 import lombok.Data;
 
 @Data
+@AllArgsConstructor
 public class MessageAttribute {
-
   @JsonProperty("Type")
   private String attributeType;
 
   @JsonProperty("Value")
   private String attributeValue;
-
-  public MessageAttribute() {}
-
-  public MessageAttribute(String attributeType, String attributeValue) {
-    this.attributeType = attributeType;
-    this.attributeValue = attributeValue;
-  }
 }
