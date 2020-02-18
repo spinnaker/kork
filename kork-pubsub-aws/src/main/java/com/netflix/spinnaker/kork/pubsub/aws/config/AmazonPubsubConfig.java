@@ -51,14 +51,16 @@ public class AmazonPubsubConfig {
       PubsubSubscribers subscribers,
       AmazonPubsubMessageHandlerFactory messageHandlerFactory,
       Registry registry,
-      EurekaStatusListener eurekaStatus) {
+      EurekaStatusListener eurekaStatus,
+      DynamicConfigService dynamicConfig) {
     return new SQSSubscriberProvider(
         awsCredentialsProvider,
         properties,
         subscribers,
         messageHandlerFactory,
         registry,
-        eurekaStatus);
+        eurekaStatus,
+        dynamicConfig);
   }
 
   @Bean
