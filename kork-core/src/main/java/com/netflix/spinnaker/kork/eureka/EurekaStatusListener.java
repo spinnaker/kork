@@ -23,37 +23,25 @@ import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationListener;
 
 /**
- * A component that starts doing something when the instance is up in discovery and stops doing that
- * thing when it goes down.
+ * A component that listens to Eureka status changes and can be queried to enable/disable components
  */
-public interface EurekaActivated extends ApplicationListener<RemoteStatusChangedEvent> {
+public class EurekaStatusListener implements ApplicationListener<RemoteStatusChangedEvent> {
+  private static final Logger log = LoggerFactory.getLogger(EurekaStatusListener.class);
 
-  Logger log = LoggerFactory.getLogger(EurekaActivated.class);
-
-  AtomicBoolean enabled = new AtomicBoolean();
+  private AtomicBoolean enabled = new AtomicBoolean();
 
   @Override
-  default void onApplicationEvent(RemoteStatusChangedEvent event) {
+  public void onApplicationEvent(RemoteStatusChangedEvent event) {
+    log.info("Instance status has changed to {} in Eureka", event.getSource().getStatus());
+
     if (event.getSource().getStatus() == InstanceInfo.InstanceStatus.UP) {
-      log.info(
-          "Instance is {}... {} starting",
-          event.getSource().getStatus(),
-          this.getClass().getSimpleName());
-      enable();
+      enabled.set(true);
     } else if (event.getSource().getPreviousStatus() == InstanceInfo.InstanceStatus.UP) {
-      log.info(
-          "Instance is {}... {} stopping",
-          event.getSource().getStatus(),
-          this.getClass().getSimpleName());
-      disable();
+      enabled.set(false);
     }
   }
 
-  default void enable() {
-    enabled.set(true);
-  }
-
-  default void disable() {
-    enabled.set(false);
+  public boolean isEnabled() {
+    return enabled.get();
   }
 }

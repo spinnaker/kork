@@ -21,13 +21,16 @@ import com.netflix.spinnaker.kork.pubsub.aws.SQSSubscriber;
 
 /**
  * Each SQSSubscriber will be associated with a single AmazonPubsubMessageHandler
+ *
  * @see AmazonPubsubMessageHandlerFactory
  * @see SQSSubscriber
  */
 public interface AmazonPubsubMessageHandler {
   /**
    * the callback that the relevant SQSSubscriber will use when it reads a message from its queue
-   * implementations can throw exceptions out of handleMessage, they will be handled by the SQSSubscriber
+   * implementations can throw exceptions out of handleMessage, they will be handled by the
+   * SQSSubscriber
+   *
    * @param message the raw SQS message read from the queue
    */
   void handleMessage(Message message);

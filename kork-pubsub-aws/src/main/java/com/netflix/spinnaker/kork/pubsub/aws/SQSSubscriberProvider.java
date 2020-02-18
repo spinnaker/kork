@@ -23,7 +23,8 @@ import com.amazonaws.services.sqs.AmazonSQSClientBuilder;
 import com.google.common.base.Preconditions;
 import com.netflix.spectator.api.Registry;
 import com.netflix.spinnaker.kork.aws.ARN;
-import com.netflix.spinnaker.kork.eureka.EurekaActivated;
+import com.netflix.spinnaker.kork.dynamicconfig.DynamicConfigService;
+import com.netflix.spinnaker.kork.eureka.EurekaStatusListener;
 import com.netflix.spinnaker.kork.pubsub.PubsubSubscribers;
 import com.netflix.spinnaker.kork.pubsub.aws.api.AmazonPubsubMessageHandlerFactory;
 import com.netflix.spinnaker.kork.pubsub.aws.config.AmazonPubsubProperties;
@@ -33,6 +34,7 @@ import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.RejectedExecutionException;
+import java.util.function.Supplier;
 import javax.annotation.PostConstruct;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -43,7 +45,7 @@ import org.springframework.stereotype.Component;
 /** Starts the individual SQS workers (one for each subscription) */
 @Component
 @ConditionalOnProperty({"pubsub.enabled", "pubsub.amazon.enabled"})
-public class SQSSubscriberProvider implements EurekaActivated {
+public class SQSSubscriberProvider {
   private static final Logger log = LoggerFactory.getLogger(SQSSubscriberProvider.class);
 
   private final AWSCredentialsProvider awsCredentialsProvider;
@@ -51,6 +53,8 @@ public class SQSSubscriberProvider implements EurekaActivated {
   private final PubsubSubscribers pubsubSubscribers;
   private final AmazonPubsubMessageHandlerFactory pubsubMessageHandlerFactory;
   private final Registry registry;
+  private final EurekaStatusListener eurekaStatus;
+  private final DynamicConfigService dynamicConfig;
 
   @Autowired
   public SQSSubscriberProvider(
@@ -58,22 +62,33 @@ public class SQSSubscriberProvider implements EurekaActivated {
       AmazonPubsubProperties properties,
       PubsubSubscribers pubsubSubscribers,
       AmazonPubsubMessageHandlerFactory pubsubMessageHandlerFactory,
-      Registry registry) {
+      Registry registry,
+      EurekaStatusListener eurekaStatus,
+      DynamicConfigService dynamicConfig) {
     this.awsCredentialsProvider = awsCredentialsProvider;
     this.properties = properties;
     this.pubsubSubscribers = pubsubSubscribers;
     this.pubsubMessageHandlerFactory = pubsubMessageHandlerFactory;
     this.registry = registry;
+    this.eurekaStatus = eurekaStatus;
+    this.dynamicConfig = dynamicConfig;
   }
 
   @PostConstruct
   public void start() {
-    Preconditions.checkNotNull(properties, "Can't initialize SQSSubscriberProvider with null properties");
+    Preconditions.checkNotNull(
+        properties, "Can't initialize SQSSubscriberProvider with null properties");
 
     ExecutorService executorService =
         Executors.newFixedThreadPool(properties.getSubscriptions().size());
 
     List<PubsubSubscriber> subscribers = new ArrayList<>();
+
+    Supplier<Boolean> isEnabled =
+        () ->
+            dynamicConfig.isEnabled("pubsub", false)
+                && dynamicConfig.isEnabled("pubsub.amazon", false)
+                && eurekaStatus.isEnabled();
 
     properties
         .getSubscriptions()
@@ -97,7 +112,7 @@ public class SQSSubscriberProvider implements EurekaActivated {
                           .withClientConfiguration(new ClientConfiguration())
                           .withRegion(queueArn.getRegion())
                           .build(),
-                      enabled::get,
+                      isEnabled,
                       registry);
 
               try {

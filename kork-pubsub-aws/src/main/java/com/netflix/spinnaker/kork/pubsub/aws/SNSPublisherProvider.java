@@ -23,12 +23,14 @@ import com.amazonaws.services.sns.AmazonSNSClientBuilder;
 import com.netflix.spectator.api.Registry;
 import com.netflix.spinnaker.kork.aws.ARN;
 import com.netflix.spinnaker.kork.core.RetrySupport;
-import com.netflix.spinnaker.kork.eureka.EurekaActivated;
+import com.netflix.spinnaker.kork.dynamicconfig.DynamicConfigService;
+import com.netflix.spinnaker.kork.eureka.EurekaStatusListener;
 import com.netflix.spinnaker.kork.pubsub.PubsubPublishers;
 import com.netflix.spinnaker.kork.pubsub.aws.config.AmazonPubsubProperties;
 import com.netflix.spinnaker.kork.pubsub.model.PubsubPublisher;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Supplier;
 import javax.annotation.PostConstruct;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -39,7 +41,7 @@ import org.springframework.stereotype.Component;
 /** Creates one SNSPublisher per subscription */
 @Component
 @ConditionalOnProperty({"pubsub.enabled", "pubsub.amazon.enabled"})
-public class SNSPublisherProvider implements EurekaActivated {
+public class SNSPublisherProvider {
   private static final Logger log = LoggerFactory.getLogger(SNSPublisherProvider.class);
 
   private final AWSCredentialsProvider awsCredentialsProvider;
@@ -47,6 +49,8 @@ public class SNSPublisherProvider implements EurekaActivated {
   private final PubsubPublishers pubsubPublishers;
   private final Registry registry;
   private final RetrySupport retrySupport;
+  private final EurekaStatusListener eurekaStatus;
+  private final DynamicConfigService dynamicConfig;
 
   @Autowired
   public SNSPublisherProvider(
@@ -54,12 +58,16 @@ public class SNSPublisherProvider implements EurekaActivated {
       AmazonPubsubProperties properties,
       PubsubPublishers pubsubPublishers,
       Registry registry,
-      RetrySupport retrySupport) {
+      RetrySupport retrySupport,
+      EurekaStatusListener eurekaStatus,
+      DynamicConfigService dynamicConfig) {
     this.awsCredentialsProvider = awsCredentialsProvider;
     this.properties = properties;
     this.pubsubPublishers = pubsubPublishers;
     this.registry = registry;
     this.retrySupport = retrySupport;
+    this.eurekaStatus = eurekaStatus;
+    this.dynamicConfig = dynamicConfig;
   }
 
   @PostConstruct
@@ -69,6 +77,12 @@ public class SNSPublisherProvider implements EurekaActivated {
     }
 
     List<PubsubPublisher> publishers = new ArrayList<>();
+
+    Supplier<Boolean> isEnabled =
+        () ->
+            dynamicConfig.isEnabled("pubsub", false)
+                && dynamicConfig.isEnabled("pubsub.amazon", false)
+                && eurekaStatus.isEnabled();
 
     properties
         .getSubscriptions()
@@ -85,7 +99,7 @@ public class SNSPublisherProvider implements EurekaActivated {
                       .build();
 
               SNSPublisher publisher =
-                  new SNSPublisher(subscription, amazonSNS, enabled::get, registry, retrySupport);
+                  new SNSPublisher(subscription, amazonSNS, isEnabled, registry, retrySupport);
 
               publishers.add(publisher);
             });
