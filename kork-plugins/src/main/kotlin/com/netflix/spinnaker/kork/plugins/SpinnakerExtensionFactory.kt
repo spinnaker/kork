@@ -76,7 +76,7 @@ class SpinnakerExtensionFactory(
           }
           else -> {
             throw IntegrationException("'${extensionClass.simpleName}' extension has unsupported " +
-              "constructor argument class '${paramType.simpleName}'.  Expected argument classes " +
+              "constructor argument type '${paramType.simpleName}'.  Expected argument classes " +
               "should be annotated with @ExpectedConfiguration or implement PluginSdks.")
           }
       }
