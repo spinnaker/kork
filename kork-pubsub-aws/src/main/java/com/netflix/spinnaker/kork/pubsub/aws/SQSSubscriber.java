@@ -25,6 +25,7 @@ import com.amazonaws.services.sqs.model.ReceiveMessageResult;
 import com.netflix.spectator.api.Counter;
 import com.netflix.spectator.api.Registry;
 import com.netflix.spinnaker.kork.aws.ARN;
+import com.netflix.spinnaker.kork.pubsub.aws.api.AmazonMessageAcknowledger;
 import com.netflix.spinnaker.kork.pubsub.aws.api.AmazonPubsubMessageHandler;
 import com.netflix.spinnaker.kork.pubsub.aws.config.AmazonPubsubConfig;
 import com.netflix.spinnaker.kork.pubsub.aws.config.AmazonPubsubProperties;
@@ -44,22 +45,25 @@ public class SQSSubscriber implements Runnable, PubsubSubscriber {
   private final AmazonSQS amazonSQS;
   private final AmazonPubsubProperties.AmazonPubsubSubscription subscription;
   private final AmazonPubsubMessageHandler messageHandler;
+  private final AmazonMessageAcknowledger messageAcknowledger;
   private final Registry registry;
   private final Supplier<Boolean> isEnabled;
 
   private final ARN queueARN;
   private final ARN topicARN;
-  private String queueUrl;
+  private AmazonSubscriptionInformation subscriptionInfo;
 
   public SQSSubscriber(
       AmazonPubsubProperties.AmazonPubsubSubscription subscription,
       AmazonPubsubMessageHandler messageHandler,
+      AmazonMessageAcknowledger messageAcknowledger,
       AmazonSNS amazonSNS,
       AmazonSQS amazonSQS,
       Supplier<Boolean> isEnabled,
       Registry registry) {
     this.subscription = subscription;
     this.messageHandler = messageHandler;
+    this.messageAcknowledger = messageAcknowledger;
     this.amazonSNS = amazonSNS;
     this.amazonSQS = amazonSQS;
     this.isEnabled = isEnabled;
@@ -116,17 +120,25 @@ public class SQSSubscriber implements Runnable, PubsubSubscriber {
   }
 
   private void initializeQueue() {
-    this.queueUrl =
+    String queueUrl =
         PubSubUtils.ensureQueueExists(
             amazonSQS, queueARN, topicARN, subscription.getSqsMessageRetentionPeriodSeconds());
     PubSubUtils.subscribeToTopic(amazonSNS, topicARN, queueARN);
+
+    this.subscriptionInfo =
+        AmazonSubscriptionInformation.builder()
+            .amazonSNS(amazonSNS)
+            .amazonSQS(amazonSQS)
+            .properties(subscription)
+            .queueUrl(queueUrl)
+            .build();
   }
 
   private void listenForMessages() {
     while (isEnabled.get()) {
       ReceiveMessageResult receiveMessageResult =
           amazonSQS.receiveMessage(
-              new ReceiveMessageRequest(this.queueUrl)
+              new ReceiveMessageRequest(this.subscriptionInfo.queueUrl)
                   .withMaxNumberOfMessages(subscription.getMaxNumberOfMessages())
                   .withVisibilityTimeout(subscription.getVisibilityTimeout())
                   .withWaitTimeSeconds(subscription.getWaitTimeSeconds())
@@ -142,25 +154,30 @@ public class SQSSubscriber implements Runnable, PubsubSubscriber {
   }
 
   private void handleMessage(Message message) {
+    Exception caught = null;
     try {
       messageHandler.handleMessage(message);
       getSuccessCounter().increment();
     } catch (Exception e) {
       log.error("failed to process message {}", message, e);
       getErrorCounter(e).increment();
+      caught = e;
+    }
+
+    if (caught == null) {
+      messageAcknowledger.ack(subscriptionInfo, message);
+    } else {
+      messageAcknowledger.nack(subscriptionInfo, message);
     }
   }
 
   private Counter getSuccessCounter() {
-    return registry.counter(
-        "pubsub.amazon.processed", "name", getName(), "subscription", getSubscriptionName());
+    return registry.counter("pubsub.amazon.processed", "subscription", getSubscriptionName());
   }
 
   private Counter getErrorCounter(Exception e) {
     return registry.counter(
         "pubsub.amazon.failed",
-        "name",
-        getName(),
         "subscription",
         getSubscriptionName(),
         "exceptionClass",

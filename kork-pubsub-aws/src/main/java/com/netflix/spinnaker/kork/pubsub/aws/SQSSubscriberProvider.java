@@ -26,6 +26,7 @@ import com.netflix.spinnaker.kork.aws.ARN;
 import com.netflix.spinnaker.kork.dynamicconfig.DynamicConfigService;
 import com.netflix.spinnaker.kork.eureka.EurekaStatusListener;
 import com.netflix.spinnaker.kork.pubsub.PubsubSubscribers;
+import com.netflix.spinnaker.kork.pubsub.aws.api.AmazonMessageAcknowledger;
 import com.netflix.spinnaker.kork.pubsub.aws.api.AmazonPubsubMessageHandlerFactory;
 import com.netflix.spinnaker.kork.pubsub.aws.config.AmazonPubsubProperties;
 import com.netflix.spinnaker.kork.pubsub.model.PubsubSubscriber;
@@ -55,6 +56,7 @@ public class SQSSubscriberProvider {
   private final Registry registry;
   private final EurekaStatusListener eurekaStatus;
   private final DynamicConfigService dynamicConfig;
+  private final AmazonMessageAcknowledger messageAcknowledger;
 
   @Autowired
   public SQSSubscriberProvider(
@@ -62,6 +64,7 @@ public class SQSSubscriberProvider {
       AmazonPubsubProperties properties,
       PubsubSubscribers pubsubSubscribers,
       AmazonPubsubMessageHandlerFactory pubsubMessageHandlerFactory,
+      AmazonMessageAcknowledger messageAcknowledger,
       Registry registry,
       EurekaStatusListener eurekaStatus,
       DynamicConfigService dynamicConfig) {
@@ -69,6 +72,7 @@ public class SQSSubscriberProvider {
     this.properties = properties;
     this.pubsubSubscribers = pubsubSubscribers;
     this.pubsubMessageHandlerFactory = pubsubMessageHandlerFactory;
+    this.messageAcknowledger = messageAcknowledger;
     this.registry = registry;
     this.eurekaStatus = eurekaStatus;
     this.dynamicConfig = dynamicConfig;
@@ -102,6 +106,7 @@ public class SQSSubscriberProvider {
                   new SQSSubscriber(
                       subscription,
                       pubsubMessageHandlerFactory.create(subscription),
+                      messageAcknowledger,
                       AmazonSNSClientBuilder.standard()
                           .withCredentials(awsCredentialsProvider)
                           .withClientConfiguration(new ClientConfiguration())

@@ -24,11 +24,14 @@ import com.netflix.spinnaker.kork.dynamicconfig.DynamicConfigService;
 import com.netflix.spinnaker.kork.eureka.EurekaStatusListener;
 import com.netflix.spinnaker.kork.pubsub.PubsubPublishers;
 import com.netflix.spinnaker.kork.pubsub.PubsubSubscribers;
+import com.netflix.spinnaker.kork.pubsub.aws.DefaultAmazonMessageAcknowledger;
 import com.netflix.spinnaker.kork.pubsub.aws.SNSPublisherProvider;
 import com.netflix.spinnaker.kork.pubsub.aws.SQSSubscriberProvider;
+import com.netflix.spinnaker.kork.pubsub.aws.api.AmazonMessageAcknowledger;
 import com.netflix.spinnaker.kork.pubsub.aws.api.AmazonPubsubMessageHandlerFactory;
 import javax.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
@@ -45,11 +48,18 @@ public class AmazonPubsubConfig {
   @Valid @Autowired private AmazonPubsubProperties amazonPubsubProperties;
 
   @Bean
+  @ConditionalOnMissingBean(AmazonMessageAcknowledger.class)
+  AmazonMessageAcknowledger defaultAmazonMessageAcknowledger(Registry registry) {
+    return new DefaultAmazonMessageAcknowledger(registry);
+  }
+
+  @Bean
   SQSSubscriberProvider subscriberProvider(
       AWSCredentialsProvider awsCredentialsProvider,
       AmazonPubsubProperties properties,
       PubsubSubscribers subscribers,
       AmazonPubsubMessageHandlerFactory messageHandlerFactory,
+      AmazonMessageAcknowledger messageAcknowledger,
       Registry registry,
       EurekaStatusListener eurekaStatus,
       DynamicConfigService dynamicConfig) {
@@ -58,6 +68,7 @@ public class AmazonPubsubConfig {
         properties,
         subscribers,
         messageHandlerFactory,
+        messageAcknowledger,
         registry,
         eurekaStatus,
         dynamicConfig);

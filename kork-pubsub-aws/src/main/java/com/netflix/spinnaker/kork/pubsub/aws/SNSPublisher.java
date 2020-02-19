@@ -121,8 +121,6 @@ public class SNSPublisher implements PubsubPublisher {
   private Counter getErrorCounter(Exception e) {
     return registry.counter(
         "pubsub.amazon.publishFailed",
-        "name",
-        getName(),
         "topic",
         getTopicName(),
         "exceptionClass",
