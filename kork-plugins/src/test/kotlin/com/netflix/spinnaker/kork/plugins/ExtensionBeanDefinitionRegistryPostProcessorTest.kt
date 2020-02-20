@@ -15,10 +15,10 @@
  */
 package com.netflix.spinnaker.kork.plugins
 
-import com.netflix.spinnaker.kork.plugins.api.ConfigurableExtension
-import com.netflix.spinnaker.kork.plugins.api.SpinnakerExtension
+import com.netflix.spinnaker.kork.plugins.api.ExtensionConfiguration
 import com.netflix.spinnaker.kork.plugins.api.spring.PrivilegedSpringPlugin
 import com.netflix.spinnaker.kork.plugins.events.ExtensionLoaded
+import com.netflix.spinnaker.kork.plugins.internal.TestPlugin
 import com.netflix.spinnaker.kork.plugins.proxy.aspects.InvocationAspect
 import com.netflix.spinnaker.kork.plugins.update.PluginUpdateService
 import dev.minutest.junit.JUnit5Minutests
@@ -63,7 +63,7 @@ class ExtensionBeanDefinitionRegistryPostProcessorTest : JUnit5Minutests {
         every { pluginManager.getExtensionClassNames(null) } returns setOf(
           FooExtension::class.java.name
         )
-        every { pluginManager.getExtensionClassNames(eq("testSpringPlugin")) } returns setOf()
+        every { pluginManager.getExtensionClassNames(eq("testPlugin")) } returns setOf()
 
         val beanFactory: ConfigurableListableBeanFactory = mockk(relaxed = true)
 
@@ -77,7 +77,7 @@ class ExtensionBeanDefinitionRegistryPostProcessorTest : JUnit5Minutests {
       test("plugin extensions are injected into parent Spring registry") {
         every { pluginManager.getExtensionClassNames(null) } returns setOf()
         every { pluginManager.startedPlugins } returns listOf(pluginWrapper)
-        every { pluginManager.getExtensionClassNames(eq("testSpringPlugin")) } returns setOf(
+        every { pluginManager.getExtensionClassNames(eq("testPlugin")) } returns setOf(
           FooExtension::class.java.name
         )
 
@@ -86,7 +86,7 @@ class ExtensionBeanDefinitionRegistryPostProcessorTest : JUnit5Minutests {
         subject.postProcessBeanFactory(beanFactory)
 
         verify(exactly = 1) { extensionFactory.create(eq(FooExtension::class.java)) }
-        verify(exactly = 1) { beanFactory.registerSingleton(eq("testSpringPluginFooExtension"), any<FooExtension>()) }
+        verify(exactly = 1) { beanFactory.registerSingleton(eq("testPluginFooExtension"), any<FooExtension>()) }
         verify(exactly = 1) { applicationEventPublisher.publishEvent(any<ExtensionLoaded>()) }
       }
 
@@ -96,7 +96,7 @@ class ExtensionBeanDefinitionRegistryPostProcessorTest : JUnit5Minutests {
           FooExtension::class.java.name
         )
         every { pluginManager.startedPlugins } returns listOf(pluginWrapper)
-        every { pluginManager.getExtensionClassNames(eq("testSpringPlugin")) } returns setOf(
+        every { pluginManager.getExtensionClassNames(eq("testPlugin")) } returns setOf(
           FooExtension::class.java.name
         )
 
@@ -127,21 +127,17 @@ class ExtensionBeanDefinitionRegistryPostProcessorTest : JUnit5Minutests {
       every { extensionFactory.create(eq(FooExtension::class.java)) } returns FooExtension()
       every { pluginDescriptor.unsafe } returns false
       every { pluginWrapper.pluginClassLoader } returns javaClass.classLoader
-      every { pluginWrapper.plugin } returns TestSpringPlugin(pluginWrapper)
-      every { pluginWrapper.pluginId } returns "testSpringPlugin"
+      every { pluginWrapper.plugin } returns TestPlugin(pluginWrapper)
+      every { pluginWrapper.pluginId } returns "testPlugin"
       every { pluginWrapper.descriptor } returns pluginDescriptor
       every { pluginManager.extensionFactory } returns extensionFactory
     }
   }
 
-  @SpinnakerExtension(id = "netflix.foo")
-  private class FooExtension : ExampleExtensionPoint, ConfigurableExtension<FooExtension.FooExtensionConfig> {
+  private class FooExtension : ExampleExtensionPoint {
     lateinit var config: FooExtensionConfig
 
-    override fun setConfiguration(configuration: FooExtensionConfig) {
-      config = configuration
-    }
-
+    @ExtensionConfiguration("netflix.foo")
     class FooExtensionConfig
   }
 
