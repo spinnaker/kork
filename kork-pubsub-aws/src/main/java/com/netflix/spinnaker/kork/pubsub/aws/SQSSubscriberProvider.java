@@ -35,7 +35,6 @@ import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.RejectedExecutionException;
-import java.util.function.Supplier;
 import javax.annotation.PostConstruct;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -88,12 +87,6 @@ public class SQSSubscriberProvider {
 
     List<PubsubSubscriber> subscribers = new ArrayList<>();
 
-    Supplier<Boolean> isEnabled =
-        () ->
-            dynamicConfig.isEnabled("pubsub", false)
-                && dynamicConfig.isEnabled("pubsub.amazon", false)
-                && eurekaStatus.isEnabled();
-
     properties
         .getSubscriptions()
         .forEach(
@@ -117,9 +110,8 @@ public class SQSSubscriberProvider {
                           .withClientConfiguration(new ClientConfiguration())
                           .withRegion(queueArn.getRegion())
                           .build(),
-                      isEnabled,
+                      PubSubUtils.getEnabledSupplier(dynamicConfig, subscription, eurekaStatus),
                       registry);
-
               try {
                 executorService.submit(worker);
                 subscribers.add(worker);

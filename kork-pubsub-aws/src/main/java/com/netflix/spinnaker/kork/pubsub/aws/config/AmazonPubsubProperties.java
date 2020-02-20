@@ -26,7 +26,6 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 @Data
 @ConfigurationProperties(prefix = "pubsub.amazon")
 public class AmazonPubsubProperties {
-
   @Valid private List<AmazonPubsubSubscription> subscriptions;
 
   @Data

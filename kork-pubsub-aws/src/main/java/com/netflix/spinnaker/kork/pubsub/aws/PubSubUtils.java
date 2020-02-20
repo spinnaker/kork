@@ -25,11 +25,14 @@ import com.amazonaws.services.sqs.AmazonSQS;
 import com.amazonaws.services.sqs.model.QueueDoesNotExistException;
 import com.netflix.spinnaker.kork.aws.ARN;
 import com.netflix.spinnaker.kork.core.RetrySupport;
+import com.netflix.spinnaker.kork.dynamicconfig.DynamicConfigService;
+import com.netflix.spinnaker.kork.eureka.EurekaStatusListener;
 import com.netflix.spinnaker.kork.pubsub.aws.config.AmazonPubsubProperties.AmazonPubsubSubscription;
 import java.time.Duration;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -124,6 +127,17 @@ public class PubSubUtils {
     }
 
     return createdTopicARN;
+  }
+
+  public static Supplier<Boolean> getEnabledSupplier(
+      DynamicConfigService dynamicConfig,
+      AmazonPubsubSubscription subscription,
+      EurekaStatusListener eurekaStatus) {
+    return () ->
+        dynamicConfig.isEnabled("pubsub", false)
+            && dynamicConfig.isEnabled("pubsub.amazon", false)
+            && dynamicConfig.isEnabled("pubsub.amazon." + subscription.getName(), false)
+            && eurekaStatus.isEnabled();
   }
 
   public static Policy buildSNSPolicy(ARN topicARN, List<String> accountIds) {

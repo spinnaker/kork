@@ -77,13 +77,6 @@ public class SNSPublisherProvider {
     }
 
     List<PubsubPublisher> publishers = new ArrayList<>();
-
-    Supplier<Boolean> isEnabled =
-        () ->
-            dynamicConfig.isEnabled("pubsub", false)
-                && dynamicConfig.isEnabled("pubsub.amazon", false)
-                && eurekaStatus.isEnabled();
-
     properties
         .getSubscriptions()
         .forEach(
@@ -97,6 +90,9 @@ public class SNSPublisherProvider {
                       .withClientConfiguration(new ClientConfiguration())
                       .withRegion(topicARN.getRegion())
                       .build();
+
+              Supplier<Boolean> isEnabled =
+                  PubSubUtils.getEnabledSupplier(dynamicConfig, subscription, eurekaStatus);
 
               SNSPublisher publisher =
                   new SNSPublisher(subscription, amazonSNS, isEnabled, registry, retrySupport);
