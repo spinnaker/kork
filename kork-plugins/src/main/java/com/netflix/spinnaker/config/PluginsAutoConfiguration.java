@@ -20,6 +20,7 @@ import com.netflix.spectator.api.Registry;
 import com.netflix.spinnaker.config.PluginsConfigurationProperties.PluginRepositoryProperties;
 import com.netflix.spinnaker.kork.plugins.ExtensionBeanDefinitionRegistryPostProcessor;
 import com.netflix.spinnaker.kork.plugins.SpinnakerPluginManager;
+import com.netflix.spinnaker.kork.plugins.SpinnakerServiceVersionManager;
 import com.netflix.spinnaker.kork.plugins.SpringPluginStatusProvider;
 import com.netflix.spinnaker.kork.plugins.config.ConfigFactory;
 import com.netflix.spinnaker.kork.plugins.config.ConfigResolver;
@@ -32,13 +33,16 @@ import com.netflix.spinnaker.kork.plugins.proxy.aspects.MetricInvocationAspect;
 import com.netflix.spinnaker.kork.plugins.sdk.SdkFactory;
 import com.netflix.spinnaker.kork.plugins.spring.actuator.SpinnakerPluginEndpoint;
 import com.netflix.spinnaker.kork.plugins.update.ConfigurableUpdateRepository;
-import com.netflix.spinnaker.kork.plugins.update.PluginUpdateService;
+import com.netflix.spinnaker.kork.plugins.update.PluginDownloadService;
 import com.netflix.spinnaker.kork.plugins.update.SpinnakerUpdateManager;
 import com.netflix.spinnaker.kork.plugins.update.downloader.FileDownloaderProvider;
+import com.netflix.spinnaker.kork.version.ManifestVersionResolver;
+import com.netflix.spinnaker.kork.version.VersionResolver;
 import java.nio.file.Paths;
 import java.util.*;
 import java.util.stream.Collectors;
 import org.pf4j.PluginStatusProvider;
+import org.pf4j.VersionManager;
 import org.pf4j.update.UpdateRepository;
 import org.pf4j.update.verifier.CompoundVerifier;
 import org.slf4j.Logger;
@@ -62,8 +66,22 @@ public class PluginsAutoConfiguration {
   private static final Logger log = LoggerFactory.getLogger(PluginsAutoConfiguration.class);
 
   @Bean
-  public static PluginStatusProvider pluginStatusProvider(Environment environment) {
+  public static SpringPluginStatusProvider pluginStatusProvider(Environment environment) {
     return new SpringPluginStatusProvider(environment);
+  }
+
+  @Bean
+  @ConditionalOnMissingBean(VersionResolver.class)
+  public static VersionResolver versionResolver() {
+    return new ManifestVersionResolver(true);
+  }
+
+  @Bean
+  @ConditionalOnMissingBean(VersionResolver.class)
+  public static VersionManager versionManager(ApplicationContext applicationContext) {
+    return new SpinnakerServiceVersionManager(
+        Objects.requireNonNull(
+            applicationContext.getEnvironment().getProperty("spring.application.name")));
   }
 
   @Bean
@@ -88,11 +106,15 @@ public class PluginsAutoConfiguration {
 
   @Bean
   public static SpinnakerPluginManager pluginManager(
+      VersionResolver serviceVersionResolver,
+      VersionManager versionManager,
       PluginStatusProvider pluginStatusProvider,
       ApplicationContext applicationContext,
       ConfigFactory configFactory,
       List<SdkFactory> sdkFactories) {
     return new SpinnakerPluginManager(
+        serviceVersionResolver,
+        versionManager,
         pluginStatusProvider,
         configFactory,
         sdkFactories,
@@ -140,16 +162,13 @@ public class PluginsAutoConfiguration {
   }
 
   @Bean
-  public static PluginUpdateService pluginUpdateManagerAgent(
+  public static PluginDownloadService pluginInstaller(
       SpinnakerUpdateManager updateManager,
       SpinnakerPluginManager pluginManager,
-      Environment environment,
+      SpringPluginStatusProvider pluginStatusProvider,
       ApplicationEventPublisher applicationEventPublisher) {
-    return new PluginUpdateService(
-        updateManager,
-        pluginManager,
-        Objects.requireNonNull(environment.getProperty("spring.application.name")),
-        applicationEventPublisher);
+    return new PluginDownloadService(
+        updateManager, pluginManager, pluginStatusProvider, applicationEventPublisher);
   }
 
   @Bean
@@ -166,11 +185,11 @@ public class PluginsAutoConfiguration {
   @Bean
   public static ExtensionBeanDefinitionRegistryPostProcessor pluginBeanPostProcessor(
       SpinnakerPluginManager pluginManager,
-      PluginUpdateService updateManagerService,
+      PluginDownloadService pluginDownloadService,
       ApplicationEventPublisher applicationEventPublisher,
       List<InvocationAspect<? extends InvocationState>> invocationAspects) {
     return new ExtensionBeanDefinitionRegistryPostProcessor(
-        pluginManager, updateManagerService, applicationEventPublisher, invocationAspects);
+        pluginManager, pluginDownloadService, applicationEventPublisher, invocationAspects);
   }
 
   @Bean

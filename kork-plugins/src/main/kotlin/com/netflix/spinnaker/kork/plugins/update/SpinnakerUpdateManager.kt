@@ -15,19 +15,24 @@
  */
 package com.netflix.spinnaker.kork.plugins.update
 
+import com.netflix.spinnaker.kork.plugins.SpinnakerServiceVersionManager
 import org.pf4j.PluginManager
-import org.pf4j.update.PluginInfo
+import org.pf4j.update.PluginInfo.PluginRelease
 import org.pf4j.update.UpdateManager
 import org.pf4j.update.UpdateRepository
 import org.slf4j.LoggerFactory
-import java.lang.UnsupportedOperationException
 import java.nio.file.Path
 
 /**
- * TODO(rz): Update [hasPluginUpdate] such that it understands the latest plugin is not always the one desired
+ * TODO(jonsie): [org.pf4j.update.UpdateManager] is overloaded.  It fetches and refreshes plugins
+ *  from update repositories, downloads plugins, loads plugins, starts plugins, and has some logic
+ *  to select plugin versions.  We have disabled update, load, and start plugin logic here.
+ *  This is now used only to manage the list of [UpdateRepository] objects, download the desired
+ *  artifact, and check version constraints via an implementation of [org.pf4j.VersionManager].
+ *  At some point, we may want to consider removing [org.pf4j.update.UpdateManager] altogether.
  */
 class SpinnakerUpdateManager(
-  pluginManager: PluginManager,
+  private val pluginManager: PluginManager,
   repositories: List<UpdateRepository>
 ) : UpdateManager(pluginManager, repositories) {
 
@@ -35,7 +40,7 @@ class SpinnakerUpdateManager(
 
   /**
    * This method is not supported as it calls pluginManager.loadPlugin and pluginManager.startPlugin.
-   * Instead, we only want to install the plugins (see [PluginUpdateService]) and leave loading
+   * Instead, we only want to install the plugins (see [PluginDownloadService]) and leave loading
    * and starting to [com.netflix.spinnaker.kork.plugins.ExtensionBeanDefinitionRegistryPostProcessor].
    */
   @Synchronized
@@ -53,20 +58,38 @@ class SpinnakerUpdateManager(
   }
 
   /**
-   * This is the current strategy to select a plugin for release; find the latest release
-   * version and check if that release requires the specified Spinnaker service.
+   * Supports the scenario wherein we want the latest plugin for the specified service (i.e., not
+   * necessarily the service that executes this code).
    *
-   * TODO(jonsie): We will eventually want to filter based on a configured plugin version and the
-   *  required service version (i.e. echo>=1.0.0).
+   * For example, Gate fetches plugins for Deck - so we need to pass in the required service for
+   * Deck.
    */
-  fun getLastPluginRelease(pluginId: String, serviceName: String): PluginInfo.PluginRelease? {
-    val lastRelease = getLastPluginRelease(pluginId)
-    if (lastRelease.requires.contains(serviceName)) return lastRelease
-    return null
+  fun getLastPluginRelease(id: String, serviceName: String): PluginRelease? {
+    val pluginInfo = pluginsMap[id] as SpinnakerPluginInfo
+    val systemVersion = pluginManager.systemVersion
+    val versionManager = SpinnakerServiceVersionManager(serviceName)
+    val lastPluginRelease: MutableMap<String, PluginRelease> = mutableMapOf()
+
+    for (release in pluginInfo.getReleases()) {
+      if (systemVersion == "0.0.0" || versionManager.checkVersionConstraint(systemVersion, release.requires)) {
+        if (lastPluginRelease[id] == null) {
+          lastPluginRelease[id] = release
+        } else if (versionManager.compareVersions(release.version, lastPluginRelease[id]!!.version) > 0) {
+          lastPluginRelease[id] = release
+        }
+      }
+    }
+
+    return lastPluginRelease[id]
   }
 
   /**
    * Exists to expose protected [downloadPlugin]
+   *
+   * TODO(jonsie): This will call [UpdateManager.getLastPluginRelease] if `version`
+   *  is null.  Shouldn't happen, but it could.  That is potentially problematic if the desired
+   *  service name is different than the service that executes this code.  Probably another reason
+   *  to consider moving away from [UpdateManager].
    */
   fun downloadPluginRelease(pluginId: String, version: String): Path {
     return downloadPlugin(pluginId, version)
