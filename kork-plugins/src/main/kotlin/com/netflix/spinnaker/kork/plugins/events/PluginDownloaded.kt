@@ -29,7 +29,6 @@ import org.springframework.context.ApplicationEvent
  */
 class PluginDownloaded(
   source: PluginDownloadService,
-  val operation: Operation,
   val status: Status,
   val pluginId: String,
   val version: String
@@ -37,17 +36,5 @@ class PluginDownloaded(
   enum class Status {
     SUCCEEDED,
     FAILED
-  }
-
-  enum class Operation {
-    /**
-     * When a plugin does not exist yet for a service.
-     */
-    INSTALL,
-
-    /**
-     * When a plugin exists for a service, but is not the correct version.
-     */
-    UPDATE
   }
 }

@@ -15,10 +15,10 @@
  */
 package com.netflix.spinnaker.kork.plugins.update
 
+import com.netflix.spinnaker.kork.exceptions.IntegrationException
 import com.netflix.spinnaker.kork.plugins.SpinnakerPluginManager
 import com.netflix.spinnaker.kork.plugins.SpringPluginStatusProvider
 import com.netflix.spinnaker.kork.plugins.events.PluginDownloaded
-import com.netflix.spinnaker.kork.plugins.events.PluginDownloaded.Operation.INSTALL
 import com.netflix.spinnaker.kork.plugins.events.PluginDownloaded.Status.FAILED
 import com.netflix.spinnaker.kork.plugins.events.PluginDownloaded.Status.SUCCEEDED
 import org.pf4j.PluginRuntimeException
@@ -57,10 +57,13 @@ class PluginDownloadService(
    * plugin release is selected.  Otherwise, it checks if the plugin has a version that matches the
    * configured plugin version AND the constraint for that version satisfies the service version
    * constraint (i.e., orca>=1.0.0 & <2.0.0).
+   *
+   * TODO(jonsie): Consider removing the fallback and throwing PluginNotFoundException once
+   *  plugins are out of beta.
    */
   internal fun downloadPlugins() {
     val availablePlugins = updateManager.availablePlugins as MutableList<SpinnakerPluginInfo>
-    log.info("Found {} available plugins", availablePlugins.size)
+    log.info("Found '{}' available plugins", availablePlugins.size)
 
     availablePlugins
       .filter { !pluginStatusProvider.isPluginDisabled(it.id) }
@@ -68,9 +71,13 @@ class PluginDownloadService(
         val configuredPluginVersion = pluginStatusProvider.configuredPluginVersion(plugin.id)
 
         val pluginRelease = if (configuredPluginVersion == null) {
-          // TODO(jonsie): Remove this fallback and replace with an IntegrationException once plugins
-          // are out of beta.
-          updateManager.getLastPluginRelease(plugin.id) ?: return@plugins
+          val fallbackRelease = updateManager.getLastPluginRelease(plugin.id)
+            ?: throw PluginNotFoundException(plugin.id, configuredPluginVersion)
+          run {
+              log.warn("'{}' is enabled but does not have a configured version, falling back to " +
+                "version '{}'.", plugin.id, fallbackRelease.version)
+              fallbackRelease
+          }
         } else {
           plugin.getReleases()
             .filter { release ->
@@ -78,22 +85,22 @@ class PluginDownloadService(
             }
             .firstOrNull { release ->
               pluginManager.versionManager.checkVersionConstraint(release.version, release.requires)
-            } ?: return@plugins
+            } ?: throw PluginNotFoundException(plugin.id, configuredPluginVersion)
         }
 
-        log.debug("Installing plugin '{}' with version {}", plugin.id, pluginRelease.version)
+        log.debug("Downloading plugin '{}' with version '{}'", plugin.id, pluginRelease.version)
         val downloaded = updateManager.downloadPluginRelease(plugin.id, pluginRelease.version)
-        val installed = pluginManager.pluginsRoot.write(downloaded)
+        val succeeded = pluginManager.pluginsRoot.write(downloaded)
 
-        if (installed) {
-          log.debug("Installed plugin '{}'", plugin.id)
+        if (succeeded) {
+          log.debug("Downloaded plugin '{}'", plugin.id)
           applicationEventPublisher.publishEvent(
-            PluginDownloaded(this, INSTALL, SUCCEEDED, plugin.id, pluginRelease.version)
+            PluginDownloaded(this, SUCCEEDED, plugin.id, pluginRelease.version)
           )
         } else {
-          log.error("Failed installing plugin '{}'", plugin.id)
+          log.error("Failed downloading plugin '{}'", plugin.id)
           applicationEventPublisher.publishEvent(
-            PluginDownloaded(this, INSTALL, FAILED, plugin.id, pluginRelease.version)
+            PluginDownloaded(this, FAILED, plugin.id, pluginRelease.version)
           )
         }
       }
@@ -117,4 +124,11 @@ class PluginDownloadService(
       throw UnsupportedOperationException("This operation is only supported on the specified plugins root directory.")
     }
   }
+
+  internal class PluginNotFoundException(pluginId: String, configuredPluginVersion: String?) :
+    IntegrationException(
+      "'$pluginId' is enabled with version ${configuredPluginVersion ?: "undefined" }, but a " +
+        "release version could not be found that satisfies the version and/or the service " +
+        "requirement constraints."
+  )
 }
