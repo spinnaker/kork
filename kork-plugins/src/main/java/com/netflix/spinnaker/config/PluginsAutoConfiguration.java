@@ -18,7 +18,6 @@ package com.netflix.spinnaker.config;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.netflix.spectator.api.Registry;
 import com.netflix.spinnaker.config.PluginsConfigurationProperties.PluginRepositoryProperties;
-import com.netflix.spinnaker.config.PluginsConfigurationProperties.ServiceVersionResolutionProperties;
 import com.netflix.spinnaker.kork.plugins.ExtensionBeanDefinitionRegistryPostProcessor;
 import com.netflix.spinnaker.kork.plugins.SpinnakerPluginManager;
 import com.netflix.spinnaker.kork.plugins.SpinnakerServiceVersionManager;
@@ -48,6 +47,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.boot.context.properties.bind.Bindable;
+import org.springframework.boot.context.properties.bind.Binder;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
@@ -69,18 +70,17 @@ public class PluginsAutoConfiguration {
   }
 
   @Bean
-  public static ServiceVersionResolutionProperties serviceVersionResolutionConfig(
-      ConfigResolver configResolver) {
-    return configResolver.resolve(
-        new ServiceVersionResolutionConfigCoordinates(), ServiceVersionResolutionProperties.class);
-  }
-
-  @Bean
   @ConditionalOnMissingBean(VersionResolver.class)
-  public static VersionResolver versionResolver(
-      ServiceVersionResolutionProperties serviceVersionResolutionConfig) {
-    return new ManifestVersionResolver(
-        serviceVersionResolutionConfig.useOssVersionManifestAttribute);
+  public static VersionResolver versionResolver(Environment environment) {
+    boolean useOssVersionManifestAttribute =
+        Binder.get(environment)
+            .bind(
+                PluginsConfigurationProperties.CONFIG_NAMESPACE
+                    + ".use-oss-version-manifest-attribute",
+                Bindable.of(Boolean.class))
+            .orElse(false);
+
+    return new ManifestVersionResolver(useOssVersionManifestAttribute);
   }
 
   @Bean

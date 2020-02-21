@@ -99,16 +99,11 @@ public class PluginsConfigurationProperties {
     }
   }
 
-  /** Service version resolution strategy configuration */
-  public ServiceVersionResolutionProperties serviceVersionResolution;
-
-  public static class ServiceVersionResolutionProperties {
-    /**
-     * If set to true, the service version resolution will use the MANIFEST.MF attribute
-     * "Implementation-OSS-Version". By default, this is false which means the version attribute
-     * lookup will be "Implementation-Version" -- for most OSS users that will still be the OSS
-     * version.
-     */
-    public boolean useOssVersionManifestAttribute = false;
-  }
+  /**
+   * If set to true, the service version resolution will use the MANIFEST.MF attribute
+   * "Implementation-OSS-Version". By default, this is false which means the version attribute
+   * lookup will be "Implementation-Version" -- for most OSS users that will still be the OSS
+   * version.
+   */
+  public boolean useOssVersionManifestAttribute;
 }
