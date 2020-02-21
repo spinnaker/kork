@@ -57,7 +57,7 @@ class PluginDownloadService(
    * configured plugin version AND the constraint for that version satisfies the service version
    * constraint (i.e., orca>=1.0.0 & <2.0.0).
    *
-   * TODO(jonsie): Consider removing the fallback and throwing PluginNotFoundException once
+   * TODO(jonsie): Consider removing the fallback and throwing an IntegrationException once
    *  plugins are out of beta.
    */
   internal fun downloadPlugins() {
@@ -72,11 +72,11 @@ class PluginDownloadService(
         val pluginRelease = if (configuredPluginVersion == null) {
           val fallbackRelease = updateManager.getLastPluginRelease(enabledPlugin.id)
             ?: throw PluginNotFoundException(enabledPlugin.id, configuredPluginVersion)
-          run {
-              log.warn("'{}' is enabled but does not have a configured version, falling back to " +
-                "version '{}'.", enabledPlugin.id, fallbackRelease.version)
-              fallbackRelease
-          }
+
+          log.warn("'{}' is enabled but does not have a configured version, falling back to " +
+            "version '{}'.", enabledPlugin.id, fallbackRelease.version)
+
+          fallbackRelease
         } else {
           enabledPlugin.getReleases()
             .filter { release ->

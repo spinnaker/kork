@@ -83,6 +83,8 @@ open class SpinnakerPluginManager(
   }
 
   override fun getSystemVersion(): String {
+    // TODO(jonsie): For now this is ok, but eventually we will want to throw an exception if the
+    // system version is null.
     return systemVersionResolver.resolve(serviceName) ?: "0.0.0"
   }
 

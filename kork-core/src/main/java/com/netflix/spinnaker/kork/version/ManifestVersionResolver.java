@@ -107,9 +107,8 @@ public class ManifestVersionResolver implements VersionResolver {
 
   private String extractImplementationVersion(Manifest manifest) {
     Attributes mainAttributes = manifest.getMainAttributes();
-    String ossVersion = mainAttributes.getValue("Implementation-OSS-Version");
-    if (ossAttribute && ossVersion != null && !ossVersion.isEmpty()) {
-      return ossVersion;
+    if (ossAttribute) {
+      return mainAttributes.getValue("Implementation-OSS-Version");
     }
     return mainAttributes.getValue("Implementation-Version");
   }

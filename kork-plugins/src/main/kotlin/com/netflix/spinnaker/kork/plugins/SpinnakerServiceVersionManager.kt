@@ -32,7 +32,7 @@ class SpinnakerServiceVersionManager(
     val serviceVersionRequirements =
       VersionRequirementsParser
         .parseAll(requires)
-        .find { it.service == serviceName }
+        .find { it.service.equals(serviceName, ignoreCase = true) }
 
     if (serviceVersionRequirements != null) {
       val constraint = serviceVersionRequirements.operator.symbol + serviceVersionRequirements.version
