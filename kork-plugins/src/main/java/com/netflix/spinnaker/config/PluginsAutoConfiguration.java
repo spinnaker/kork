@@ -18,14 +18,12 @@ package com.netflix.spinnaker.config;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.netflix.spectator.api.Registry;
 import com.netflix.spinnaker.config.PluginsConfigurationProperties.PluginRepositoryProperties;
+import com.netflix.spinnaker.config.PluginsConfigurationProperties.ServiceVersionResolutionProperties;
 import com.netflix.spinnaker.kork.plugins.ExtensionBeanDefinitionRegistryPostProcessor;
 import com.netflix.spinnaker.kork.plugins.SpinnakerPluginManager;
 import com.netflix.spinnaker.kork.plugins.SpinnakerServiceVersionManager;
 import com.netflix.spinnaker.kork.plugins.SpringPluginStatusProvider;
-import com.netflix.spinnaker.kork.plugins.config.ConfigFactory;
-import com.netflix.spinnaker.kork.plugins.config.ConfigResolver;
-import com.netflix.spinnaker.kork.plugins.config.RepositoryConfigCoordinates;
-import com.netflix.spinnaker.kork.plugins.config.SpringEnvironmentConfigResolver;
+import com.netflix.spinnaker.kork.plugins.config.*;
 import com.netflix.spinnaker.kork.plugins.proxy.aspects.InvocationAspect;
 import com.netflix.spinnaker.kork.plugins.proxy.aspects.InvocationState;
 import com.netflix.spinnaker.kork.plugins.proxy.aspects.LogInvocationAspect;
@@ -71,9 +69,18 @@ public class PluginsAutoConfiguration {
   }
 
   @Bean
+  public static ServiceVersionResolutionProperties serviceVersionResolutionConfig(
+      ConfigResolver configResolver) {
+    return configResolver.resolve(
+        new ServiceVersionResolutionConfigCoordinates(), ServiceVersionResolutionProperties.class);
+  }
+
+  @Bean
   @ConditionalOnMissingBean(VersionResolver.class)
-  public static VersionResolver versionResolver() {
-    return new ManifestVersionResolver(true);
+  public static VersionResolver versionResolver(
+      ServiceVersionResolutionProperties serviceVersionResolutionConfig) {
+    return new ManifestVersionResolver(
+        serviceVersionResolutionConfig.useOssVersionManifestAttribute);
   }
 
   @Bean

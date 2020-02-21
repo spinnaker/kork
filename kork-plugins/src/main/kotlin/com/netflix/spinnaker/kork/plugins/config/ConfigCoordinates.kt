@@ -71,3 +71,11 @@ class RepositoryConfigCoordinates : ConfigCoordinates() {
   override fun toPointer(): String =
     "$ROOT_PATH/repositories"
 }
+
+/**
+ * Config coordinates for the OSS version manifest attribute.
+ */
+class ServiceVersionResolutionConfigCoordinates : ConfigCoordinates() {
+  override fun toPointer(): String =
+    "$ROOT_PATH/serviceVersionResolution"
+}
