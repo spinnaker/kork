@@ -16,12 +16,14 @@
 
 package com.netflix.spinnaker.kork.plugins.update.release
 
+import com.netflix.spinnaker.kork.annotations.Beta
 import com.netflix.spinnaker.kork.exceptions.IntegrationException
 import org.pf4j.update.PluginInfo
 
 /**
  * Implement to select the desired release(s) from [PluginInfo].
  */
+@Beta
 interface PluginReleaseProvider {
 
   /**
@@ -30,7 +32,7 @@ interface PluginReleaseProvider {
   fun getReleases(pluginInfo: List<PluginInfo>): Set<Release?>
 
   /**
-   * Get plugin release from a plugin info
+   * Get a plugin release from plugin info
    */
   fun getRelease(pluginInfo: PluginInfo): Release?
 }

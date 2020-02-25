@@ -22,7 +22,10 @@ import com.netflix.spinnaker.kork.plugins.ExtensionBeanDefinitionRegistryPostPro
 import com.netflix.spinnaker.kork.plugins.SpinnakerPluginManager;
 import com.netflix.spinnaker.kork.plugins.SpinnakerServiceVersionManager;
 import com.netflix.spinnaker.kork.plugins.SpringPluginStatusProvider;
-import com.netflix.spinnaker.kork.plugins.config.*;
+import com.netflix.spinnaker.kork.plugins.config.ConfigFactory;
+import com.netflix.spinnaker.kork.plugins.config.ConfigResolver;
+import com.netflix.spinnaker.kork.plugins.config.RepositoryConfigCoordinates;
+import com.netflix.spinnaker.kork.plugins.config.SpringEnvironmentConfigResolver;
 import com.netflix.spinnaker.kork.plugins.proxy.aspects.InvocationAspect;
 import com.netflix.spinnaker.kork.plugins.proxy.aspects.InvocationState;
 import com.netflix.spinnaker.kork.plugins.proxy.aspects.LogInvocationAspect;

@@ -47,7 +47,7 @@ class PropertySourcePluginReleaseProvider(
     if (!pluginStatusProvider.isPluginDisabled(pluginInfo.id)) {
       val pluginVersion = pluginStatusProvider.pluginVersion(pluginInfo.id)
 
-      val release = if (pluginVersion == null) {
+      val release = if (pluginVersion == null || pluginVersion.isEmpty()) {
         val fallbackRelease = updateManager.getLastPluginRelease(pluginInfo.id)
           ?: throw PluginNotFoundException(pluginInfo.id, pluginVersion)
 
@@ -57,9 +57,7 @@ class PropertySourcePluginReleaseProvider(
         fallbackRelease
       } else {
         pluginInfo.releases
-          .filter { release ->
-            release.version == pluginVersion
-          }
+          .filter { it.version == pluginVersion }
           .firstOrNull { release ->
             versionManager.checkVersionConstraint(pluginManager.systemVersion, release.requires)
           } ?: throw PluginNotFoundException(pluginInfo.id, pluginVersion)

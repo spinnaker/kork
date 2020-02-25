@@ -100,10 +100,11 @@ public class PluginsConfigurationProperties {
   }
 
   /**
-   * If set to true, the service version resolution will use the MANIFEST.MF attribute
-   * "Implementation-OSS-Version". By default, this is false which means the version attribute
-   * lookup will be "Implementation-Version" -- for most OSS users that will still be the OSS
-   * version.
+   * Defines what MANIFEST.MF attribute to use in determining a service version. By default, a
+   * service version is determined by reading the "Implementation-Version" attribute. If this
+   * property is set to true, however, "Implementation-OSS-Version" will be used to support use
+   * cases where services are being extended and rebuilt. Unless you're re-building services, this
+   * should remain its default value.
    */
   public boolean useOssVersionManifestAttribute;
 }

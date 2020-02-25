@@ -49,10 +49,19 @@ class ExtensionBeanDefinitionRegistryPostProcessor(
   override fun postProcessBeanDefinitionRegistry(registry: BeanDefinitionRegistry) {
     val start = System.currentTimeMillis()
     log.debug("Preparing plugins")
+
+    // Load plugins prior to downloading so updateManager know what requires updating
     pluginManager.loadPlugins()
-    updateManager.downloadPlugins(
-      pluginReleaseProvider.getReleases(updateManager.availablePlugins)
-    ).forEach { pluginManager.loadPlugin(it) }
+
+    // Determine list of plugins for release from available plugins
+    val releases = pluginReleaseProvider.getReleases(updateManager.availablePlugins)
+
+    // Download releases, updating previously loaded plugins where necessary
+    updateManager.downloadPluginReleases(releases).forEach { pluginPath ->
+      pluginManager.loadPlugin(pluginPath)
+    }
+
+    // Start plugins - should only be called once in kork-plugins
     pluginManager.startPlugins()
 
     pluginManager.startedPlugins.forEach { pluginWrapper ->

@@ -15,6 +15,7 @@
  */
 package com.netflix.spinnaker.kork.plugins.update
 
+import com.netflix.spinnaker.kork.exceptions.IntegrationException
 import com.netflix.spinnaker.kork.plugins.SpinnakerServiceVersionManager
 import com.netflix.spinnaker.kork.plugins.events.PluginDownloaded
 import com.netflix.spinnaker.kork.plugins.update.release.Release
@@ -46,26 +47,13 @@ class SpinnakerUpdateManager(
 
   private val log by lazy { LoggerFactory.getLogger(javaClass) }
 
-  internal fun downloadPlugins(releases: Set<Release?>): Set<Path> {
-    val downloadPlugins: MutableSet<Path> = mutableSetOf()
+  internal fun downloadPluginReleases(releases: Set<Release?>): Set<Path> {
+    val downloadedPlugins: MutableSet<Path> = mutableSetOf()
 
-    if (releases.isNotEmpty()) {
-      releases.forEach release@{ release ->
-        if (release == null) return@release
-        val loadedPlugin = pluginManager.getPlugin(release.pluginId)
-        if (loadedPlugin != null) {
-          val loadedPluginVersion = loadedPlugin.descriptor.version
-
-          if (pluginManager.versionManager.compareVersions(loadedPluginVersion, release.props.version) > 1) {
-            log.debug("Newer version '{}' of plugin '{}' found, deleting previous version '{}'",
-              release.props.version, release.pluginId, loadedPluginVersion)
-            pluginManager.deletePlugin(loadedPlugin.pluginId)
-          } else {
-            // Desired plugin exists and is loaded, move on...
-            return@release
-          }
-        }
-
+    releases
+      .filterNotNull()
+      .filter { needsUpdate(it) }
+      .forEach { release ->
         log.debug("Downloading plugin '{}' with version '{}'", release.pluginId, release.props.version)
         val tmpPath = downloadPluginRelease(release.pluginId, release.props.version)
         val downloadedPluginPath = pluginManager.pluginsRoot.write(tmpPath)
@@ -75,11 +63,36 @@ class SpinnakerUpdateManager(
           PluginDownloaded(this, PluginDownloaded.Status.SUCCEEDED, release.pluginId, release.props.version)
         )
 
-        downloadPlugins.add(downloadedPluginPath)
-      }
+        downloadedPlugins.add(downloadedPluginPath)
     }
 
-    return downloadPlugins
+    return downloadedPlugins
+  }
+
+  /**
+   * Determines if the loaded plugin needs to be updated.  If so, delete the plugin and return true/
+   * false if plugin was deleted.  If not, return false.
+   */
+  private fun needsUpdate(release: Release): Boolean {
+    val loadedPlugin = pluginManager.getPlugin(release.pluginId)
+    if (loadedPlugin != null) {
+      val loadedPluginVersion = loadedPlugin.descriptor.version
+
+      if (pluginManager.versionManager.compareVersions(loadedPluginVersion, release.props.version) > 1) {
+        log.debug("Newer version '{}' of plugin '{}' found, deleting previous version '{}'",
+          release.props.version, release.pluginId, loadedPluginVersion)
+        val deleted = pluginManager.deletePlugin(loadedPlugin.pluginId)
+
+        if (!deleted) {
+          throw IntegrationException(
+            "Unable to update plugin '${release.pluginId}' to version '${release.props.version}', " +
+              "failed to delete previous version '$loadedPluginVersion'")
+        }
+
+        return deleted
+      }
+    }
+    return false
   }
 
   /**
@@ -146,8 +159,8 @@ class SpinnakerUpdateManager(
 
   /**
    * This method is not supported as it calls pluginManager.loadPlugin and pluginManager.startPlugin.
-   * Instead, we only want to install the plugins and leave loading
-   * and starting to [com.netflix.spinnaker.kork.plugins.ExtensionBeanDefinitionRegistryPostProcessor].
+   * Instead, we only want to install the plugins and leave loading and starting to
+   * [com.netflix.spinnaker.kork.plugins.ExtensionBeanDefinitionRegistryPostProcessor].
    */
   @Synchronized
   override fun installPlugin(id: String?, version: String?): Boolean {
@@ -156,8 +169,8 @@ class SpinnakerUpdateManager(
 
   /**
    * This method is not supported as it calls pluginManager.loadPlugin and pluginManager.startPlugin.
-   * Instead, we only want to install the plugins and leave loading
-   * and starting to [com.netflix.spinnaker.kork.plugins.ExtensionBeanDefinitionRegistryPostProcessor].
+   * Instead, we only want to install the plugins and leave loading and starting to
+   * [com.netflix.spinnaker.kork.plugins.ExtensionBeanDefinitionRegistryPostProcessor].
    */
   override fun updatePlugin(id: String?, version: String?): Boolean {
     throw UnsupportedOperationException("UpdateManager updatePlugin is not supported")
