@@ -32,15 +32,15 @@ import com.netflix.spinnaker.kork.plugins.spring.actuator.SpinnakerPluginEndpoin
 import com.netflix.spinnaker.kork.plugins.update.SpinnakerUpdateManager;
 import com.netflix.spinnaker.kork.plugins.update.downloader.CompositeFileDownloader;
 import com.netflix.spinnaker.kork.plugins.update.downloader.FileDownloaderProvider;
+import com.netflix.spinnaker.kork.plugins.update.downloader.SupportingFileDownloader;
 import com.netflix.spinnaker.kork.plugins.update.release.PluginReleaseProvider;
 import com.netflix.spinnaker.kork.plugins.update.release.PropertySourcePluginReleaseProvider;
-import com.netflix.spinnaker.kork.version.ManifestVersionResolver;
-import com.netflix.spinnaker.kork.plugins.update.downloader.SupportingFileDownloader;
 import com.netflix.spinnaker.kork.plugins.update.repository.ConfigurableUpdateRepository;
+import com.netflix.spinnaker.kork.version.ManifestVersionResolver;
+import com.netflix.spinnaker.kork.version.VersionResolver;
 import java.nio.file.Paths;
 import java.util.*;
 import java.util.stream.Collectors;
-import com.netflix.spinnaker.kork.version.VersionResolver;
 import org.pf4j.PluginStatusProvider;
 import org.pf4j.VersionManager;
 import org.pf4j.update.UpdateRepository;
@@ -139,12 +139,12 @@ public class PluginsAutoConfiguration {
 
   @Bean
   public static PluginReleaseProvider pluginReleaseProvider(
-    SpringPluginStatusProvider pluginStatusProvider,
-    VersionManager versionManager,
-    SpinnakerUpdateManager updateManager,
-    SpinnakerPluginManager pluginManager) {
+      SpringPluginStatusProvider pluginStatusProvider,
+      VersionManager versionManager,
+      SpinnakerUpdateManager updateManager,
+      SpinnakerPluginManager pluginManager) {
     return new PropertySourcePluginReleaseProvider(
-      pluginStatusProvider, versionManager, updateManager, pluginManager);
+        pluginStatusProvider, versionManager, updateManager, pluginManager);
   }
 
   @Bean
@@ -152,11 +152,7 @@ public class PluginsAutoConfiguration {
       SpinnakerPluginManager pluginManager,
       ApplicationEventPublisher applicationEventPublisher,
       List<UpdateRepository> updateRepositories) {
-    return new SpinnakerUpdateManager(
-      applicationEventPublisher,
-      pluginManager,
-      updateRepositories
-    );
+    return new SpinnakerUpdateManager(applicationEventPublisher, pluginManager, updateRepositories);
   }
 
   @Bean
@@ -206,18 +202,17 @@ public class PluginsAutoConfiguration {
 
   @Bean
   public static ExtensionBeanDefinitionRegistryPostProcessor pluginBeanPostProcessor(
-    SpinnakerPluginManager pluginManager,
-    SpinnakerUpdateManager updateManager,
-    PluginReleaseProvider pluginReleaseProvider,
-    ApplicationEventPublisher applicationEventPublisher,
-    List<InvocationAspect<? extends InvocationState>> invocationAspects) {
+      SpinnakerPluginManager pluginManager,
+      SpinnakerUpdateManager updateManager,
+      PluginReleaseProvider pluginReleaseProvider,
+      ApplicationEventPublisher applicationEventPublisher,
+      List<InvocationAspect<? extends InvocationState>> invocationAspects) {
     return new ExtensionBeanDefinitionRegistryPostProcessor(
-      pluginManager,
-      updateManager,
-      pluginReleaseProvider,
-      applicationEventPublisher,
-      invocationAspects
-    );
+        pluginManager,
+        updateManager,
+        pluginReleaseProvider,
+        applicationEventPublisher,
+        invocationAspects);
   }
 
   @Bean

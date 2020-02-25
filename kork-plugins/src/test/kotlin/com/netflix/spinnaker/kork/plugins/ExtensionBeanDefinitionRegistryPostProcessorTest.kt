@@ -115,7 +115,7 @@ class ExtensionBeanDefinitionRegistryPostProcessorTest : JUnit5Minutests {
   private class Fixture {
     val pluginManager: SpinnakerPluginManager = mockk(relaxed = true)
     val updateManager: SpinnakerUpdateManager = mockk(relaxed = true)
-    val pluginReleaseProvider : PluginReleaseProvider = mockk(relaxed = true)
+    val pluginReleaseProvider: PluginReleaseProvider = mockk(relaxed = true)
     val pluginWrapper: PluginWrapper = mockk(relaxed = true)
     val extensionFactory: ExtensionFactory = mockk(relaxed = true)
     val applicationEventPublisher: ApplicationEventPublisher = mockk(relaxed = true)

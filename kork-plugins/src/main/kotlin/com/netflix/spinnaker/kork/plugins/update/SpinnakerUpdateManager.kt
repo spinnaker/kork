@@ -17,7 +17,6 @@ package com.netflix.spinnaker.kork.plugins.update
 
 import com.netflix.spinnaker.kork.plugins.SpinnakerServiceVersionManager
 import com.netflix.spinnaker.kork.plugins.events.PluginDownloaded
-import com.netflix.spinnaker.kork.plugins.update.release.PluginReleaseProvider
 import com.netflix.spinnaker.kork.plugins.update.release.Release
 import org.pf4j.PluginManager
 import org.pf4j.PluginRuntimeException
@@ -47,7 +46,7 @@ class SpinnakerUpdateManager(
 
   private val log by lazy { LoggerFactory.getLogger(javaClass) }
 
-  internal fun downloadPlugins(releases: Set<Release?>) : Set<Path> {
+  internal fun downloadPlugins(releases: Set<Release?>): Set<Path> {
     val downloadPlugins: MutableSet<Path> = mutableSetOf()
 
     if (releases.isNotEmpty()) {
@@ -62,7 +61,7 @@ class SpinnakerUpdateManager(
               release.props.version, release.pluginId, loadedPluginVersion)
             pluginManager.deletePlugin(loadedPlugin.pluginId)
           } else {
-            //Desired plugin exists and is loaded, move on...
+            // Desired plugin exists and is loaded, move on...
             return@release
           }
         }

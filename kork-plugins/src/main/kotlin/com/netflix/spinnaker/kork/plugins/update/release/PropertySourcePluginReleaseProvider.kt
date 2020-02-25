@@ -43,7 +43,7 @@ class PropertySourcePluginReleaseProvider(
       return pluginInfoRelease(pluginInfo)
   }
 
-  private fun pluginInfoRelease(pluginInfo: PluginInfo) : Release? {
+  private fun pluginInfoRelease(pluginInfo: PluginInfo): Release? {
     if (!pluginStatusProvider.isPluginDisabled(pluginInfo.id)) {
       val pluginVersion = pluginStatusProvider.pluginVersion(pluginInfo.id)
 

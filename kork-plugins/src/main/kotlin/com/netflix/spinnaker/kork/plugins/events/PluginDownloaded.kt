@@ -21,7 +21,7 @@ import org.springframework.context.ApplicationEvent
 /**
  * An event emitted whenever a plugin has been downloaded (successfully or not).
  *
- * @param source The [PluginDownloadService], which has emitted this event.
+ * @param source The [SpinnakerUpdateManager], which has emitted this event.
  * @param operation Defines whether the plugin was being installed or updated.
  * @param status Whether or not the plugin download succeeded
  * @param pluginId The ID of the plugin
