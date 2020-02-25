@@ -32,9 +32,11 @@ import com.netflix.spinnaker.kork.plugins.spring.actuator.SpinnakerPluginEndpoin
 import com.netflix.spinnaker.kork.plugins.update.ConfigurableUpdateRepository;
 import com.netflix.spinnaker.kork.plugins.update.PluginDownloadService;
 import com.netflix.spinnaker.kork.plugins.update.SpinnakerUpdateManager;
+import com.netflix.spinnaker.kork.plugins.update.downloader.CompositeFileDownloader;
 import com.netflix.spinnaker.kork.plugins.update.downloader.FileDownloaderProvider;
 import com.netflix.spinnaker.kork.version.ManifestVersionResolver;
-import com.netflix.spinnaker.kork.version.VersionResolver;
+import com.netflix.spinnaker.kork.plugins.update.downloader.SupportingFileDownloader;
+import com.netflix.spinnaker.kork.plugins.update.repository.ConfigurableUpdateRepository;
 import java.nio.file.Paths;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -59,7 +61,7 @@ import org.springframework.core.env.Environment;
 
 @Configuration
 @EnableConfigurationProperties(PluginsConfigurationProperties.class)
-@Import({Front50UpdateRepositoryConfiguration.class})
+@Import({Front50PluginsConfiguration.class})
 public class PluginsAutoConfiguration {
 
   private static final Logger log = LoggerFactory.getLogger(PluginsAutoConfiguration.class);
@@ -142,8 +144,15 @@ public class PluginsAutoConfiguration {
   }
 
   @Bean
+  public static FileDownloaderProvider fileDownloaderProvider(
+      List<SupportingFileDownloader> fileDownloaders) {
+    return new FileDownloaderProvider(new CompositeFileDownloader(fileDownloaders));
+  }
+
+  @Bean
   public static List<UpdateRepository> pluginUpdateRepositories(
-      Map<String, PluginRepositoryProperties> pluginRepositoriesConfig) {
+      Map<String, PluginRepositoryProperties> pluginRepositoriesConfig,
+      FileDownloaderProvider fileDownloaderProvider) {
 
     List<UpdateRepository> repositories =
         pluginRepositoriesConfig.entrySet().stream()
@@ -155,7 +164,7 @@ public class PluginsAutoConfiguration {
                     new ConfigurableUpdateRepository(
                         entry.getKey(),
                         entry.getValue().getUrl(),
-                        FileDownloaderProvider.get(entry.getValue().fileDownloader),
+                        fileDownloaderProvider.get(entry.getValue().fileDownloader),
                         new CompoundVerifier()))
             .collect(Collectors.toList());
 
