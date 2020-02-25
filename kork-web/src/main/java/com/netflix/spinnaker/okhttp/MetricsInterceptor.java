@@ -1,15 +1,15 @@
 package com.netflix.spinnaker.okhttp;
 
+import com.netflix.spectator.api.Id;
 import com.netflix.spectator.api.Registry;
+import com.netflix.spectator.api.Tag;
 import com.netflix.spinnaker.kork.common.Header;
 import com.squareup.okhttp.Interceptor;
 import com.squareup.okhttp.Request;
 import com.squareup.okhttp.Response;
 import java.io.IOException;
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import org.slf4j.Logger;
@@ -25,6 +25,14 @@ import org.springframework.util.StringUtils;
  * way out and the interceptor logic will not be necessary long term.
  */
 class MetricsInterceptor {
+
+  /** Storage of extra tags that can be added at call sites. */
+  private static final ThreadLocal<Collection<Tag>> EXTRA_TAGS = new ThreadLocal<>();
+
+  /** Tags that cannot be set by {@link EXTRA_TAGS}. */
+  private static final Collection<String> RESERVED_TAG_IDS =
+      Arrays.asList("requestHost", "statusCode", "status", "success", "authenticated");
+
   private final Registry registry;
   private final boolean skipHeaderCheck;
   private final Logger log;
@@ -117,13 +125,14 @@ class MetricsInterceptor {
       boolean hasAuthHeaders) {
     registry
         .timer(
-            registry
-                .createId("okhttp.requests")
-                .withTag("requestHost", requestUrl.getHost())
-                .withTag("statusCode", String.valueOf(statusCode))
-                .withTag("status", bucket(statusCode))
-                .withTag("success", wasSuccessful)
-                .withTag("authenticated", hasAuthHeaders))
+            withExtraTags(
+                registry
+                    .createId("okhttp.requests")
+                    .withTag("requestHost", requestUrl.getHost())
+                    .withTag("statusCode", String.valueOf(statusCode))
+                    .withTag("status", bucket(statusCode))
+                    .withTag("success", wasSuccessful)
+                    .withTag("authenticated", hasAuthHeaders)))
         .record(durationNs, TimeUnit.NANOSECONDS);
   }
 
@@ -133,5 +142,26 @@ class MetricsInterceptor {
     }
 
     return Integer.toString(statusCode).charAt(0) + "xx";
+  }
+
+  private static Id withExtraTags(Id id) {
+    Collection<Tag> tags = EXTRA_TAGS.get();
+    EXTRA_TAGS.set(null);
+    if (tags == null) {
+      return id;
+    }
+    return id.withTags(tags);
+  }
+
+  /**
+   * Add additional metric tags to OkHttp client requests.
+   *
+   * <p>Additional tags cannot override default tags and will be silently dropped.
+   */
+  public static void addTags(Collection<Tag> tags) {
+    EXTRA_TAGS.set(
+        tags.stream()
+            .filter(t -> !RESERVED_TAG_IDS.contains(t.key()))
+            .collect(Collectors.toList()));
   }
 }
