@@ -15,7 +15,7 @@
  */
 package com.netflix.spinnaker.kork.plugins.events
 
-import com.netflix.spinnaker.kork.plugins.update.PluginDownloadService
+import com.netflix.spinnaker.kork.plugins.update.SpinnakerUpdateManager
 import org.springframework.context.ApplicationEvent
 
 /**
@@ -28,7 +28,7 @@ import org.springframework.context.ApplicationEvent
  * @param version The version of the plugin downloaded
  */
 class PluginDownloaded(
-  source: PluginDownloadService,
+  source: SpinnakerUpdateManager,
   val status: Status,
   val pluginId: String,
   val version: String

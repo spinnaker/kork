@@ -21,7 +21,8 @@ import com.netflix.spinnaker.kork.plugins.events.ExtensionLoaded
 import com.netflix.spinnaker.kork.plugins.proxy.ExtensionInvocationProxy
 import com.netflix.spinnaker.kork.plugins.proxy.aspects.InvocationAspect
 import com.netflix.spinnaker.kork.plugins.proxy.aspects.InvocationState
-import com.netflix.spinnaker.kork.plugins.update.PluginDownloadService
+import com.netflix.spinnaker.kork.plugins.update.SpinnakerUpdateManager
+import com.netflix.spinnaker.kork.plugins.update.release.PluginReleaseProvider
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.config.ConfigurableListableBeanFactory
 import org.springframework.beans.factory.support.BeanDefinitionRegistry
@@ -37,7 +38,8 @@ import kotlin.jvm.javaClass
  */
 class ExtensionBeanDefinitionRegistryPostProcessor(
   private val pluginManager: SpinnakerPluginManager,
-  private val pluginDownloadService: PluginDownloadService,
+  private val updateManager: SpinnakerUpdateManager,
+  private val pluginReleaseProvider: PluginReleaseProvider,
   private val applicationEventPublisher: ApplicationEventPublisher,
   private val invocationAspects: List<InvocationAspect<*>>
 ) : BeanDefinitionRegistryPostProcessor {
@@ -47,8 +49,10 @@ class ExtensionBeanDefinitionRegistryPostProcessor(
   override fun postProcessBeanDefinitionRegistry(registry: BeanDefinitionRegistry) {
     val start = System.currentTimeMillis()
     log.debug("Preparing plugins")
-    pluginDownloadService.downloadPlugins()
     pluginManager.loadPlugins()
+    updateManager.downloadPlugins(
+      pluginReleaseProvider.getReleases(updateManager.availablePlugins)
+    ).forEach { pluginManager.loadPlugin(it) }
     pluginManager.startPlugins()
 
     pluginManager.startedPlugins.forEach { pluginWrapper ->

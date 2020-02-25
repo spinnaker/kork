@@ -61,7 +61,7 @@ class SpringPluginStatusProvider(
   private fun enabledPropertyName(pluginId: String): String =
     "$ROOT_CONFIG.$pluginId.enabled"
 
-  fun configuredPluginVersion(pluginId: String): String? =
+  fun pluginVersion(pluginId: String): String? =
     environment.getProperty(versionPropertyName(pluginId))?.toString()
 
   private fun versionPropertyName(pluginId: String): String =

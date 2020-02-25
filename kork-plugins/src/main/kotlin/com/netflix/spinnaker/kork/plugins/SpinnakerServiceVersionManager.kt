@@ -21,7 +21,7 @@ import org.pf4j.VersionManager
 import org.pf4j.util.StringUtils
 
 /**
- * Since plugins can require multiple services, this class is necessary to ensure we are making the
+ * Since plugins may require multiple services, this class is necessary to ensure we are making the
  * constraint check against the correct service.
  */
 class SpinnakerServiceVersionManager(
@@ -29,13 +29,13 @@ class SpinnakerServiceVersionManager(
 ) : VersionManager {
 
   override fun checkVersionConstraint(version: String, requires: String): Boolean {
-    val serviceVersionRequirements =
+    val requirements =
       VersionRequirementsParser
         .parseAll(requires)
         .find { it.service.equals(serviceName, ignoreCase = true) }
 
-    if (serviceVersionRequirements != null) {
-      val constraint = serviceVersionRequirements.operator.symbol + serviceVersionRequirements.version
+    if (requirements != null) {
+      val constraint = requirements.operator.symbol + requirements.version
       return StringUtils.isNullOrEmpty(constraint) || Version.valueOf(version).satisfies(constraint)
     }
 

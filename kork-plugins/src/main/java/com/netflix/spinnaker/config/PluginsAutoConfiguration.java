@@ -29,17 +29,18 @@ import com.netflix.spinnaker.kork.plugins.proxy.aspects.LogInvocationAspect;
 import com.netflix.spinnaker.kork.plugins.proxy.aspects.MetricInvocationAspect;
 import com.netflix.spinnaker.kork.plugins.sdk.SdkFactory;
 import com.netflix.spinnaker.kork.plugins.spring.actuator.SpinnakerPluginEndpoint;
-import com.netflix.spinnaker.kork.plugins.update.ConfigurableUpdateRepository;
-import com.netflix.spinnaker.kork.plugins.update.PluginDownloadService;
 import com.netflix.spinnaker.kork.plugins.update.SpinnakerUpdateManager;
 import com.netflix.spinnaker.kork.plugins.update.downloader.CompositeFileDownloader;
 import com.netflix.spinnaker.kork.plugins.update.downloader.FileDownloaderProvider;
+import com.netflix.spinnaker.kork.plugins.update.release.PluginReleaseProvider;
+import com.netflix.spinnaker.kork.plugins.update.release.PropertySourcePluginReleaseProvider;
 import com.netflix.spinnaker.kork.version.ManifestVersionResolver;
 import com.netflix.spinnaker.kork.plugins.update.downloader.SupportingFileDownloader;
 import com.netflix.spinnaker.kork.plugins.update.repository.ConfigurableUpdateRepository;
 import java.nio.file.Paths;
 import java.util.*;
 import java.util.stream.Collectors;
+import com.netflix.spinnaker.kork.version.VersionResolver;
 import org.pf4j.PluginStatusProvider;
 import org.pf4j.VersionManager;
 import org.pf4j.update.UpdateRepository;
@@ -86,7 +87,6 @@ public class PluginsAutoConfiguration {
   }
 
   @Bean
-  @ConditionalOnMissingBean(VersionResolver.class)
   public static VersionManager versionManager(ApplicationContext applicationContext) {
     return new SpinnakerServiceVersionManager(
         Objects.requireNonNull(
@@ -138,9 +138,25 @@ public class PluginsAutoConfiguration {
   }
 
   @Bean
+  public static PluginReleaseProvider pluginReleaseProvider(
+    SpringPluginStatusProvider pluginStatusProvider,
+    VersionManager versionManager,
+    SpinnakerUpdateManager updateManager,
+    SpinnakerPluginManager pluginManager) {
+    return new PropertySourcePluginReleaseProvider(
+      pluginStatusProvider, versionManager, updateManager, pluginManager);
+  }
+
+  @Bean
   public static SpinnakerUpdateManager pluginUpdateManager(
-      SpinnakerPluginManager pluginManager, List<UpdateRepository> updateRepositories) {
-    return new SpinnakerUpdateManager(pluginManager, updateRepositories);
+      SpinnakerPluginManager pluginManager,
+      ApplicationEventPublisher applicationEventPublisher,
+      List<UpdateRepository> updateRepositories) {
+    return new SpinnakerUpdateManager(
+      applicationEventPublisher,
+      pluginManager,
+      updateRepositories
+    );
   }
 
   @Bean
@@ -178,16 +194,6 @@ public class PluginsAutoConfiguration {
   }
 
   @Bean
-  public static PluginDownloadService pluginInstaller(
-      SpinnakerUpdateManager updateManager,
-      SpinnakerPluginManager pluginManager,
-      SpringPluginStatusProvider pluginStatusProvider,
-      ApplicationEventPublisher applicationEventPublisher) {
-    return new PluginDownloadService(
-        updateManager, pluginManager, pluginStatusProvider, applicationEventPublisher);
-  }
-
-  @Bean
   public static MetricInvocationAspect metricInvocationAspect(
       ObjectProvider<Registry> registryProvider) {
     return new MetricInvocationAspect(registryProvider);
@@ -200,12 +206,18 @@ public class PluginsAutoConfiguration {
 
   @Bean
   public static ExtensionBeanDefinitionRegistryPostProcessor pluginBeanPostProcessor(
-      SpinnakerPluginManager pluginManager,
-      PluginDownloadService pluginDownloadService,
-      ApplicationEventPublisher applicationEventPublisher,
-      List<InvocationAspect<? extends InvocationState>> invocationAspects) {
+    SpinnakerPluginManager pluginManager,
+    SpinnakerUpdateManager updateManager,
+    PluginReleaseProvider pluginReleaseProvider,
+    ApplicationEventPublisher applicationEventPublisher,
+    List<InvocationAspect<? extends InvocationState>> invocationAspects) {
     return new ExtensionBeanDefinitionRegistryPostProcessor(
-        pluginManager, pluginDownloadService, applicationEventPublisher, invocationAspects);
+      pluginManager,
+      updateManager,
+      pluginReleaseProvider,
+      applicationEventPublisher,
+      invocationAspects
+    );
   }
 
   @Bean

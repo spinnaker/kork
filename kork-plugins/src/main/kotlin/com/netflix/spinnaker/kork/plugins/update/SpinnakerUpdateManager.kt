@@ -16,45 +16,71 @@
 package com.netflix.spinnaker.kork.plugins.update
 
 import com.netflix.spinnaker.kork.plugins.SpinnakerServiceVersionManager
+import com.netflix.spinnaker.kork.plugins.events.PluginDownloaded
+import com.netflix.spinnaker.kork.plugins.update.release.PluginReleaseProvider
+import com.netflix.spinnaker.kork.plugins.update.release.Release
 import org.pf4j.PluginManager
+import org.pf4j.PluginRuntimeException
 import org.pf4j.update.PluginInfo.PluginRelease
 import org.pf4j.update.UpdateManager
 import org.pf4j.update.UpdateRepository
 import org.slf4j.LoggerFactory
+import org.springframework.context.ApplicationEventPublisher
+import java.io.File
+import java.io.IOException
+import java.nio.file.Files
 import java.nio.file.Path
+import java.nio.file.StandardCopyOption
 
 /**
- * TODO(jonsie): [org.pf4j.update.UpdateManager] is overloaded.  It fetches and refreshes plugins
- *  from update repositories, downloads plugins, loads plugins, starts plugins, and has some logic
- *  to select plugin versions.  We have disabled update, load, and start plugin logic here.
- *  This is now used only to manage the list of [UpdateRepository] objects, download the desired
- *  artifact, and check version constraints via an implementation of [org.pf4j.VersionManager].
- *  At some point, we may want to consider removing [org.pf4j.update.UpdateManager] altogether.
+ * TODO(jonsie): We have disabled [org.pf4j.update.UpdateManager] update, load, and start plugin
+ *  logic here. This is now used only to manage the list of [UpdateRepository] objects, download
+ *  the desired artifact, and check version constraints via an implementation of
+ *  [org.pf4j.VersionManager]. At some point, we may want to consider removing
+ *  [org.pf4j.update.UpdateManager].
  */
 class SpinnakerUpdateManager(
+  private val applicationEventPublisher: ApplicationEventPublisher,
   private val pluginManager: PluginManager,
   repositories: List<UpdateRepository>
 ) : UpdateManager(pluginManager, repositories) {
 
   private val log by lazy { LoggerFactory.getLogger(javaClass) }
 
-  /**
-   * This method is not supported as it calls pluginManager.loadPlugin and pluginManager.startPlugin.
-   * Instead, we only want to install the plugins (see [PluginDownloadService]) and leave loading
-   * and starting to [com.netflix.spinnaker.kork.plugins.ExtensionBeanDefinitionRegistryPostProcessor].
-   */
-  @Synchronized
-  override fun installPlugin(id: String?, version: String?): Boolean {
-    throw UnsupportedOperationException("UpdateManager installPlugin is not supported")
-  }
+  internal fun downloadPlugins(releases: Set<Release?>) : Set<Path> {
+    val downloadPlugins: MutableSet<Path> = mutableSetOf()
 
-  /**
-   * This method is not supported as it calls pluginManager.loadPlugin and pluginManager.startPlugin.
-   * Instead, we only want to install the plugins (see [PluginUpdateService]) and leave loading
-   * and starting to [com.netflix.spinnaker.kork.plugins.ExtensionBeanDefinitionRegistryPostProcessor].
-   */
-  override fun updatePlugin(id: String?, version: String?): Boolean {
-    throw UnsupportedOperationException("UpdateManager updatePlugin is not supported")
+    if (releases.isNotEmpty()) {
+      releases.forEach release@{ release ->
+        if (release == null) return@release
+        val loadedPlugin = pluginManager.getPlugin(release.pluginId)
+        if (loadedPlugin != null) {
+          val loadedPluginVersion = loadedPlugin.descriptor.version
+
+          if (pluginManager.versionManager.compareVersions(loadedPluginVersion, release.props.version) > 1) {
+            log.debug("Newer version '{}' of plugin '{}' found, deleting previous version '{}'",
+              release.props.version, release.pluginId, loadedPluginVersion)
+            pluginManager.deletePlugin(loadedPlugin.pluginId)
+          } else {
+            //Desired plugin exists and is loaded, move on...
+            return@release
+          }
+        }
+
+        log.debug("Downloading plugin '{}' with version '{}'", release.pluginId, release.props.version)
+        val tmpPath = downloadPluginRelease(release.pluginId, release.props.version)
+        val downloadedPluginPath = pluginManager.pluginsRoot.write(tmpPath)
+
+        log.debug("Downloaded plugin '{}'", release.pluginId)
+        applicationEventPublisher.publishEvent(
+          PluginDownloaded(this, PluginDownloaded.Status.SUCCEEDED, release.pluginId, release.props.version)
+        )
+
+        downloadPlugins.add(downloadedPluginPath)
+      }
+    }
+
+    return downloadPlugins
   }
 
   /**
@@ -65,12 +91,17 @@ class SpinnakerUpdateManager(
    * Deck.
    */
   fun getLastPluginRelease(id: String, serviceName: String): PluginRelease? {
-    val pluginInfo = pluginsMap[id] as SpinnakerPluginInfo
+    val pluginInfo = pluginsMap[id]
+    if (pluginInfo == null) {
+      log.warn("Unable to find plugin info for '{}'", id)
+      return null
+    }
+
     val systemVersion = pluginManager.systemVersion
     val versionManager = SpinnakerServiceVersionManager(serviceName)
     val lastPluginRelease: MutableMap<String, PluginRelease> = mutableMapOf()
 
-    for (release in pluginInfo.getReleases()) {
+    for (release in pluginInfo.releases) {
       if (systemVersion == "0.0.0" || versionManager.checkVersionConstraint(systemVersion, release.requires)) {
         if (lastPluginRelease[id] == null) {
           lastPluginRelease[id] = release
@@ -84,7 +115,7 @@ class SpinnakerUpdateManager(
   }
 
   /**
-   * Exists to expose protected [downloadPlugin]
+   * Exists to expose protected [downloadPlugin] - must remain public.
    *
    * TODO(jonsie): This will call [UpdateManager.getLastPluginRelease] if `version`
    *  is null.  Shouldn't happen, but it could.  That is potentially problematic if the desired
@@ -93,5 +124,43 @@ class SpinnakerUpdateManager(
    */
   fun downloadPluginRelease(pluginId: String, version: String): Path {
     return downloadPlugin(pluginId, version)
+  }
+
+  /**
+   * Write the plugin, creating the the plugins root directory defined in [pluginManager] if
+   * necessary.
+   */
+  private fun Path.write(downloaded: Path): Path {
+    if (pluginManager.pluginsRoot == this) {
+      val file = this.resolve(downloaded.fileName)
+      File(this.toString()).mkdirs()
+      try {
+        return Files.move(downloaded, file, StandardCopyOption.REPLACE_EXISTING)
+      } catch (e: IOException) {
+        throw PluginRuntimeException(e, "Failed to write file '{}' to plugins folder", file)
+      }
+    } else {
+      throw UnsupportedOperationException("This operation is only supported on the specified " +
+        "plugins root directory.")
+    }
+  }
+
+  /**
+   * This method is not supported as it calls pluginManager.loadPlugin and pluginManager.startPlugin.
+   * Instead, we only want to install the plugins and leave loading
+   * and starting to [com.netflix.spinnaker.kork.plugins.ExtensionBeanDefinitionRegistryPostProcessor].
+   */
+  @Synchronized
+  override fun installPlugin(id: String?, version: String?): Boolean {
+    throw UnsupportedOperationException("UpdateManager installPlugin is not supported")
+  }
+
+  /**
+   * This method is not supported as it calls pluginManager.loadPlugin and pluginManager.startPlugin.
+   * Instead, we only want to install the plugins and leave loading
+   * and starting to [com.netflix.spinnaker.kork.plugins.ExtensionBeanDefinitionRegistryPostProcessor].
+   */
+  override fun updatePlugin(id: String?, version: String?): Boolean {
+    throw UnsupportedOperationException("UpdateManager updatePlugin is not supported")
   }
 }
