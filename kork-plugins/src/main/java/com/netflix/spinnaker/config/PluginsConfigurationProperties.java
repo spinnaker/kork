@@ -106,5 +106,5 @@ public class PluginsConfigurationProperties {
    * cases where services are being extended and rebuilt. Unless you're re-building services, this
    * should remain its default value.
    */
-  public boolean useOssVersionManifestAttribute;
+  public boolean useOssVersionManifestAttribute = false;
 }

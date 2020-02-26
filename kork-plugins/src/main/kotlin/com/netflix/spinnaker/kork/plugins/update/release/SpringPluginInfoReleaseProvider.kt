@@ -49,7 +49,7 @@ class SpringPluginInfoReleaseProvider(
 
       val release = if (pluginVersion == null || pluginVersion.isEmpty()) {
         val fallbackRelease = updateManager.getLastPluginRelease(pluginInfo.id)
-          ?: throw PluginNotFoundException(pluginInfo.id, pluginVersion)
+          ?: throw PluginReleaseNotFoundException(pluginInfo.id, pluginVersion)
 
         log.warn("'{}' is enabled but does not have a configured version, falling back to " +
           "version '{}'.", pluginInfo.id, fallbackRelease.version)
@@ -60,7 +60,7 @@ class SpringPluginInfoReleaseProvider(
           .filter { it.version == pluginVersion }
           .firstOrNull { release ->
             versionManager.checkVersionConstraint(pluginManager.systemVersion, release.requires)
-          } ?: throw PluginNotFoundException(pluginInfo.id, pluginVersion)
+          } ?: throw PluginReleaseNotFoundException(pluginInfo.id, pluginVersion)
       }
       return PluginInfoRelease(pluginInfo.id, release)
     }

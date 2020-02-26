@@ -27,17 +27,17 @@ import org.pf4j.update.PluginInfo
 interface PluginInfoReleaseProvider {
 
   /**
-   * Get plugin releases from a list of plugin info
+   * Get plugin releases from a list of plugin info objects
    */
   fun getReleases(pluginInfo: List<PluginInfo>): Set<PluginInfoRelease?>
 
   /**
-   * Get a plugin release from plugin info
+   * Get a plugin release from a singular plugin info object
    */
   fun getRelease(pluginInfo: PluginInfo): PluginInfoRelease?
 }
 
-class PluginNotFoundException(pluginId: String, pluginVersion: String?) :
+class PluginReleaseNotFoundException(pluginId: String, pluginVersion: String?) :
   IntegrationException(
     "'$pluginId' is enabled with version '${pluginVersion ?: "undefined" }', but a " +
       "release version could not be found that satisfies the version and/or the service " +

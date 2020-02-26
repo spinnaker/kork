@@ -52,7 +52,7 @@ class SpinnakerUpdateManager(
 
     pluginInfoReleases
       .filterNotNull()
-      .filter { needsUpdate(it) }
+      .filter { !needsUpdate(it) }
       .forEach { release ->
         log.debug("Downloading plugin '{}' with version '{}'", release.pluginId, release.props.version)
         val tmpPath = downloadPluginRelease(release.pluginId, release.props.version)
@@ -78,7 +78,7 @@ class SpinnakerUpdateManager(
     if (loadedPlugin != null) {
       val loadedPluginVersion = loadedPlugin.descriptor.version
 
-      if (pluginManager.versionManager.compareVersions(loadedPluginVersion, pluginInfoRelease.props.version) > 1) {
+      if (pluginManager.versionManager.compareVersions(pluginInfoRelease.props.version, loadedPluginVersion) > 0) {
         log.debug("Newer version '{}' of plugin '{}' found, deleting previous version '{}'",
           pluginInfoRelease.props.version, pluginInfoRelease.pluginId, loadedPluginVersion)
         val deleted = pluginManager.deletePlugin(loadedPlugin.pluginId)

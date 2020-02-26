@@ -82,7 +82,7 @@ class SpringPluginInfoReleaseProviderTest : JUnit5Minutests {
       // Plugin2 version 3.0.0 requires orca>=2.0.0
       every { pluginManager.systemVersion } returns "1.1.0"
 
-      expectThrows<PluginNotFoundException> {
+      expectThrows<PluginReleaseNotFoundException> {
         subject.getReleases(pluginInfoList)
       }
     }
@@ -112,7 +112,7 @@ class SpringPluginInfoReleaseProviderTest : JUnit5Minutests {
       every { pluginStatusProvider.pluginVersion(plugin2.id) } returns plugin2ExpectedRelease.version
       every { pluginManager.systemVersion } returns "2.2.0"
 
-      expectThrows<PluginNotFoundException> {
+      expectThrows<PluginReleaseNotFoundException> {
         subject.getReleases(pluginInfoList)
       }
     }
