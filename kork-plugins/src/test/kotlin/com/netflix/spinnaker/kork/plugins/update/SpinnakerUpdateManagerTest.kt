@@ -88,6 +88,28 @@ class SpinnakerUpdateManagerTest : JUnit5Minutests {
       // Previously loaded plugin deleted - we do not load plugins from SpinnakerUpdateManager
       expectThat(pluginManager.plugins).hasSize(0)
     }
+
+    test("Plugins loaded with newer version, no need to download") {
+      addToLocalPlugins(createPlugin(paths.repository, "0.0.2"), paths).id
+
+      val plugin = createPlugin(paths.repository, "0.0.1")
+      changeRepository(subject, paths.repository, listOf(plugin))
+
+      pluginManager.loadPlugins()
+      expectThat(pluginManager.plugins).hasSize(1)
+
+      val releases = mutableSetOf(PluginInfoRelease(plugin.id, plugin.releases.first()))
+      subject.downloadPluginReleases(releases)
+
+      expect {
+        that(pluginManager.pluginsRoot.contains(
+          paths.plugins.resolve("spinnaker.generatedtestplugin-0.0.1.zip"))
+        )
+      }
+
+      // Previously loaded plugin is still loaded
+      expectThat(pluginManager.plugins).hasSize(1)
+    }
   }
 
   private class Fixture {

@@ -52,8 +52,27 @@ class SpinnakerUpdateManager(
 
     pluginInfoReleases
       .filterNotNull()
-      .filter { !needsUpdate(it) }
-      .forEach { release ->
+      .forEach release@{ release ->
+
+        val loadedPlugin = pluginManager.getPlugin(release.pluginId)
+        if (loadedPlugin != null) {
+          val loadedPluginVersion = loadedPlugin.descriptor.version
+
+          if (pluginManager.versionManager.compareVersions(release.props.version, loadedPluginVersion) > 0) {
+            log.debug("Newer version '{}' of plugin '{}' found, deleting previous version '{}'",
+              release.props.version, release.pluginId, loadedPluginVersion)
+            val deleted = pluginManager.deletePlugin(loadedPlugin.pluginId)
+
+            if (!deleted) {
+              throw IntegrationException(
+                "Unable to update plugin '${release.pluginId}' to version '${release.props.version}', " +
+                  "failed to delete previous version '$loadedPluginVersion}'")
+            }
+          } else {
+            return@release
+          }
+        }
+
         log.debug("Downloading plugin '{}' with version '{}'", release.pluginId, release.props.version)
         val tmpPath = downloadPluginRelease(release.pluginId, release.props.version)
         val downloadedPluginPath = pluginManager.pluginsRoot.write(tmpPath)
@@ -67,32 +86,6 @@ class SpinnakerUpdateManager(
     }
 
     return downloadedPlugins
-  }
-
-  /**
-   * Determines if the loaded plugin needs to be updated.  If so, delete the plugin and return true/
-   * false if plugin was deleted.  Otherwise, return false.
-   */
-  private fun needsUpdate(pluginInfoRelease: PluginInfoRelease): Boolean {
-    val loadedPlugin = pluginManager.getPlugin(pluginInfoRelease.pluginId)
-    if (loadedPlugin != null) {
-      val loadedPluginVersion = loadedPlugin.descriptor.version
-
-      if (pluginManager.versionManager.compareVersions(pluginInfoRelease.props.version, loadedPluginVersion) > 0) {
-        log.debug("Newer version '{}' of plugin '{}' found, deleting previous version '{}'",
-          pluginInfoRelease.props.version, pluginInfoRelease.pluginId, loadedPluginVersion)
-        val deleted = pluginManager.deletePlugin(loadedPlugin.pluginId)
-
-        if (!deleted) {
-          throw IntegrationException(
-            "Unable to update plugin '${pluginInfoRelease.pluginId}' to version '${pluginInfoRelease.props.version}', " +
-              "failed to delete previous version '$loadedPluginVersion'")
-        }
-
-        return deleted
-      }
-    }
-    return false
   }
 
   /**
