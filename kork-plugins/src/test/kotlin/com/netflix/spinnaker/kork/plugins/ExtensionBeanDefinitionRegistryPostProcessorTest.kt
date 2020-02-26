@@ -21,7 +21,7 @@ import com.netflix.spinnaker.kork.plugins.events.ExtensionLoaded
 import com.netflix.spinnaker.kork.plugins.internal.TestPlugin
 import com.netflix.spinnaker.kork.plugins.proxy.aspects.InvocationAspect
 import com.netflix.spinnaker.kork.plugins.update.SpinnakerUpdateManager
-import com.netflix.spinnaker.kork.plugins.update.release.PluginReleaseProvider
+import com.netflix.spinnaker.kork.plugins.update.release.PluginInfoReleaseProvider
 import dev.minutest.junit.JUnit5Minutests
 import dev.minutest.rootContext
 import io.mockk.every
@@ -115,7 +115,7 @@ class ExtensionBeanDefinitionRegistryPostProcessorTest : JUnit5Minutests {
   private class Fixture {
     val pluginManager: SpinnakerPluginManager = mockk(relaxed = true)
     val updateManager: SpinnakerUpdateManager = mockk(relaxed = true)
-    val pluginReleaseProvider: PluginReleaseProvider = mockk(relaxed = true)
+    val pluginInfoReleaseProvider: PluginInfoReleaseProvider = mockk(relaxed = true)
     val pluginWrapper: PluginWrapper = mockk(relaxed = true)
     val extensionFactory: ExtensionFactory = mockk(relaxed = true)
     val applicationEventPublisher: ApplicationEventPublisher = mockk(relaxed = true)
@@ -123,7 +123,7 @@ class ExtensionBeanDefinitionRegistryPostProcessorTest : JUnit5Minutests {
     val pluginDescriptor: SpinnakerPluginDescriptor = mockk(relaxed = true)
 
     val subject = ExtensionBeanDefinitionRegistryPostProcessor(pluginManager, updateManager,
-      pluginReleaseProvider, applicationEventPublisher, invocationAspects)
+      pluginInfoReleaseProvider, applicationEventPublisher, invocationAspects)
 
     init {
       every { extensionFactory.create(eq(FooExtension::class.java)) } returns FooExtension()

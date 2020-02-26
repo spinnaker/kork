@@ -18,7 +18,7 @@ package com.netflix.spinnaker.kork.plugins.update
 import com.netflix.spinnaker.kork.exceptions.IntegrationException
 import com.netflix.spinnaker.kork.plugins.SpinnakerServiceVersionManager
 import com.netflix.spinnaker.kork.plugins.events.PluginDownloaded
-import com.netflix.spinnaker.kork.plugins.update.release.Release
+import com.netflix.spinnaker.kork.plugins.update.release.PluginInfoRelease
 import org.pf4j.PluginManager
 import org.pf4j.PluginRuntimeException
 import org.pf4j.update.PluginInfo.PluginRelease
@@ -47,10 +47,10 @@ class SpinnakerUpdateManager(
 
   private val log by lazy { LoggerFactory.getLogger(javaClass) }
 
-  internal fun downloadPluginReleases(releases: Set<Release?>): Set<Path> {
+  internal fun downloadPluginReleases(pluginInfoReleases: Set<PluginInfoRelease?>): Set<Path> {
     val downloadedPlugins: MutableSet<Path> = mutableSetOf()
 
-    releases
+    pluginInfoReleases
       .filterNotNull()
       .filter { needsUpdate(it) }
       .forEach { release ->
@@ -71,21 +71,21 @@ class SpinnakerUpdateManager(
 
   /**
    * Determines if the loaded plugin needs to be updated.  If so, delete the plugin and return true/
-   * false if plugin was deleted.  If not, return false.
+   * false if plugin was deleted.  Otherwise, return false.
    */
-  private fun needsUpdate(release: Release): Boolean {
-    val loadedPlugin = pluginManager.getPlugin(release.pluginId)
+  private fun needsUpdate(pluginInfoRelease: PluginInfoRelease): Boolean {
+    val loadedPlugin = pluginManager.getPlugin(pluginInfoRelease.pluginId)
     if (loadedPlugin != null) {
       val loadedPluginVersion = loadedPlugin.descriptor.version
 
-      if (pluginManager.versionManager.compareVersions(loadedPluginVersion, release.props.version) > 1) {
+      if (pluginManager.versionManager.compareVersions(loadedPluginVersion, pluginInfoRelease.props.version) > 1) {
         log.debug("Newer version '{}' of plugin '{}' found, deleting previous version '{}'",
-          release.props.version, release.pluginId, loadedPluginVersion)
+          pluginInfoRelease.props.version, pluginInfoRelease.pluginId, loadedPluginVersion)
         val deleted = pluginManager.deletePlugin(loadedPlugin.pluginId)
 
         if (!deleted) {
           throw IntegrationException(
-            "Unable to update plugin '${release.pluginId}' to version '${release.props.version}', " +
+            "Unable to update plugin '${pluginInfoRelease.pluginId}' to version '${pluginInfoRelease.props.version}', " +
               "failed to delete previous version '$loadedPluginVersion'")
         }
 

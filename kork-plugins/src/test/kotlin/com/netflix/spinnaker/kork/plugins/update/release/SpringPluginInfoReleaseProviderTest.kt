@@ -33,7 +33,7 @@ import strikt.assertions.isEqualTo
 import java.time.Instant
 import java.util.Date
 
-class PropertySourcePluginReleaseProviderTest : JUnit5Minutests {
+class SpringPluginInfoReleaseProviderTest : JUnit5Minutests {
 
   fun tests() = rootContext<Fixture> {
     fixture {
@@ -49,9 +49,9 @@ class PropertySourcePluginReleaseProviderTest : JUnit5Minutests {
 
       val releases = subject.getReleases(pluginInfoList)
 
-      expectThat(releases).isA<Set<Release>>()
-        .get { releases.size == 1 }
-        .get { releases.first() }.isEqualTo(Release(plugin1.id, expectedRelease))
+      expectThat(releases).isA<Set<PluginInfoRelease>>()
+        .get { releases.filterNotNull().size }.isEqualTo(1)
+        .get { releases.first() }.isEqualTo(PluginInfoRelease(plugin1.id, expectedRelease))
     }
 
     test("Gets releases for multiple enabled plugins where plugin version and system version constraints are met") {
@@ -65,9 +65,10 @@ class PropertySourcePluginReleaseProviderTest : JUnit5Minutests {
 
       val releases = subject.getReleases(pluginInfoList)
 
-      expectThat(releases).isA<Set<Release>>()
-        .get { releases.find { it?.pluginId == plugin1.id } }.isEqualTo(Release(plugin1.id, plugin1ExpectedRelease))
-        .get { releases.find { it?.pluginId == plugin2.id } }.isEqualTo(Release(plugin2.id, plugin2ExpectedRelease))
+      expectThat(releases).isA<Set<PluginInfoRelease>>()
+        .get { releases.filterNotNull().size }.isEqualTo(2)
+        .get { releases.find { it?.pluginId == plugin1.id } }.isEqualTo(PluginInfoRelease(plugin1.id, plugin1ExpectedRelease))
+        .get { releases.find { it?.pluginId == plugin2.id } }.isEqualTo(PluginInfoRelease(plugin2.id, plugin2ExpectedRelease))
     }
 
     test("Fails to get a release due to unsatisfied system version, throws PluginNotFoundException") {
@@ -97,9 +98,10 @@ class PropertySourcePluginReleaseProviderTest : JUnit5Minutests {
 
       val releases = subject.getReleases(pluginInfoList)
 
-      expectThat(releases).isA<Set<Release>>()
-        .get { releases.find { it?.pluginId == plugin1.id } }.isEqualTo(Release(plugin1.id, plugin1LatestRelease))
-        .get { releases.find { it?.pluginId == plugin2.id } }.isEqualTo(Release(plugin2.id, plugin2ExpectedRelease))
+      expectThat(releases).isA<Set<PluginInfoRelease>>()
+        .get { releases.filterNotNull().size }.isEqualTo(2)
+        .get { releases.find { it?.pluginId == plugin1.id } }.isEqualTo(PluginInfoRelease(plugin1.id, plugin1LatestRelease))
+        .get { releases.find { it?.pluginId == plugin2.id } }.isEqualTo(PluginInfoRelease(plugin2.id, plugin2ExpectedRelease))
     }
 
     test("Plugin1 version is not configured, falls back to latest version but a latest version can not be found - throws PluginNotFoundException") {
@@ -113,6 +115,18 @@ class PropertySourcePluginReleaseProviderTest : JUnit5Minutests {
       expectThrows<PluginNotFoundException> {
         subject.getReleases(pluginInfoList)
       }
+    }
+
+    test("Gets a release from one plugin info object") {
+      val expectedRelease = plugin1.releases.first()
+      every { environment.getProperty("spinnaker.extensibility.plugins.${plugin1.id}.enabled") } returns "true"
+      every { pluginStatusProvider.pluginVersion(plugin1.id) } returns expectedRelease.version
+      every { pluginManager.systemVersion } returns "2.1.0"
+
+      val release = subject.getRelease(plugin1)
+
+      expectThat(release).isA<PluginInfoRelease>()
+        .get { release }.isEqualTo(PluginInfoRelease(plugin1.id, expectedRelease))
     }
   }
 
@@ -167,7 +181,7 @@ class PropertySourcePluginReleaseProviderTest : JUnit5Minutests {
     val updateManager: SpinnakerUpdateManager = mockk(relaxed = true)
     val pluginManager: SpinnakerPluginManager = mockk(relaxed = true)
 
-    val subject = PropertySourcePluginReleaseProvider(
+    val subject = SpringPluginInfoReleaseProvider(
       pluginStatusProvider, versionManager, updateManager, pluginManager)
   }
 }

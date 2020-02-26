@@ -14,11 +14,18 @@
  * limitations under the License.
  */
 
-package com.netflix.spinnaker.kork.plugins.update.release
+package com.netflix.spinnaker.kork.plugins.update
 
-import org.pf4j.update.PluginInfo
+import dev.minutest.junit.JUnit5Minutests
+import dev.minutest.rootContext
 
-/**
- * A data class representing a tuple of [pluginId] and [PluginInfo.PluginRelease]
- */
-data class Release(val pluginId: String, val props: PluginInfo.PluginRelease)
+class SpinnakerUpdateManagerTest : JUnit5Minutests {
+
+  fun tests() = rootContext<Fixture> {
+    fixture {
+      Fixture()
+    }
+  }
+
+  private class Fixture
+}

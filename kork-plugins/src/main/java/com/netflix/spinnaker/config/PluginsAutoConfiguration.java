@@ -36,8 +36,8 @@ import com.netflix.spinnaker.kork.plugins.update.SpinnakerUpdateManager;
 import com.netflix.spinnaker.kork.plugins.update.downloader.CompositeFileDownloader;
 import com.netflix.spinnaker.kork.plugins.update.downloader.FileDownloaderProvider;
 import com.netflix.spinnaker.kork.plugins.update.downloader.SupportingFileDownloader;
-import com.netflix.spinnaker.kork.plugins.update.release.PluginReleaseProvider;
-import com.netflix.spinnaker.kork.plugins.update.release.PropertySourcePluginReleaseProvider;
+import com.netflix.spinnaker.kork.plugins.update.release.PluginInfoReleaseProvider;
+import com.netflix.spinnaker.kork.plugins.update.release.SpringPluginInfoReleaseProvider;
 import com.netflix.spinnaker.kork.plugins.update.repository.ConfigurableUpdateRepository;
 import com.netflix.spinnaker.kork.version.ManifestVersionResolver;
 import com.netflix.spinnaker.kork.version.VersionResolver;
@@ -141,12 +141,12 @@ public class PluginsAutoConfiguration {
   }
 
   @Bean
-  public static PluginReleaseProvider pluginReleaseProvider(
+  public static PluginInfoReleaseProvider pluginReleaseProvider(
       SpringPluginStatusProvider pluginStatusProvider,
       VersionManager versionManager,
       SpinnakerUpdateManager updateManager,
       SpinnakerPluginManager pluginManager) {
-    return new PropertySourcePluginReleaseProvider(
+    return new SpringPluginInfoReleaseProvider(
         pluginStatusProvider, versionManager, updateManager, pluginManager);
   }
 
@@ -207,13 +207,13 @@ public class PluginsAutoConfiguration {
   public static ExtensionBeanDefinitionRegistryPostProcessor pluginBeanPostProcessor(
       SpinnakerPluginManager pluginManager,
       SpinnakerUpdateManager updateManager,
-      PluginReleaseProvider pluginReleaseProvider,
+      PluginInfoReleaseProvider pluginInfoReleaseProvider,
       ApplicationEventPublisher applicationEventPublisher,
       List<InvocationAspect<? extends InvocationState>> invocationAspects) {
     return new ExtensionBeanDefinitionRegistryPostProcessor(
         pluginManager,
         updateManager,
-        pluginReleaseProvider,
+        pluginInfoReleaseProvider,
         applicationEventPublisher,
         invocationAspects);
   }

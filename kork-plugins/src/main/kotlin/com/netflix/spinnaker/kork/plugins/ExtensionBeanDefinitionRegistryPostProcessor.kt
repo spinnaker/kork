@@ -22,7 +22,7 @@ import com.netflix.spinnaker.kork.plugins.proxy.ExtensionInvocationProxy
 import com.netflix.spinnaker.kork.plugins.proxy.aspects.InvocationAspect
 import com.netflix.spinnaker.kork.plugins.proxy.aspects.InvocationState
 import com.netflix.spinnaker.kork.plugins.update.SpinnakerUpdateManager
-import com.netflix.spinnaker.kork.plugins.update.release.PluginReleaseProvider
+import com.netflix.spinnaker.kork.plugins.update.release.PluginInfoReleaseProvider
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.config.ConfigurableListableBeanFactory
 import org.springframework.beans.factory.support.BeanDefinitionRegistry
@@ -39,7 +39,7 @@ import kotlin.jvm.javaClass
 class ExtensionBeanDefinitionRegistryPostProcessor(
   private val pluginManager: SpinnakerPluginManager,
   private val updateManager: SpinnakerUpdateManager,
-  private val pluginReleaseProvider: PluginReleaseProvider,
+  private val pluginInfoReleaseProvider: PluginInfoReleaseProvider,
   private val applicationEventPublisher: ApplicationEventPublisher,
   private val invocationAspects: List<InvocationAspect<*>>
 ) : BeanDefinitionRegistryPostProcessor {
@@ -50,18 +50,18 @@ class ExtensionBeanDefinitionRegistryPostProcessor(
     val start = System.currentTimeMillis()
     log.debug("Preparing plugins")
 
-    // Load plugins prior to downloading so updateManager know what requires updating
+    // 1) Load plugins prior to downloading so we can resolve what needs to be updated
     pluginManager.loadPlugins()
 
-    // Determine list of plugins for release from available plugins
-    val releases = pluginReleaseProvider.getReleases(updateManager.availablePlugins)
+    // 2) Determine the plugins for release from the list of available plugins
+    val releases = pluginInfoReleaseProvider.getReleases(updateManager.availablePlugins)
 
-    // Download releases, updating previously loaded plugins where necessary
+    // 3) Download releases, updating previously loaded plugins where necessary
     updateManager.downloadPluginReleases(releases).forEach { pluginPath ->
       pluginManager.loadPlugin(pluginPath)
     }
 
-    // Start plugins - should only be called once in kork-plugins
+    // 4) Start plugins - should only be called once in kork-plugins
     pluginManager.startPlugins()
 
     pluginManager.startedPlugins.forEach { pluginWrapper ->

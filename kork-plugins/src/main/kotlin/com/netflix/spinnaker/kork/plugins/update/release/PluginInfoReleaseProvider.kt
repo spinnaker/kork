@@ -24,17 +24,17 @@ import org.pf4j.update.PluginInfo
  * Implement to select the desired release(s) from [PluginInfo].
  */
 @Beta
-interface PluginReleaseProvider {
+interface PluginInfoReleaseProvider {
 
   /**
    * Get plugin releases from a list of plugin info
    */
-  fun getReleases(pluginInfo: List<PluginInfo>): Set<Release?>
+  fun getReleases(pluginInfo: List<PluginInfo>): Set<PluginInfoRelease?>
 
   /**
    * Get a plugin release from plugin info
    */
-  fun getRelease(pluginInfo: PluginInfo): Release?
+  fun getRelease(pluginInfo: PluginInfo): PluginInfoRelease?
 }
 
 class PluginNotFoundException(pluginId: String, pluginVersion: String?) :

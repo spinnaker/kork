@@ -26,24 +26,24 @@ import org.slf4j.LoggerFactory
 /**
  * Determines plugin releases based on Spring properties via [SpringPluginStatusProvider].
  */
-class PropertySourcePluginReleaseProvider(
+class SpringPluginInfoReleaseProvider(
   private val pluginStatusProvider: SpringPluginStatusProvider,
   private val versionManager: VersionManager,
   private val updateManager: SpinnakerUpdateManager,
   private val pluginManager: SpinnakerPluginManager
-) : PluginReleaseProvider {
+) : PluginInfoReleaseProvider {
 
   private val log by lazy { LoggerFactory.getLogger(javaClass) }
 
-  override fun getReleases(pluginInfo: List<PluginInfo>): Set<Release?> {
+  override fun getReleases(pluginInfo: List<PluginInfo>): Set<PluginInfoRelease?> {
     return pluginInfo.map { pluginInfoRelease(it) }.toSet()
   }
 
-  override fun getRelease(pluginInfo: PluginInfo): Release? {
+  override fun getRelease(pluginInfo: PluginInfo): PluginInfoRelease? {
       return pluginInfoRelease(pluginInfo)
   }
 
-  private fun pluginInfoRelease(pluginInfo: PluginInfo): Release? {
+  private fun pluginInfoRelease(pluginInfo: PluginInfo): PluginInfoRelease? {
     if (!pluginStatusProvider.isPluginDisabled(pluginInfo.id)) {
       val pluginVersion = pluginStatusProvider.pluginVersion(pluginInfo.id)
 
@@ -62,7 +62,7 @@ class PropertySourcePluginReleaseProvider(
             versionManager.checkVersionConstraint(pluginManager.systemVersion, release.requires)
           } ?: throw PluginNotFoundException(pluginInfo.id, pluginVersion)
       }
-      return Release(pluginInfo.id, release)
+      return PluginInfoRelease(pluginInfo.id, release)
     }
     return null
   }
