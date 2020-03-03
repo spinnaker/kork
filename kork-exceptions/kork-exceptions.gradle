@@ -4,6 +4,10 @@ apply from: "$rootDir/gradle/lombok.gradle"
 
 dependencies {
   api(platform(project(":spinnaker-dependencies")))
+
+  implementation project(":kork-annotations")
+  implementation "com.squareup.retrofit:retrofit"
+  implementation "org.springframework.boot:spring-boot-starter-web"
   api "com.google.code.findbugs:jsr305"
 
   testImplementation "org.codehaus.groovy:groovy-all"
