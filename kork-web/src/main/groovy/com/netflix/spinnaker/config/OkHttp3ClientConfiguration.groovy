@@ -31,6 +31,7 @@ import org.springframework.stereotype.Component
 import javax.net.ssl.KeyManagerFactory
 import javax.net.ssl.SSLContext
 import javax.net.ssl.TrustManagerFactory
+import javax.net.ssl.X509TrustManager
 import java.security.KeyStore
 import java.security.NoSuchAlgorithmException
 import java.security.SecureRandom
@@ -99,7 +100,7 @@ class OkHttp3ClientConfiguration {
     }
 
     sslContext.init(keyManagerFactory.keyManagers, trustManagerFactory.trustManagers, secureRandom)
-    okHttpClientBuilder.sslSocketFactory(sslContext.socketFactory)
+    okHttpClientBuilder.sslSocketFactory(sslContext.socketFactory, (X509TrustManager) trustManagerFactory.getTrustManagers().first())
 
     return applyConnectionSpecs(okHttpClientBuilder)
   }
