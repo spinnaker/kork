@@ -16,6 +16,7 @@
 
 package com.netflix.spinnaker.config
 
+import static com.google.common.base.Preconditions.checkState
 import com.netflix.spinnaker.okhttp.OkHttp3MetricsInterceptor
 import com.netflix.spinnaker.okhttp.OkHttpClientConfigurationProperties
 import com.netflix.spinnaker.okhttp.OkHttpMetricsInterceptor
@@ -100,7 +101,10 @@ class OkHttp3ClientConfiguration {
     }
 
     sslContext.init(keyManagerFactory.keyManagers, trustManagerFactory.trustManagers, secureRandom)
-    okHttpClientBuilder.sslSocketFactory(sslContext.socketFactory, (X509TrustManager) trustManagerFactory.getTrustManagers().first())
+    def trustManagers = trustManagerFactory.getTrustManagers()
+    checkState(trustManagers.length == 1, "Found multiple trust managers; don't know which one to use")
+    checkState(trustManagers.first() instanceof X509TrustManager, "Configured TrustManager is a %s, not an X509TrustManager; don't know how to configure it", trustManagers.first().class.getName())
+    okHttpClientBuilder.sslSocketFactory(sslContext.socketFactory, (X509TrustManager) trustManagers.first())
 
     return applyConnectionSpecs(okHttpClientBuilder)
   }
