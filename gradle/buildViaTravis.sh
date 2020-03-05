@@ -21,8 +21,8 @@ elif [ "$TRAVIS_PULL_REQUEST" == "false" ] && [ "$TRAVIS_TAG" != "" ]; then
   *)
     $GRADLE --info -Prelease.travisci=true -Prelease.useLastTag=true -PbintrayUser="${bintrayUser}" -PbintrayKey="${bintrayKey}" final
     # delay a bit to let published artifacts get all mirrored etc before autobumping
-    sleep 60
-    $GRADLE --info -Prelease.travisci=true -Prelease.useLastTag=true -PbintrayUser="${bintrayUser}" -PbintrayKey="${bintrayKey}" -Pgithub.token="${githubToken}" bumpDependencies
+    # sleep 60
+    # $GRADLE --info -Prelease.travisci=true -Prelease.useLastTag=true -PbintrayUser="${bintrayUser}" -PbintrayKey="${bintrayKey}" -Pgithub.token="${githubToken}" bumpDependencies
     ;;
   esac
 else
