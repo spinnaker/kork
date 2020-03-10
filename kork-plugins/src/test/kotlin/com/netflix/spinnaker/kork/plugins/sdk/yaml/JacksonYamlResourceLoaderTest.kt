@@ -26,7 +26,7 @@ import strikt.assertions.isEqualTo
 import strikt.assertions.message
 import strikt.assertions.get
 
-class YamlResourceLoaderServiceTest : JUnit5Minutests {
+class JacksonYamlResourceLoaderTest : JUnit5Minutests {
 
   fun tests() = rootContext<Fixture> {
     fixture {
@@ -39,7 +39,7 @@ class YamlResourceLoaderServiceTest : JUnit5Minutests {
         expectThrows<IllegalArgumentException> {
           subject.loadResource("unknown.yml", HashMap<String, String>().javaClass)
         }.and {
-          message.isEqualTo("Cannot load specified resource: unknown.yml")
+          message.isEqualTo("Cannot load specified resource: unknown.yml , for extension: Fixture")
         }
       }
 
@@ -71,7 +71,7 @@ class YamlResourceLoaderServiceTest : JUnit5Minutests {
   }
 
   private inner class Fixture {
-    val subject = YamlResourceLoaderService(this.javaClass)
+    val subject = JacksonYamlResourceLoader(this.javaClass)
   }
 
   class YmlSampleObject() {

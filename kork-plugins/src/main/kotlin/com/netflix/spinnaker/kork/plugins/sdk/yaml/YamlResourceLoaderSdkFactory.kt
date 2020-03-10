@@ -25,6 +25,6 @@ import org.pf4j.PluginWrapper
 class YamlResourceLoaderSdkFactory() : SdkFactory {
 
   override fun create(extensionClass: Class<*>, pluginWrapper: PluginWrapper?): Any {
-    return YamlResourceLoaderService(extensionClass)
+    return JacksonYamlResourceLoader(extensionClass)
   }
 }
