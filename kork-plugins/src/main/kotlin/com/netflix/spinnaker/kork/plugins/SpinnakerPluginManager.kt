@@ -86,7 +86,7 @@ open class SpinnakerPluginManager(
     // TODO(jonsie): For now this is ok, but eventually we will want to throw an exception if the
     // system version is null.
     return serviceVersion.resolve().let {
-      if (it == ServiceVersion.UNKNOWN_VERSION) {
+      if (it == ServiceVersion.UNKNOWN_VERSION || it.isEmpty()) {
         "0.0.0"
       } else {
         it

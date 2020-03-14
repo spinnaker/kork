@@ -62,7 +62,10 @@ public class ServiceVersion {
         }
       }
 
-      resolvedServiceVersion = UNKNOWN_VERSION;
+      if (resolvedServiceVersion == null || resolvedServiceVersion.isEmpty()) {
+        log.warn("Unable to determine the service version, setting it to unknown");
+        resolvedServiceVersion = UNKNOWN_VERSION;
+      }
     }
 
     return resolvedServiceVersion;
