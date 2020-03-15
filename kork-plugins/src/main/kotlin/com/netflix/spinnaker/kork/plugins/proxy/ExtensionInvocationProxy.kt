@@ -42,17 +42,19 @@ class ExtensionInvocationProxy(
     return target.javaClass
   }
 
-  override fun invoke(proxy: Any, method: Method, args: Array<out Any>?): Any {
+  override fun invoke(proxy: Any, method: Method, args: Array<out Any>?): Any? {
     val invocationStates: MutableSet<InvocationState> = mutableSetOf()
     invocationStates.before(proxy, method, args)
 
-    val result: Any
+    val result: Any?
     try {
       result = method.invoke(target, *(args ?: arrayOfNulls<Any>(0)))
       invocationStates.after()
     } catch (e: InvocationTargetException) {
       invocationStates.error(e)
       throw e.cause ?: RuntimeException("Caught invocation target exception without cause.", e)
+    } finally {
+      invocationStates.finally()
     }
 
     return result
@@ -79,6 +81,16 @@ class ExtensionInvocationProxy(
       invocationAspects.forEach { invocationAspect ->
         if (invocationAspect.supports((invocationState.javaClass))) {
           invocationAspect.after(invocationState)
+        }
+      }
+    }
+  }
+
+  private fun MutableSet<InvocationState>.finally() {
+    this.forEach { invocationState ->
+      invocationAspects.forEach { invocationAspect ->
+        if (invocationAspect.supports((invocationState.javaClass))) {
+          invocationAspect.finally(invocationState)
         }
       }
     }

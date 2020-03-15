@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Netflix, Inc.
+ * Copyright 2020 Netflix, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,13 +14,17 @@
  * limitations under the License.
  */
 
-apply plugin: "java-library"
-apply from: "$rootDir/gradle/kotlin-test.gradle"
+package com.netflix.spinnaker.kork.plugins.sdk.yaml
 
-dependencies {
-  api(platform(project(":spinnaker-dependencies")))
+import com.netflix.spinnaker.kork.plugins.sdk.SdkFactory
+import org.pf4j.PluginWrapper
 
-  api "javax.annotation:javax.annotation-api"
-  api project(":kork-annotations")
-  api "org.pf4j:pf4j"
+/**
+ * Creates YAML Resource Loader for the provided extension class.
+ */
+class YamlResourceLoaderSdkFactory() : SdkFactory {
+
+  override fun create(extensionClass: Class<*>, pluginWrapper: PluginWrapper?): Any {
+    return JacksonYamlResourceLoader(extensionClass)
+  }
 }

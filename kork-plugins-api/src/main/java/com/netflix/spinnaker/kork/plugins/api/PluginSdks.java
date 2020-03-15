@@ -15,6 +15,12 @@
  */
 package com.netflix.spinnaker.kork.plugins.api;
 
+import com.netflix.spinnaker.kork.annotations.Beta;
+import com.netflix.spinnaker.kork.plugins.api.httpclient.HttpClient;
+import com.netflix.spinnaker.kork.plugins.api.httpclient.HttpClientRegistry;
+import com.netflix.spinnaker.kork.plugins.api.yaml.YamlResourceLoader;
+import javax.annotation.Nonnull;
+
 /**
  * A convenience interface for accessing plugin SDK services.
  *
@@ -24,12 +30,23 @@ package com.netflix.spinnaker.kork.plugins.api;
  * <pre>{@code
  * public class MyExtension {
  *
- *   private final PluginServices pluginServices;
+ *   private final PluginSdks pluginSdks;
  *
- *   public MyExtension(PluginServices pluginServices) {
- *     this.pluginServices = pluginServices;
+ *   public MyExtension(PluginSdks pluginSdks) {
+ *     this.pluginSdks = pluginSdks;
  *   }
  * }
  * }</pre>
  */
-public interface PluginSdks {}
+public interface PluginSdks {
+
+  /** Get the {@link HttpClientRegistry}, containing all configured {@link HttpClient}s. */
+  @Beta
+  @Nonnull
+  HttpClientRegistry http();
+
+  /** Get the {@link YamlResourceLoader}, util to load yml resources. */
+  @Beta
+  @Nonnull
+  YamlResourceLoader yamlResourceLoader();
+}
