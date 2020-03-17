@@ -19,6 +19,7 @@ import com.netflix.spinnaker.kork.exceptions.IntegrationException
 import com.netflix.spinnaker.kork.plugins.SpinnakerServiceVersionManager
 import com.netflix.spinnaker.kork.plugins.events.PluginDownloaded
 import com.netflix.spinnaker.kork.plugins.update.release.PluginInfoRelease
+import com.netflix.spinnaker.kork.version.ServiceVersion
 import org.pf4j.PluginManager
 import org.pf4j.PluginRuntimeException
 import org.pf4j.update.PluginInfo.PluginRelease
@@ -115,7 +116,7 @@ class SpinnakerUpdateManager(
     //
     // If version is determined, check the version constraint explicitly to decide if the plugin is applicable or not.
     for (release in pluginInfo.releases) {
-      if ((systemVersion == "0.0.0" && release.requires.contains(serviceName, ignoreCase = true)) ||
+      if ((systemVersion == ServiceVersion.DEFAULT_VERSION && release.requires.contains(serviceName, ignoreCase = true)) ||
           versionManager.checkVersionConstraint(systemVersion, release.requires)) {
         if (lastPluginRelease[id] == null) {
           lastPluginRelease[id] = release

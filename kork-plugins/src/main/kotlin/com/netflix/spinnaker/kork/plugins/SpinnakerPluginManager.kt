@@ -87,7 +87,7 @@ open class SpinnakerPluginManager(
     // system version is null.
     return serviceVersion.resolve().let {
       if (it == ServiceVersion.UNKNOWN_VERSION || it.isEmpty()) {
-        "0.0.0"
+        ServiceVersion.DEFAULT_VERSION
       } else {
         it
       }

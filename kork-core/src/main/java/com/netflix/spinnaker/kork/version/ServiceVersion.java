@@ -27,6 +27,8 @@ public class ServiceVersion {
 
   public static final String UNKNOWN_VERSION = "unknown";
 
+  public static final String DEFAULT_VERSION = "0.0.0";
+
   private final List<VersionResolver> resolvers;
   private final ApplicationContext applicationContext;
 
