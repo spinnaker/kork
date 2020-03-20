@@ -15,7 +15,6 @@
  */
 package com.netflix.spinnaker.kork.plugins.bundle
 
-import com.netflix.spinnaker.kork.exceptions.IntegrationException
 import java.nio.file.Path
 import org.pf4j.util.FileUtils
 import org.slf4j.LoggerFactory
@@ -43,7 +42,7 @@ class PluginBundleExtractor {
   /**
    * Extract a specific service from a bundle.
    */
-  fun extractService(bundlePath: Path, service: String): Path {
+  fun extractService(bundlePath: Path, service: String): Path? {
     val extractedPath = extractBundle(bundlePath)
     if (!looksLikeBundle(extractedPath)) {
       log.debug("Plugin path does not appear to be a bundle, using as-is: {}", bundlePath)
@@ -55,10 +54,12 @@ class PluginBundleExtractor {
       return FileUtils.expandIfZip(servicePluginZipPath)
     }
 
+    // TODO (link108): make this throw an exception, instead of log, once plugin deployments via halyard are fixed
     // If thrown, this is an indicator that either: A) There's a bug in the plugin framework resolving which plugin
     // bundles should actually be downloaded, or B) The plugin author incorrectly identified this [service] as one
     // that the plugin extends (via the PluginInfo `requires` list).
-    throw IntegrationException("Downloaded plugin bundle does not have plugin for service '$service'")
+    log.warn("Downloaded plugin bundle: {}, does not have plugin for service: {}", bundlePath.fileName, service)
+    return null
   }
 
   /**

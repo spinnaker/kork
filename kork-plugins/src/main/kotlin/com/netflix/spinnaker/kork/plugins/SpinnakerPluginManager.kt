@@ -26,6 +26,7 @@ import com.netflix.spinnaker.kork.plugins.loaders.SpinnakerJarPluginLoader
 import com.netflix.spinnaker.kork.plugins.repository.PluginRefPluginRepository
 import com.netflix.spinnaker.kork.plugins.sdk.SdkFactory
 import com.netflix.spinnaker.kork.version.ServiceVersion
+import java.nio.file.Files
 import java.nio.file.Path
 import org.pf4j.CompoundPluginLoader
 import org.pf4j.CompoundPluginRepository
@@ -38,6 +39,7 @@ import org.pf4j.PluginRepository
 import org.pf4j.PluginStatusProvider
 import org.pf4j.PluginWrapper
 import org.pf4j.VersionManager
+import org.slf4j.LoggerFactory
 
 /**
  * The primary entry-point to the plugins system from a provider-side (services, libs, CLIs, and so-on).
@@ -54,9 +56,11 @@ open class SpinnakerPluginManager(
   val statusProvider: PluginStatusProvider,
   configFactory: ConfigFactory,
   sdkFactories: List<SdkFactory>,
-  private val serviceName: String,
+  val serviceName: String,
   pluginsRoot: Path
 ) : DefaultPluginManager(pluginsRoot) {
+
+  private val log by lazy { LoggerFactory.getLogger(javaClass) }
 
   private val springExtensionFactory: ExtensionFactory = SpinnakerExtensionFactory(
     this,
@@ -114,7 +118,7 @@ open class SpinnakerPluginManager(
     SpinnakerPluginDescriptorFinder(this.getRuntimeMode())
 
   override fun loadPluginFromPath(pluginPath: Path): PluginWrapper? {
-    val extractedPath = bundleExtractor.extractService(pluginPath, serviceName)
+    val extractedPath = bundleExtractor.extractService(pluginPath, serviceName) ?: return null
     return super.loadPluginFromPath(extractedPath)
   }
 
@@ -127,4 +131,14 @@ open class SpinnakerPluginManager(
     .add(super.createPluginRepository())
 
   override fun getPluginFactory(): PluginFactory = spinnakerPluginFactory
+
+  // TODO (link108): remove this override, once plugin deployments via halyard are fixed
+  override fun loadPlugin(pluginPath: Path?): String? {
+    require(!(pluginPath == null || Files.notExists(pluginPath))) { String.format("Specified plugin %s does not exist!", pluginPath) }
+    log.debug("Loading plugin from '{}'", pluginPath)
+    val pluginWrapper = loadPluginFromPath(pluginPath) ?: return null
+    // try to resolve  the loaded plugin together with other possible plugins that depend on this plugin
+    resolvePlugins()
+    return pluginWrapper!!.descriptor.pluginId
+  }
 }

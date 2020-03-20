@@ -15,7 +15,6 @@
  */
 package com.netflix.spinnaker.kork.plugins.bundle
 
-import com.netflix.spinnaker.kork.exceptions.IntegrationException
 import dev.minutest.junit.JUnit5Minutests
 import dev.minutest.rootContext
 import java.io.File
@@ -30,7 +29,6 @@ import java.util.zip.ZipEntry
 import java.util.zip.ZipOutputStream
 import strikt.api.expect
 import strikt.api.expectThat
-import strikt.api.expectThrows
 import strikt.assertions.isTrue
 
 class PluginBundleExtractorTest : JUnit5Minutests {
@@ -83,9 +81,7 @@ class PluginBundleExtractorTest : JUnit5Minutests {
       }
 
       test("throws if bundle is missing expected service plugin") {
-        expectThrows<IntegrationException> {
-          extractService(ZipBuilder.workspace.resolve("bundle.zip"), "clouddriver")
-        }
+        expectThat(extractService(ZipBuilder.workspace.resolve("bundle.zip"), "clouddriver")).equals(null)
       }
     }
 
