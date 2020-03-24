@@ -64,7 +64,7 @@ class PluginBundleExtractor(
       // that the plugin extends (via the PluginInfo `requires` list).
       throw IntegrationException("Downloaded plugin bundle does not have plugin for service '$service'")
     } else {
-      log.warn("Downloaded plugin bundle: {}, does not have plugin for service: {}", bundlePath.fileName, service)
+      log.warn("Downloaded plugin bundle '{}' does not have plugin for service: {}", bundlePath.fileName, service)
       return null
     }
   }
