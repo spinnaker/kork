@@ -136,7 +136,7 @@ open class SpinnakerPluginManager(
 
   // TODO (link108): remove this override, once plugin deployments via halyard are fixed
   override fun loadPlugin(pluginPath: Path?): String? {
-    require(!(pluginPath == null || Files.notExists(pluginPath))) { String.format("Specified plugin %s does not exist!", pluginPath) }
+    require(!(pluginPath == null || Files.notExists(pluginPath))) { "Specified plugin '$pluginPath' does not exist!" }
     log.debug("Loading plugin from '{}'", pluginPath)
     val pluginWrapper = loadPluginFromPath(pluginPath) ?: return null
     // try to resolve  the loaded plugin together with other possible plugins that depend on this plugin
