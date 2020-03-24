@@ -40,6 +40,7 @@ import org.pf4j.PluginStatusProvider
 import org.pf4j.PluginWrapper
 import org.pf4j.VersionManager
 import org.slf4j.LoggerFactory
+import org.springframework.core.env.Environment
 
 /**
  * The primary entry-point to the plugins system from a provider-side (services, libs, CLIs, and so-on).
@@ -57,7 +58,8 @@ open class SpinnakerPluginManager(
   configFactory: ConfigFactory,
   sdkFactories: List<SdkFactory>,
   val serviceName: String,
-  pluginsRoot: Path
+  pluginsRoot: Path,
+  private val environment: Environment
 ) : DefaultPluginManager(pluginsRoot) {
 
   private val log by lazy { LoggerFactory.getLogger(javaClass) }
@@ -67,7 +69,7 @@ open class SpinnakerPluginManager(
     configFactory,
     sdkFactories
   )
-  private val bundleExtractor = PluginBundleExtractor()
+  private val bundleExtractor = PluginBundleExtractor(environment)
 
   private val spinnakerPluginFactory = SpinnakerPluginFactory(sdkFactories, configFactory)
 

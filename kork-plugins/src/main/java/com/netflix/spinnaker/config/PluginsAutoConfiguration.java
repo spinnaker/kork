@@ -128,7 +128,8 @@ public class PluginsAutoConfiguration {
       PluginStatusProvider pluginStatusProvider,
       ApplicationContext applicationContext,
       ConfigFactory configFactory,
-      List<SdkFactory> sdkFactories) {
+      List<SdkFactory> sdkFactories,
+      Environment environment) {
     return new SpinnakerPluginManager(
         serviceVersion,
         versionManager,
@@ -142,7 +143,8 @@ public class PluginsAutoConfiguration {
                 .getEnvironment()
                 .getProperty(
                     PluginsConfigurationProperties.ROOT_PATH_CONFIG,
-                    PluginsConfigurationProperties.DEFAULT_ROOT_PATH)));
+                    PluginsConfigurationProperties.DEFAULT_ROOT_PATH)),
+        environment);
   }
 
   @Bean
