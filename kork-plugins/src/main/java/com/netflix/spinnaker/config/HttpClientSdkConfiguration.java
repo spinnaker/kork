@@ -27,8 +27,6 @@ import com.netflix.spinnaker.okhttp.OkHttpClientConfigurationProperties;
 import java.util.ArrayList;
 import java.util.List;
 import javax.inject.Provider;
-import org.springframework.beans.factory.BeanCreationException;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
 import org.springframework.boot.context.properties.bind.Bindable;
 import org.springframework.boot.context.properties.bind.Binder;
 import org.springframework.context.annotation.Bean;
@@ -36,7 +34,6 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.Environment;
 
 @Configuration
-@ConditionalOnExpression("false")
 public class HttpClientSdkConfiguration {
 
   @Bean
@@ -48,11 +45,7 @@ public class HttpClientSdkConfiguration {
     OkHttpClientConfigurationProperties okHttpClientProperties =
         Binder.get(environment)
             .bind("ok-http-client", Bindable.of(OkHttpClientConfigurationProperties.class))
-            .orElseThrow(
-                () ->
-                    new BeanCreationException(
-                        "Unable to bind ok-http-client property to "
-                            + OkHttpClientConfigurationProperties.class.getSimpleName()));
+            .orElse(new OkHttpClientConfigurationProperties());
 
     List<OkHttp3ClientFactory> factories = new ArrayList<>(okHttpClientFactories);
     OkHttp3MetricsInterceptor okHttp3MetricsInterceptor =
