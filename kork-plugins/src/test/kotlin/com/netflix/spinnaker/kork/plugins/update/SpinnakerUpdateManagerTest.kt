@@ -19,6 +19,7 @@ package com.netflix.spinnaker.kork.plugins.update
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.netflix.spinnaker.kork.plugins.SpinnakerPluginManager
 import com.netflix.spinnaker.kork.plugins.SpinnakerServiceVersionManager
+import com.netflix.spinnaker.kork.plugins.bundle.PluginBundleExtractor
 import com.netflix.spinnaker.kork.plugins.internal.PluginZip
 import com.netflix.spinnaker.kork.plugins.testplugin.TestPluginBuilder
 import com.netflix.spinnaker.kork.plugins.update.release.PluginInfoRelease
@@ -130,7 +131,7 @@ class SpinnakerUpdateManagerTest : JUnit5Minutests {
       listOf(),
       "orca",
       paths.plugins,
-      mockk(relaxed = true)
+      PluginBundleExtractor(mockk(relaxed = true))
     )
 
     val repositories = listOf(DefaultUpdateRepository("testing",

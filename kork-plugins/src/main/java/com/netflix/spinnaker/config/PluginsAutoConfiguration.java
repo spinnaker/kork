@@ -22,6 +22,7 @@ import com.netflix.spinnaker.kork.plugins.ExtensionBeanDefinitionRegistryPostPro
 import com.netflix.spinnaker.kork.plugins.SpinnakerPluginManager;
 import com.netflix.spinnaker.kork.plugins.SpinnakerServiceVersionManager;
 import com.netflix.spinnaker.kork.plugins.SpringPluginStatusProvider;
+import com.netflix.spinnaker.kork.plugins.bundle.PluginBundleExtractor;
 import com.netflix.spinnaker.kork.plugins.config.ConfigFactory;
 import com.netflix.spinnaker.kork.plugins.config.ConfigResolver;
 import com.netflix.spinnaker.kork.plugins.config.RepositoryConfigCoordinates;
@@ -129,7 +130,7 @@ public class PluginsAutoConfiguration {
       ApplicationContext applicationContext,
       ConfigFactory configFactory,
       List<SdkFactory> sdkFactories,
-      Environment environment) {
+      PluginBundleExtractor pluginBundleExtractor) {
     return new SpinnakerPluginManager(
         serviceVersion,
         versionManager,
@@ -144,7 +145,12 @@ public class PluginsAutoConfiguration {
                 .getProperty(
                     PluginsConfigurationProperties.ROOT_PATH_CONFIG,
                     PluginsConfigurationProperties.DEFAULT_ROOT_PATH)),
-        environment);
+        pluginBundleExtractor);
+  }
+
+  @Bean
+  public static PluginBundleExtractor pluginBundleExtractor(Environment environment) {
+    return new PluginBundleExtractor(environment);
   }
 
   @Bean
