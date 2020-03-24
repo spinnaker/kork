@@ -138,9 +138,11 @@ open class SpinnakerPluginManager(
   override fun loadPlugin(pluginPath: Path?): String? {
     require(!(pluginPath == null || Files.notExists(pluginPath))) { "Specified plugin '$pluginPath' does not exist!" }
     log.debug("Loading plugin from '{}'", pluginPath)
-    val pluginWrapper = loadPluginFromPath(pluginPath) ?: return null
-    // try to resolve  the loaded plugin together with other possible plugins that depend on this plugin
-    resolvePlugins()
-    return pluginWrapper!!.descriptor.pluginId
+    return loadPluginFromPath(pluginPath)
+      ?.let {
+        // try to resolve  the loaded plugin together with other possible plugins that depend on this plugin
+        resolvePlugins()
+        it.descriptor.pluginId
+      }
   }
 }
