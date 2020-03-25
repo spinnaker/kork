@@ -26,6 +26,8 @@ import com.netflix.spinnaker.kork.plugins.loaders.SpinnakerJarPluginLoader
 import com.netflix.spinnaker.kork.plugins.repository.PluginRefPluginRepository
 import com.netflix.spinnaker.kork.plugins.sdk.SdkFactory
 import com.netflix.spinnaker.kork.version.ServiceVersion
+import java.nio.file.Files
+import java.nio.file.Path
 import org.pf4j.CompoundPluginLoader
 import org.pf4j.CompoundPluginRepository
 import org.pf4j.DefaultPluginManager
@@ -36,7 +38,7 @@ import org.pf4j.PluginRepository
 import org.pf4j.PluginStatusProvider
 import org.pf4j.PluginWrapper
 import org.pf4j.VersionManager
-import java.nio.file.Path
+import org.slf4j.LoggerFactory
 
 /**
  * The primary entry-point to the plugins system from a provider-side (services, libs, CLIs, and so-on).
@@ -54,15 +56,17 @@ open class SpinnakerPluginManager(
   configFactory: ConfigFactory,
   sdkFactories: List<SdkFactory>,
   private val serviceName: String,
-  pluginsRoot: Path
+  pluginsRoot: Path,
+  private val pluginBundleExtractor: PluginBundleExtractor
 ) : DefaultPluginManager(pluginsRoot) {
+
+  private val log by lazy { LoggerFactory.getLogger(javaClass) }
 
   private val springExtensionFactory: ExtensionFactory = SpinnakerExtensionFactory(
     this,
     configFactory,
     sdkFactories
   )
-  private val bundleExtractor = PluginBundleExtractor()
 
   private inner class ExtensionFactoryDelegate : ExtensionFactory {
     override fun <T : Any?> create(extensionClass: Class<T>?): T = springExtensionFactory.create(extensionClass)
@@ -111,7 +115,7 @@ open class SpinnakerPluginManager(
     SpinnakerPluginDescriptorFinder(this.getRuntimeMode())
 
   override fun loadPluginFromPath(pluginPath: Path): PluginWrapper? {
-    val extractedPath = bundleExtractor.extractService(pluginPath, serviceName)
+    val extractedPath = pluginBundleExtractor.extractService(pluginPath, serviceName) ?: return null
     return super.loadPluginFromPath(extractedPath)
   }
 
@@ -122,4 +126,16 @@ open class SpinnakerPluginManager(
   override fun createPluginRepository(): PluginRepository = CompoundPluginRepository()
     .add(PluginRefPluginRepository(getPluginsRoot()), this::isDevelopment)
     .add(super.createPluginRepository())
+
+  // TODO (link108): remove this override, once plugin deployments via halyard are fixed
+  override fun loadPlugin(pluginPath: Path?): String? {
+    require(!(pluginPath == null || Files.notExists(pluginPath))) { "Specified plugin '$pluginPath' does not exist!" }
+    log.debug("Loading plugin from '{}'", pluginPath)
+    return loadPluginFromPath(pluginPath)
+      ?.let {
+        // try to resolve  the loaded plugin together with other possible plugins that depend on this plugin
+        resolvePlugins()
+        it.descriptor.pluginId
+      }
+  }
 }
