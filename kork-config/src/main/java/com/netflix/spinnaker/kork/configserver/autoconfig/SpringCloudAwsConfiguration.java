@@ -1,6 +1,5 @@
 package com.netflix.spinnaker.kork.configserver.autoconfig;
 
-import com.amazonaws.auth.DefaultAWSCredentialsProviderChain;
 import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.s3.AmazonS3ClientBuilder;
 import org.springframework.cloud.config.server.environment.AwsS3EnvironmentProperties;
@@ -15,9 +14,6 @@ class SpringCloudAwsConfiguration {
   @Bean
   public static AmazonS3Client amazonS3(AwsS3EnvironmentProperties s3EnvironmentProperties) {
     return (AmazonS3Client)
-        AmazonS3ClientBuilder.standard()
-            .withRegion(s3EnvironmentProperties.getRegion())
-            .withCredentials(new DefaultAWSCredentialsProviderChain())
-            .build();
+        AmazonS3ClientBuilder.standard().withRegion(s3EnvironmentProperties.getRegion()).build();
   }
 }
