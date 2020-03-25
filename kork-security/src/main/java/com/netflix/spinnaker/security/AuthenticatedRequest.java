@@ -26,12 +26,15 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.Callable;
 import lombok.SneakyThrows;
-import org.slf4j.MDC;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.util.CollectionUtils;
 
 public class AuthenticatedRequest {
+
+  private AuthenticatedRequest() {
+    // Don't allow creating new instances.
+  }
 
   /**
    * Allow a given HTTP call to be anonymous. Normally, all requests to Spinnaker services should be
@@ -45,13 +48,13 @@ public class AuthenticatedRequest {
    */
   @SneakyThrows(Exception.class)
   public static <V> V allowAnonymous(Callable<V> closure) {
-    String originalValue = MDC.get(Header.XSpinnakerAnonymous);
-    MDC.put(Header.XSpinnakerAnonymous, "anonymous");
+    String originalValue = ThreadSecurityStore.get(Header.XSpinnakerAnonymous);
+    ThreadSecurityStore.putOrRemove(Header.XSpinnakerAnonymous, "anonymous");
 
     try {
       return closure.call();
     } finally {
-      setOrRemoveMdc(Header.XSpinnakerAnonymous, originalValue);
+      ThreadSecurityStore.putOrRemove(Header.XSpinnakerAnonymous, originalValue);
     }
   }
 
@@ -67,7 +70,7 @@ public class AuthenticatedRequest {
     return propagate(closure, true, principal);
   }
 
-  /** Ensure an appropriate MDC context is available when {@code closure} is executed. */
+  /** Ensure an appropriate security context is available when {@code closure} is executed. */
   public static <V> Callable<V> propagate(
       Callable<V> closure, boolean restoreOriginalContext, Object principal) {
     String spinnakerUser = getSpinnakerUser(principal).orElse(null);
@@ -79,22 +82,22 @@ public class AuthenticatedRequest {
 
     return () -> {
       // Deal with (set/reset) known X-SPINNAKER headers, all others will just stick around
-      Map originalMdc = MDC.getCopyOfContextMap();
+      Map<String, String> originalStore = ThreadSecurityStore.getCopy();
 
       try {
-        setOrRemoveMdc(Header.USER.getHeader(), spinnakerUser);
-        setOrRemoveMdc(Header.USER_ORIGIN.getHeader(), userOrigin);
-        setOrRemoveMdc(Header.ACCOUNTS.getHeader(), spinnakerAccounts);
-        setOrRemoveMdc(Header.REQUEST_ID.getHeader(), requestId);
-        setOrRemoveMdc(Header.EXECUTION_ID.getHeader(), executionId);
-        setOrRemoveMdc(Header.APPLICATION.getHeader(), spinnakerApp);
+        ThreadSecurityStore.putOrRemove(Header.USER.getHeader(), spinnakerUser);
+        ThreadSecurityStore.putOrRemove(Header.USER_ORIGIN.getHeader(), userOrigin);
+        ThreadSecurityStore.putOrRemove(Header.ACCOUNTS.getHeader(), spinnakerAccounts);
+        ThreadSecurityStore.putOrRemove(Header.REQUEST_ID.getHeader(), requestId);
+        ThreadSecurityStore.putOrRemove(Header.EXECUTION_ID.getHeader(), executionId);
+        ThreadSecurityStore.putOrRemove(Header.APPLICATION.getHeader(), spinnakerApp);
 
         return closure.call();
       } finally {
         clear();
 
-        if (restoreOriginalContext && originalMdc != null) {
-          MDC.setContextMap(originalMdc);
+        if (restoreOriginalContext && originalStore != null) {
+          ThreadSecurityStore.set(originalStore);
         }
       }
     };
@@ -106,10 +109,10 @@ public class AuthenticatedRequest {
     headers.put(Header.ACCOUNTS.getHeader(), getSpinnakerAccounts());
 
     // Copy all headers that look like X-SPINNAKER*
-    Map<String, String> allMdcEntries = MDC.getCopyOfContextMap();
+    Map<String, String> allSecurityEntries = ThreadSecurityStore.getCopy();
 
-    if (allMdcEntries != null) {
-      for (Map.Entry<String, String> mdcEntry : allMdcEntries.entrySet()) {
+    if (allSecurityEntries != null) {
+      for (Map.Entry<String, String> mdcEntry : allSecurityEntries.entrySet()) {
         String header = mdcEntry.getKey();
 
         boolean isSpinnakerHeader =
@@ -188,7 +191,7 @@ public class AuthenticatedRequest {
   }
 
   public static Optional<String> get(String header) {
-    return Optional.ofNullable(MDC.get(header));
+    return Optional.ofNullable(ThreadSecurityStore.get(header));
   }
 
   public static void setAccounts(String accounts) {
@@ -228,18 +231,11 @@ public class AuthenticatedRequest {
         header.startsWith(Header.XSpinnakerPrefix),
         "Header '%s' does not start with 'X-SPINNAKER-'",
         header);
-    MDC.put(header, value);
+    ThreadSecurityStore.putOrRemove(header, value);
   }
 
   public static void clear() {
-    MDC.clear();
-
-    try {
-      // force clear to avoid the potential for a memory leak if log4j is being used
-      Class log4jMDC = Class.forName("org.apache.log4j.MDC");
-      log4jMDC.getDeclaredMethod("clear").invoke(null);
-    } catch (Exception ignored) {
-    }
+    ThreadSecurityStore.clear();
   }
 
   /** @return the Spring Security principal or null if there is no authority. */
@@ -250,10 +246,6 @@ public class AuthenticatedRequest {
   }
 
   private static void setOrRemoveMdc(String key, String value) {
-    if (value != null) {
-      MDC.put(key, value);
-    } else {
-      MDC.remove(key);
-    }
+    ThreadSecurityStore.putOrRemove(key, value);
   }
 }

@@ -23,8 +23,8 @@ import spock.lang.Specification
 class AuthenticatedRequestSpec extends Specification {
   void "should extract user details by priority (Principal > MDC)"() {
     when:
-    MDC.clear()
-    MDC.put(Header.USER.header, "spinnaker-user")
+    ThreadSecurityStore.clear()
+    ThreadSecurityStore.putOrRemove(Header.USER.header, "spinnaker-user")
 
     then:
     AuthenticatedRequest.getSpinnakerUser().get() == "spinnaker-user"
@@ -33,8 +33,8 @@ class AuthenticatedRequestSpec extends Specification {
 
   void "should extract allowed account details by priority (Principal > MDC"() {
     when:
-    MDC.clear()
-    MDC.put(Header.ACCOUNTS.header, "account1,account2")
+    ThreadSecurityStore.clear()
+    ThreadSecurityStore.putOrRemove(Header.ACCOUNTS.header, "account1,account2")
 
     then:
     AuthenticatedRequest.getSpinnakerAccounts().get() == "account1,account2"
@@ -43,7 +43,7 @@ class AuthenticatedRequestSpec extends Specification {
 
   void "should have no user/allowed account details if no MDC or Principal available"() {
     when:
-    MDC.clear()
+    ThreadSecurityStore.clear()
 
     then:
     !AuthenticatedRequest.getSpinnakerUser().present
@@ -52,8 +52,8 @@ class AuthenticatedRequestSpec extends Specification {
 
   void "should propagate user/allowed account details"() {
     when:
-    MDC.put(Header.USER.header, "spinnaker-user")
-    MDC.put(Header.ACCOUNTS.header, "account1,account2")
+    ThreadSecurityStore.putOrRemove(Header.USER.header, "spinnaker-user")
+    ThreadSecurityStore.putOrRemove(Header.ACCOUNTS.header, "account1,account2")
 
     def closure = AuthenticatedRequest.propagate({
       assert AuthenticatedRequest.getSpinnakerUser().get() == "spinnaker-user"
@@ -61,28 +61,28 @@ class AuthenticatedRequestSpec extends Specification {
       return true
     })
 
-    MDC.put(Header.USER.header, "spinnaker-another-user")
-    MDC.put(Header.ACCOUNTS.header, "account1,account3")
+    ThreadSecurityStore.putOrRemove(Header.USER.header, "spinnaker-another-user")
+    ThreadSecurityStore.putOrRemove(Header.ACCOUNTS.header, "account1,account3")
     closure.call()
 
     then:
     // ensure MDC context is restored
-    MDC.get(Header.USER.header) == "spinnaker-another-user"
-    MDC.get(Header.ACCOUNTS.header) == "account1,account3"
+    ThreadSecurityStore.get(Header.USER.header) == "spinnaker-another-user"
+    ThreadSecurityStore.get(Header.ACCOUNTS.header) == "account1,account3"
 
     when:
-    MDC.clear()
+    ThreadSecurityStore.clear()
 
     then:
     closure.call()
-    MDC.clear()
+    ThreadSecurityStore.clear()
   }
 
   void "should propagate headers"() {
     when:
-    MDC.clear()
-    MDC.put(Header.USER.header, "spinnaker-another-user")
-    MDC.put(Header.makeCustomHeader("cloudprovider"), "aws")
+    ThreadSecurityStore.clear()
+    ThreadSecurityStore.putOrRemove(Header.USER.header, "spinnaker-another-user")
+    ThreadSecurityStore.putOrRemove(Header.makeCustomHeader("cloudprovider"), "aws")
 
     then:
     Map allheaders = AuthenticatedRequest.getAuthenticationHeaders()
@@ -94,7 +94,7 @@ class AuthenticatedRequestSpec extends Specification {
 
   void "should not fail when no headers are set"() {
     when:
-    MDC.clear()
+    ThreadSecurityStore.clear()
 
     then:
     Map allheaders = AuthenticatedRequest.getAuthenticationHeaders()
