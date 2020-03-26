@@ -33,6 +33,8 @@ class CompositeOkHttpClientFactory(
     return factories
       .firstOrNull { it.supports(baseUrl) }
       ?.create(baseUrl, config)
-      ?: throw IntegrationException("Cannot create http client ($baseUrl) from config: $config")
+      ?: throw IntegrationException(
+        "Cannot create HttpClient for '$baseUrl': No HttpClientFactory found supporting this base URL"
+      )
   }
 }
