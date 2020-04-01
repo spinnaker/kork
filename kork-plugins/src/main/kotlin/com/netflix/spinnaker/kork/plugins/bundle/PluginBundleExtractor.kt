@@ -19,6 +19,7 @@ import com.netflix.spinnaker.kork.exceptions.IntegrationException
 import org.pf4j.util.FileUtils
 import org.slf4j.LoggerFactory
 import java.nio.file.Path
+import com.netflix.spinnaker.kork.plugins.SpringStrictPluginLoaderStatusProvider
 
 /**
  * Provides extraction capabilities for plugin bundles.
@@ -29,7 +30,9 @@ import java.nio.file.Path
  *
  * Individual service plugins will be as what PF4J would normally expect.
  */
-class PluginBundleExtractor {
+class PluginBundleExtractor(
+  private val springStrictPluginLoaderStatusProvider: SpringStrictPluginLoaderStatusProvider
+) {
 
   private val log by lazy { LoggerFactory.getLogger(javaClass) }
 
@@ -43,7 +46,7 @@ class PluginBundleExtractor {
   /**
    * Extract a specific service from a bundle.
    */
-  fun extractService(bundlePath: Path, service: String): Path {
+  fun extractService(bundlePath: Path, service: String): Path? {
     val extractedPath = extractBundle(bundlePath)
     if (!looksLikeBundle(extractedPath)) {
       log.debug("Plugin path does not appear to be a bundle, using as-is: {}", bundlePath)
@@ -55,10 +58,15 @@ class PluginBundleExtractor {
       return FileUtils.expandIfZip(servicePluginZipPath)
     }
 
-    // If thrown, this is an indicator that either: A) There's a bug in the plugin framework resolving which plugin
-    // bundles should actually be downloaded, or B) The plugin author incorrectly identified this [service] as one
-    // that the plugin extends (via the PluginInfo `requires` list).
-    throw IntegrationException("Downloaded plugin bundle does not have plugin for service '$service'")
+    if (springStrictPluginLoaderStatusProvider.isStrictPluginLoading()) {
+      // If thrown, this is an indicator that either: A) There's a bug in the plugin framework resolving which plugin
+      // bundles should actually be downloaded, or B) The plugin author incorrectly identified this [service] as one
+      // that the plugin extends (via the PluginInfo `requires` list).
+      throw IntegrationException("Downloaded plugin bundle does not have plugin for service '$service'")
+    } else {
+      log.warn("Downloaded plugin bundle '{}' does not have plugin for service: {}", bundlePath.fileName, service)
+      return null
+    }
   }
 
   /**

@@ -16,12 +16,15 @@
 package com.netflix.spinnaker.kork.plugins.bundle
 
 import com.netflix.spinnaker.kork.exceptions.IntegrationException
+import com.netflix.spinnaker.kork.plugins.SpringStrictPluginLoaderStatusProvider
 import dev.minutest.junit.JUnit5Minutests
 import dev.minutest.rootContext
 import strikt.api.expect
 import strikt.api.expectThat
 import strikt.api.expectThrows
 import strikt.assertions.isTrue
+import io.mockk.every
+import io.mockk.mockk
 import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
@@ -32,11 +35,12 @@ import java.nio.file.Path
 import java.nio.file.Paths
 import java.util.zip.ZipEntry
 import java.util.zip.ZipOutputStream
+import org.springframework.core.env.ConfigurableEnvironment
 
 class PluginBundleExtractorTest : JUnit5Minutests {
 
   fun tests() = rootContext<PluginBundleExtractor> {
-    fixture { PluginBundleExtractor() }
+    fixture { PluginBundleExtractor(strictPluginLoaderStatusProvider) }
 
     before {
       // Creates 3 zips: Two service plugin zips, and then a bundle zip containing the service plugin zips
@@ -82,7 +86,13 @@ class PluginBundleExtractorTest : JUnit5Minutests {
         expectThat(ZipBuilder.workspace.resolve("bundle/deck/index.js").toFile()).get { exists() }.isTrue()
       }
 
-      test("throws if bundle is missing expected service plugin") {
+      test("return null if bundle is missing expected service plugin") {
+        every { environment.getProperty("spinnaker.extensibility.strict-plugin-loading") } returns "false"
+        expectThat(extractService(ZipBuilder.workspace.resolve("bundle.zip"), "clouddriver")).equals(null)
+      }
+
+      test("throws if bundle is missing expected service plugin in strict configuration") {
+        every { environment.getProperty("spinnaker.extensibility.strict-plugin-loading") } returns null
         expectThrows<IntegrationException> {
           extractService(ZipBuilder.workspace.resolve("bundle.zip"), "clouddriver")
         }
@@ -96,6 +106,8 @@ class PluginBundleExtractorTest : JUnit5Minutests {
     }
   }
 
+  private val environment: ConfigurableEnvironment = mockk(relaxed = true)
+  private val strictPluginLoaderStatusProvider = SpringStrictPluginLoaderStatusProvider(environment)
   private class ZipBuilder(
     private val sourceRootPath: Path,
     private val zipFilename: String,

@@ -22,6 +22,8 @@ import com.netflix.spinnaker.kork.plugins.ExtensionBeanDefinitionRegistryPostPro
 import com.netflix.spinnaker.kork.plugins.SpinnakerPluginManager;
 import com.netflix.spinnaker.kork.plugins.SpinnakerServiceVersionManager;
 import com.netflix.spinnaker.kork.plugins.SpringPluginStatusProvider;
+import com.netflix.spinnaker.kork.plugins.SpringStrictPluginLoaderStatusProvider;
+import com.netflix.spinnaker.kork.plugins.bundle.PluginBundleExtractor;
 import com.netflix.spinnaker.kork.plugins.config.ConfigFactory;
 import com.netflix.spinnaker.kork.plugins.config.ConfigResolver;
 import com.netflix.spinnaker.kork.plugins.config.RepositoryConfigCoordinates;
@@ -128,7 +130,8 @@ public class PluginsAutoConfiguration {
       PluginStatusProvider pluginStatusProvider,
       ApplicationContext applicationContext,
       ConfigFactory configFactory,
-      List<SdkFactory> sdkFactories) {
+      List<SdkFactory> sdkFactories,
+      PluginBundleExtractor pluginBundleExtractor) {
     return new SpinnakerPluginManager(
         serviceVersion,
         versionManager,
@@ -142,7 +145,14 @@ public class PluginsAutoConfiguration {
                 .getEnvironment()
                 .getProperty(
                     PluginsConfigurationProperties.ROOT_PATH_CONFIG,
-                    PluginsConfigurationProperties.DEFAULT_ROOT_PATH)));
+                    PluginsConfigurationProperties.DEFAULT_ROOT_PATH)),
+        pluginBundleExtractor);
+  }
+
+  @Bean
+  public static PluginBundleExtractor pluginBundleExtractor(
+      SpringStrictPluginLoaderStatusProvider springStrictPluginLoaderStatusProvider) {
+    return new PluginBundleExtractor(springStrictPluginLoaderStatusProvider);
   }
 
   @Bean
@@ -150,9 +160,14 @@ public class PluginsAutoConfiguration {
       SpringPluginStatusProvider pluginStatusProvider,
       VersionManager versionManager,
       SpinnakerUpdateManager updateManager,
-      SpinnakerPluginManager pluginManager) {
+      SpinnakerPluginManager pluginManager,
+      SpringStrictPluginLoaderStatusProvider springStrictPluginLoaderStatusProvider) {
     return new SpringPluginInfoReleaseProvider(
-        pluginStatusProvider, versionManager, updateManager, pluginManager);
+        pluginStatusProvider,
+        versionManager,
+        updateManager,
+        pluginManager,
+        springStrictPluginLoaderStatusProvider);
   }
 
   @Bean
@@ -195,6 +210,12 @@ public class PluginsAutoConfiguration {
     }
 
     return repositories;
+  }
+
+  @Bean
+  public static SpringStrictPluginLoaderStatusProvider springStrictPluginLoaderStatusProvider(
+      Environment environment) {
+    return new SpringStrictPluginLoaderStatusProvider(environment);
   }
 
   @Bean
