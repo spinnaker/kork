@@ -26,12 +26,10 @@ import com.spinnaker.netflix.kork.plugins.SomeFeatureExtension
 import com.spinnaker.netflix.kork.plugins.TestPlugin
 import dev.minutest.rootContext
 import java.io.File
-import org.junit.runner.RunWith
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.context.annotation.Import
-import org.springframework.test.context.junit4.SpringRunner
 
 class PluginsTckFixtureTest : PluginsTck<PluginsTckFixtureImpl>() {
   fun tests() = rootContext<PluginsTckFixtureImpl> {
@@ -49,7 +47,6 @@ class PluginsTckFixtureTest : PluginsTck<PluginsTckFixtureImpl>() {
   }
 }
 
-@RunWith(SpringRunner::class)
 @SpringBootTest(
   classes = [StartupTestApp::class],
   properties = [
