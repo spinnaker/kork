@@ -98,8 +98,8 @@ class Ok3HttpClient(
     val url = (baseUrl + request.path).replace("//", "/")
     val httpUrlBuilder = HttpUrl.parse(url)?.newBuilder()
       ?: throw IntegrationException("Unable to parse url '$baseUrl'")
-    for (param in request.queryParams) {
-      httpUrlBuilder.addQueryParameter(param.key, param.value)
+    request.queryParams.forEach {
+      httpUrlBuilder.addQueryParameter(it.key, it.value)
     }
     return okhttp3.Request.Builder()
       .tag("$name.${request.name}")
