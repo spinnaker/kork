@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Netflix, Inc.
+ * Copyright 2020 Netflix, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,18 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.netflix.spinnaker.kork.version
+package com.netflix.spinnaker.config;
 
+import com.netflix.spinnaker.kork.plugins.sdk.serde.SerdeServiceSdkFactory;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.annotation.Configuration;
 
-import spock.lang.Specification
-import spock.lang.Subject
+@Configuration
+public class SerdeSdkConfiguration {
 
-class ManifestVersionResolverSpec extends Specification {
-
-  @Subject ManifestVersionResolver subject = new ManifestVersionResolver("org.springframework.boot")
-
-  def "extracts the first detected version"() {
-    expect:
-    subject.resolve("spring-boot").matches("^[0-9]\\.[0-9]+\\.[0-9]+\\.RELEASE")
+  public static SerdeServiceSdkFactory SerdeServiceSdkFactory(
+      ApplicationContext applicationContext) {
+    return new SerdeServiceSdkFactory(applicationContext);
   }
 }
