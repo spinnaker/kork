@@ -38,8 +38,10 @@ import com.netflix.spinnaker.kork.plugins.update.SpinnakerUpdateManager;
 import com.netflix.spinnaker.kork.plugins.update.downloader.CompositeFileDownloader;
 import com.netflix.spinnaker.kork.plugins.update.downloader.FileDownloaderProvider;
 import com.netflix.spinnaker.kork.plugins.update.downloader.SupportingFileDownloader;
-import com.netflix.spinnaker.kork.plugins.update.release.PluginInfoReleaseProvider;
-import com.netflix.spinnaker.kork.plugins.update.release.SpringPluginInfoReleaseProvider;
+import com.netflix.spinnaker.kork.plugins.update.release.provider.AggregatePluginInfoReleaseProvider;
+import com.netflix.spinnaker.kork.plugins.update.release.provider.PluginInfoReleaseProvider;
+import com.netflix.spinnaker.kork.plugins.update.release.source.PluginInfoReleaseSource;
+import com.netflix.spinnaker.kork.plugins.update.release.source.SpringPluginInfoReleaseSource;
 import com.netflix.spinnaker.kork.plugins.update.repository.ConfigurableUpdateRepository;
 import com.netflix.spinnaker.kork.version.ServiceVersion;
 import com.netflix.spinnaker.kork.version.SpringPackageVersionResolver;
@@ -159,18 +161,18 @@ public class PluginsAutoConfiguration {
   }
 
   @Bean
-  public static PluginInfoReleaseProvider pluginReleaseProvider(
-      SpringPluginStatusProvider pluginStatusProvider,
-      VersionManager versionManager,
-      SpinnakerUpdateManager updateManager,
-      SpinnakerPluginManager pluginManager,
-      SpringStrictPluginLoaderStatusProvider springStrictPluginLoaderStatusProvider) {
-    return new SpringPluginInfoReleaseProvider(
-        pluginStatusProvider,
-        versionManager,
-        updateManager,
-        pluginManager,
-        springStrictPluginLoaderStatusProvider);
+  public static PluginInfoReleaseSource pluginReleaseProvider(
+      SpringPluginStatusProvider pluginStatusProvider) {
+    return new SpringPluginInfoReleaseSource(
+        pluginStatusProvider);
+  }
+
+  @Bean
+  public static PluginInfoReleaseProvider pluginInfoReleaseProvider(
+    List<PluginInfoReleaseSource> pluginInfoReleaseSources,
+    SpringStrictPluginLoaderStatusProvider springStrictPluginLoaderStatusProvider) {
+    return new AggregatePluginInfoReleaseProvider(
+      pluginInfoReleaseSources, springStrictPluginLoaderStatusProvider);
   }
 
   @Bean
@@ -234,11 +236,11 @@ public class PluginsAutoConfiguration {
 
   @Bean
   public static ExtensionBeanDefinitionRegistryPostProcessor pluginBeanPostProcessor(
-      SpinnakerPluginManager pluginManager,
-      SpinnakerUpdateManager updateManager,
-      PluginInfoReleaseProvider pluginInfoReleaseProvider,
-      ApplicationEventPublisher applicationEventPublisher,
-      List<InvocationAspect<? extends InvocationState>> invocationAspects) {
+    SpinnakerPluginManager pluginManager,
+    SpinnakerUpdateManager updateManager,
+    PluginInfoReleaseProvider pluginInfoReleaseProvider,
+    ApplicationEventPublisher applicationEventPublisher,
+    List<InvocationAspect<? extends InvocationState>> invocationAspects) {
     return new ExtensionBeanDefinitionRegistryPostProcessor(
         pluginManager,
         updateManager,

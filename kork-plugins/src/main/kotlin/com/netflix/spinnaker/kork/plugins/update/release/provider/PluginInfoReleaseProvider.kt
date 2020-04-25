@@ -12,18 +12,19 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
+ *
  */
 
-package com.netflix.spinnaker.kork.plugins.update.release
+package com.netflix.spinnaker.kork.plugins.update.release.provider
 
-import com.netflix.spinnaker.kork.annotations.Beta
 import com.netflix.spinnaker.kork.exceptions.IntegrationException
+import com.netflix.spinnaker.kork.plugins.update.release.PluginInfoRelease
 import org.pf4j.update.PluginInfo
 
 /**
- * Implement to select the desired release(s) from [PluginInfo].
+ * A similar signature as PluginInfoReleaseSource, but used by consumers to obtain the actual set
+ * of plugin releases.
  */
-@Beta
 interface PluginInfoReleaseProvider {
 
   /**

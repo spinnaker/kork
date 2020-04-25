@@ -21,7 +21,8 @@ import com.netflix.spinnaker.kork.plugins.events.ExtensionLoaded
 import com.netflix.spinnaker.kork.plugins.internal.TestPlugin
 import com.netflix.spinnaker.kork.plugins.proxy.aspects.InvocationAspect
 import com.netflix.spinnaker.kork.plugins.update.SpinnakerUpdateManager
-import com.netflix.spinnaker.kork.plugins.update.release.PluginInfoReleaseProvider
+import com.netflix.spinnaker.kork.plugins.update.release.provider.PluginInfoReleaseProvider
+import com.netflix.spinnaker.kork.plugins.update.release.source.PluginInfoReleaseSource
 import dev.minutest.junit.JUnit5Minutests
 import dev.minutest.rootContext
 import io.mockk.every
