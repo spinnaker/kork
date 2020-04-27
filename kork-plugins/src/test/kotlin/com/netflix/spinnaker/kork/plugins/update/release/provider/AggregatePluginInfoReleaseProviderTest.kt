@@ -18,7 +18,11 @@
 package com.netflix.spinnaker.kork.plugins.update.release.provider
 
 import com.netflix.spinnaker.kork.plugins.SpringStrictPluginLoaderStatusProvider
-import com.netflix.spinnaker.kork.plugins.update.release.*
+import com.netflix.spinnaker.kork.plugins.update.release.PluginInfoRelease
+import com.netflix.spinnaker.kork.plugins.update.release.plugin1
+import com.netflix.spinnaker.kork.plugins.update.release.plugin2
+import com.netflix.spinnaker.kork.plugins.update.release.plugin3
+import com.netflix.spinnaker.kork.plugins.update.release.pluginNoReleases
 import com.netflix.spinnaker.kork.plugins.update.release.source.PluginInfoReleaseSource
 import dev.minutest.junit.JUnit5Minutests
 import dev.minutest.rootContext
@@ -29,7 +33,6 @@ import strikt.api.expectThat
 import strikt.api.expectThrows
 import strikt.assertions.isA
 import strikt.assertions.isEqualTo
-
 
 class AggregatePluginInfoReleaseProviderTest : JUnit5Minutests {
   fun tests() = rootContext<Fixture> {
