@@ -97,6 +97,7 @@ class FriggaReflectiveNamerSpec extends Specification {
     new HasNameMethods(name: "app-stack-detail-v000")      || "app-stack-detail" | "app" | "stack" | "detail" | 0
     new HasNameMethodsChild(name: "app")                   || "app"              | "app" | null    | null     | null
     new HasNameMethodsChild(name: "app-stack-detail-v000") || "app-stack-detail" | "app" | "stack" | "detail" | 0
+    "app-stack-detail-v000"                                || "app-stack-detail" | "app" | "stack" | "detail" | 0
   }
 
   private static class HasName {
