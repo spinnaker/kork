@@ -15,7 +15,7 @@
  */
 
 plugins {
-  id 'io.spinnaker.project' version "$spinnakerGradleVersion" apply false
+  id 'io.spinnaker.project' version "$spinnakerGradleVersion"
 }
 
 group = "com.netflix.spinnaker.moniker"
