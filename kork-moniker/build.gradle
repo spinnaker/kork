@@ -19,7 +19,7 @@ plugins {
 }
 
 group = "com.netflix.spinnaker.moniker"
-apply plugin: 'io.spinnaker.project'
+apply plugin: 'java-library'
 apply plugin: 'groovy'
 
 //groovy only for tests
