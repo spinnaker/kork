@@ -19,7 +19,6 @@ package com.netflix.spinnaker.moniker.frigga;
 import com.netflix.frigga.autoscaling.AutoScalingGroupNameBuilder;
 import com.netflix.spinnaker.moniker.Moniker;
 import com.netflix.spinnaker.moniker.Namer;
-
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -84,7 +83,8 @@ public class FriggaReflectiveNamer implements Namer<Object> {
       clazz = clazz.getSuperclass();
     }
 
-    throw new IllegalArgumentException("No way to infer how to name " + obj.getClass().getSimpleName());
+    throw new IllegalArgumentException(
+        "No way to infer how to name " + obj.getClass().getSimpleName());
   }
 
   private String getName(Object obj) {
@@ -116,6 +116,7 @@ public class FriggaReflectiveNamer implements Namer<Object> {
       clazz = clazz.getSuperclass();
     }
 
-    throw new IllegalArgumentException("No way to infer how to name " + obj.getClass().getSimpleName());
+    throw new IllegalArgumentException(
+        "No way to infer how to name " + obj.getClass().getSimpleName());
   }
 }

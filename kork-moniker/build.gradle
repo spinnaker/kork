@@ -14,27 +14,16 @@
  * limitations under the License.
  */
 
-buildscript {
-  repositories {
-    jcenter()
-    maven { url "https://spinnaker.bintray.com/gradle" }
-    maven { url "https://plugins.gradle.org/m2/" }
-  }
-  dependencies {
-    classpath 'com.netflix.spinnaker.gradle:spinnaker-gradle-project:3.16.0'
-  }
+plugins {
+  id 'io.spinnaker.project' version "$spinnakerGradleVersion" apply false
 }
 
 group = "com.netflix.spinnaker.moniker"
-apply plugin: 'spinnaker.project'
+apply plugin: 'io.spinnaker.project'
 apply plugin: 'groovy'
 
 //groovy only for tests
 tasks.compileGroovy.enabled = false
-
-spinnaker {
-  dependenciesVersion = "0.109.2"
-}
 
 test {
   testLogging {
@@ -45,9 +34,19 @@ test {
 }
 
 dependencies {
-  spinnaker.group('test')
-  testCompile spinnaker.dependency('groovy')
+  implementation(platform("com.netflix.spinnaker.kork:kork-bom:$korkVersion"))
+  compileOnly "org.projectlombok:lombok"
+  annotationProcessor platform("com.netflix.spinnaker.kork:kork-bom:$korkVersion")
+  annotationProcessor "org.projectlombok:lombok"
+  testAnnotationProcessor platform("com.netflix.spinnaker.kork:kork-bom:$korkVersion")
+  testAnnotationProcessor "org.projectlombok:lombok"
 
-  compileOnly spinnaker.dependency('lombok')
-  compile spinnaker.dependency('frigga')
+  implementation "com.netflix.frigga:frigga"
+
+  testImplementation "org.codehaus.groovy:groovy-all"
+  testImplementation "org.spockframework:spock-core"
+  testImplementation "org.junit.jupiter:junit-jupiter-api"
+  testImplementation "org.assertj:assertj-core"
+  testRuntimeOnly "org.junit.vintage:junit-vintage-engine"
+  testRuntime "org.junit.jupiter:junit-jupiter-engine"
 }

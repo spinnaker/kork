@@ -32,4 +32,3 @@ public class Moniker {
   String stack;
   Integer sequence;
 }
-
