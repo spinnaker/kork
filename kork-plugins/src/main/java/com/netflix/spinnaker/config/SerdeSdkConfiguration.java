@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Armory, Inc.
+ * Copyright 2020 Netflix, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,17 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package com.netflix.spinnaker.config;
 
-apply plugin: "java-library"
-apply from: "$rootDir/gradle/lombok.gradle"
+import com.netflix.spinnaker.kork.plugins.sdk.serde.SerdeServiceSdkFactory;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.annotation.Configuration;
 
-dependencies {
-  api(platform(project(":spinnaker-dependencies")))
+@Configuration
+public class SerdeSdkConfiguration {
 
-  api project(':kork-secrets')
-
-  implementation 'com.google.apis:google-api-services-storage'
-  implementation 'com.google.auth:google-auth-library-oauth2-http'
-  implementation "org.springframework.boot:spring-boot-autoconfigure"
-  implementation "org.slf4j:slf4j-api"
+  public static SerdeServiceSdkFactory SerdeServiceSdkFactory(
+      ApplicationContext applicationContext) {
+    return new SerdeServiceSdkFactory(applicationContext);
+  }
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Armory, Inc.
+ * Copyright 2020 Netflix, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,17 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package com.netflix.spinnaker.kork.plugins.api.servicesdk;
 
-apply plugin: "java-library"
-apply from: "$rootDir/gradle/lombok.gradle"
-
-dependencies {
-  api(platform(project(":spinnaker-dependencies")))
-
-  api project(':kork-secrets')
-
-  implementation 'com.google.apis:google-api-services-storage'
-  implementation 'com.google.auth:google-auth-library-oauth2-http'
-  implementation "org.springframework.boot:spring-boot-autoconfigure"
-  implementation "org.slf4j:slf4j-api"
-}
+/**
+ * If a service does not provide its own {@link ServiceSdk}, this empty class will be provided in
+ * return.
+ */
+public class EmptyServiceSdk implements ServiceSdk {}
