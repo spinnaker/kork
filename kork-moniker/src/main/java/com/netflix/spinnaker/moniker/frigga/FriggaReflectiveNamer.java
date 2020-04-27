@@ -90,6 +90,11 @@ public class FriggaReflectiveNamer implements Namer<Object> {
   private String getName(Object obj) {
     Class clazz = obj.getClass();
 
+    // If the object is a String, just return it.
+    if (clazz == String.class) {
+      return (String) obj;
+    }
+
     // First walk up the object hierarchy and try to find some "getName" method to call
     while (clazz != Object.class) {
       try {
