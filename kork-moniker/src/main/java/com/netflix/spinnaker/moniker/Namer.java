@@ -19,15 +19,15 @@ package com.netflix.spinnaker.moniker;
 /**
  * A "Namer" takes some type "T" (e.g. a server group) and allows you to either
  *
- *  a) derive a "Moniker" object from a "T" object
- *  b) set a "Moniker" object on a "T" object
+ * <p>a) derive a "Moniker" object from a "T" object b) set a "Moniker" object on a "T" object
  *
- * For example, if T is an ASG, and you apply the Moniker(app=app, sequence=3),
- * the ASG Namer would set ASG.name = app-v003
+ * <p>For example, if T is an ASG, and you apply the Moniker(app=app, sequence=3), the ASG Namer
+ * would set ASG.name = app-v003
  *
  * @param <T> is the type of the object acting as the name
  */
 public interface Namer<T> {
   void applyMoniker(T obj, Moniker moniker);
+
   Moniker deriveMoniker(T obj);
 }
