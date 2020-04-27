@@ -37,7 +37,8 @@ interface PluginInfoReleaseSource : Ordered {
   fun getReleases(pluginInfo: List<PluginInfo>): Set<PluginInfoRelease>
 
   /**
-   * Optionally process releases (i.e., POST to front50/another service, write to a filesystem, etc).
+   * Optionally process releases (i.e., POST to front50/another service, modify in-memory set,
+   * write to a filesystem, etc).
    */
-  fun processReleases(pluginInfoReleases: Set<PluginInfoRelease>) {}
+  fun processReleases(pluginInfoReleases: Set<PluginInfoRelease>) { /* default implementation */ }
 }

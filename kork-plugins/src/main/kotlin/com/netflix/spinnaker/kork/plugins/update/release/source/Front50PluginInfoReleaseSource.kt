@@ -19,18 +19,19 @@ package com.netflix.spinnaker.kork.plugins.update.release.source
 
 import com.netflix.spinnaker.kork.plugins.update.release.PluginInfoRelease
 import org.pf4j.update.PluginInfo
+import org.slf4j.LoggerFactory
 import org.springframework.core.Ordered.LOWEST_PRECEDENCE
 
 class Front50PluginInfoReleaseSource : PluginInfoReleaseSource {
 
+  private val log by lazy { LoggerFactory.getLogger(javaClass) }
+
   override fun getReleases(pluginInfo: List<PluginInfo>): Set<PluginInfoRelease> {
-    //If we decide to break the calls into two calls (one to get releases, another to pin)
-    //having the option here is nice, for now just return an empty set.
     return mutableSetOf()
   }
 
   override fun processReleases(pluginInfoReleases: Set<PluginInfoRelease>) {
-    //Front50 stuff to sync / pin release
+    // Front50 stuff to sync / pin release
   }
 
   /**

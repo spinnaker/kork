@@ -33,7 +33,6 @@ class AggregatePluginInfoReleaseProvider(
 
     pluginInfoReleaseSources.forEach { source ->
       source.getReleases(pluginInfo).forEach { release ->
-        //If the pluginId exists, remove and write the most recently found record otherwise just add the release
         val hit = pluginInfoReleases.find { it.pluginId == release.pluginId }
         if (hit != null) {
           pluginInfoReleases.remove(hit)
@@ -42,11 +41,17 @@ class AggregatePluginInfoReleaseProvider(
           pluginInfoReleases.add(release)
         }
       }
+
       source.processReleases(pluginInfoReleases)
     }
 
-    //TODO: If a plugin from plugin info does not have a release, throw
-    // PluginReleaseNotFoundException (depending on SpringStrictPluginLoaderStatusProvider)
+    pluginInfo.forEach { plugin ->
+      if (pluginInfoReleases.find { it.pluginId == plugin.id } == null
+        && strictPluginLoaderStatusProvider.isStrictPluginLoading()) {
+        throw PluginReleaseNotFoundException(plugin.id, pluginInfoReleaseSources)
+      }
+    }
+
     return pluginInfoReleases
   }
 }

@@ -21,7 +21,6 @@ import com.netflix.spinnaker.kork.plugins.events.ExtensionLoaded
 import com.netflix.spinnaker.kork.plugins.proxy.aspects.InvocationAspect
 import com.netflix.spinnaker.kork.plugins.update.SpinnakerUpdateManager
 import com.netflix.spinnaker.kork.plugins.update.release.provider.PluginInfoReleaseProvider
-import com.netflix.spinnaker.kork.plugins.update.release.source.PluginInfoReleaseSource
 import kotlin.jvm.javaClass
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.config.ConfigurableListableBeanFactory

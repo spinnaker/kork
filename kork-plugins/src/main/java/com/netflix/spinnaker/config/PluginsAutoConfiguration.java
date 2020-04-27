@@ -18,6 +18,8 @@ package com.netflix.spinnaker.config;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.netflix.spectator.api.Registry;
 import com.netflix.spinnaker.config.PluginsConfigurationProperties.PluginRepositoryProperties;
+import com.netflix.spinnaker.kork.dynamicconfig.DynamicConfigService;
+import com.netflix.spinnaker.kork.dynamicconfig.SpringDynamicConfigService;
 import com.netflix.spinnaker.kork.plugins.ExtensionBeanDefinitionRegistryPostProcessor;
 import com.netflix.spinnaker.kork.plugins.SpinnakerPluginManager;
 import com.netflix.spinnaker.kork.plugins.SpinnakerServiceVersionManager;
@@ -40,6 +42,7 @@ import com.netflix.spinnaker.kork.plugins.update.downloader.FileDownloaderProvid
 import com.netflix.spinnaker.kork.plugins.update.downloader.SupportingFileDownloader;
 import com.netflix.spinnaker.kork.plugins.update.release.provider.AggregatePluginInfoReleaseProvider;
 import com.netflix.spinnaker.kork.plugins.update.release.provider.PluginInfoReleaseProvider;
+import com.netflix.spinnaker.kork.plugins.update.release.source.LatestPluginInfoReleaseSource;
 import com.netflix.spinnaker.kork.plugins.update.release.source.PluginInfoReleaseSource;
 import com.netflix.spinnaker.kork.plugins.update.release.source.SpringPluginInfoReleaseSource;
 import com.netflix.spinnaker.kork.plugins.update.repository.ConfigurableUpdateRepository;
@@ -75,8 +78,16 @@ public class PluginsAutoConfiguration {
   private static final Logger log = LoggerFactory.getLogger(PluginsAutoConfiguration.class);
 
   @Bean
-  public static SpringPluginStatusProvider pluginStatusProvider(Environment environment) {
-    return new SpringPluginStatusProvider(environment);
+  @ConditionalOnMissingBean(DynamicConfigService.class)
+  DynamicConfigService springTransientConfigService() {
+    return new SpringDynamicConfigService();
+  }
+
+  @Bean
+  public static SpringPluginStatusProvider pluginStatusProvider(DynamicConfigService dynamicConfigService) {
+    String configNamespace = PluginsConfigurationProperties.CONFIG_NAMESPACE;
+    String defaultRootPath = PluginsConfigurationProperties.DEFAULT_ROOT_PATH;
+    return new SpringPluginStatusProvider(dynamicConfigService, configNamespace + "." + defaultRootPath);
   }
 
   @Bean
@@ -161,18 +172,23 @@ public class PluginsAutoConfiguration {
   }
 
   @Bean
-  public static PluginInfoReleaseSource pluginReleaseProvider(
+  public static PluginInfoReleaseSource springPluginInfoReleaseSource(
       SpringPluginStatusProvider pluginStatusProvider) {
-    return new SpringPluginInfoReleaseSource(
-        pluginStatusProvider);
+    return new SpringPluginInfoReleaseSource(pluginStatusProvider);
+  }
+
+  @Bean
+  public static PluginInfoReleaseSource latestPluginInfoReleaseSource(
+    SpinnakerUpdateManager updateManager) {
+    return new LatestPluginInfoReleaseSource(updateManager);
   }
 
   @Bean
   public static PluginInfoReleaseProvider pluginInfoReleaseProvider(
-    List<PluginInfoReleaseSource> pluginInfoReleaseSources,
-    SpringStrictPluginLoaderStatusProvider springStrictPluginLoaderStatusProvider) {
+      List<PluginInfoReleaseSource> pluginInfoReleaseSources,
+      SpringStrictPluginLoaderStatusProvider springStrictPluginLoaderStatusProvider) {
     return new AggregatePluginInfoReleaseProvider(
-      pluginInfoReleaseSources, springStrictPluginLoaderStatusProvider);
+        pluginInfoReleaseSources, springStrictPluginLoaderStatusProvider);
   }
 
   @Bean
@@ -236,11 +252,11 @@ public class PluginsAutoConfiguration {
 
   @Bean
   public static ExtensionBeanDefinitionRegistryPostProcessor pluginBeanPostProcessor(
-    SpinnakerPluginManager pluginManager,
-    SpinnakerUpdateManager updateManager,
-    PluginInfoReleaseProvider pluginInfoReleaseProvider,
-    ApplicationEventPublisher applicationEventPublisher,
-    List<InvocationAspect<? extends InvocationState>> invocationAspects) {
+      SpinnakerPluginManager pluginManager,
+      SpinnakerUpdateManager updateManager,
+      PluginInfoReleaseProvider pluginInfoReleaseProvider,
+      ApplicationEventPublisher applicationEventPublisher,
+      List<InvocationAspect<? extends InvocationState>> invocationAspects) {
     return new ExtensionBeanDefinitionRegistryPostProcessor(
         pluginManager,
         updateManager,

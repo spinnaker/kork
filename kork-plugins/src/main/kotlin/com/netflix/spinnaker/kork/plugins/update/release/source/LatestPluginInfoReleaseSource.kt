@@ -37,8 +37,14 @@ class LatestPluginInfoReleaseSource(
   }
 
   private fun pluginInfoRelease(pluginInfo: PluginInfo): PluginInfoRelease? {
-    val lastRelease = updateManager.getLastPluginRelease(pluginInfo.id)
-    return PluginInfoRelease(pluginInfo.id, lastRelease)
+    val latestRelease = updateManager.getLastPluginRelease(pluginInfo.id)
+    return if (latestRelease != null) {
+      log.info("Latest release version {} for plugin {}", latestRelease.version, pluginInfo.id)
+      PluginInfoRelease(pluginInfo.id, latestRelease)
+    } else {
+      log.info("Latest release version not found for plugin {}", pluginInfo.id)
+      null
+    }
   }
 
   /**

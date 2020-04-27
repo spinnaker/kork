@@ -38,8 +38,14 @@ class SpringPluginInfoReleaseSource(
   private fun pluginInfoRelease(pluginInfo: PluginInfo): PluginInfoRelease? {
     val pluginVersion = pluginStatusProvider.pluginVersion(pluginInfo.id)
     val release = pluginInfo.releases.firstOrNull { it.version == pluginVersion }
-    return if (release != null) PluginInfoRelease(pluginInfo.id, release) else null
+    return if (release != null) {
+      log.info("Spring configured release version {} for plugin {}", release.version, pluginInfo.id)
+      PluginInfoRelease(pluginInfo.id, release)
+    } else {
+      log.info("Spring configured release version not found for plugin {}", pluginInfo.id)
+      null
+    }
   }
 
-  override fun getOrder(): Int = 1
+  override fun getOrder(): Int = 100
 }
