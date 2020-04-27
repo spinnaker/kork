@@ -17,9 +17,9 @@
 
 package com.netflix.spinnaker.kork.plugins.update.release
 
-import org.pf4j.update.PluginInfo
 import java.time.Instant
 import java.util.Date
+import org.pf4j.update.PluginInfo
 
 val plugin1 = PluginInfo().apply {
   id = "com.netflix.plugin1"
@@ -57,6 +57,27 @@ val plugin2 = PluginInfo().apply {
     PluginInfo.PluginRelease().apply {
       requires = "orca>=1.0.0"
       version = "4.0.0"
+      date = Date.from(Instant.now())
+      url = "front50.com/plugin.zip"
+    },
+    PluginInfo.PluginRelease().apply {
+      requires = "orca>=1.0.0"
+      version = "5.0.0"
+      date = Date.from(Instant.now())
+      url = "front50.com/plugin.zip"
+    }
+  )
+}
+
+val plugin3 = PluginInfo().apply {
+  id = "com.netflix.plugin3"
+  name = "plugin3"
+  description = "A test plugin"
+  provider = "netflix"
+  releases = listOf(
+    PluginInfo.PluginRelease().apply {
+      requires = "orca>=2.0.0"
+      version = "7.0.0"
       date = Date.from(Instant.now())
       url = "front50.com/plugin.zip"
     }

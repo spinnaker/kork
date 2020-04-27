@@ -84,10 +84,12 @@ public class PluginsAutoConfiguration {
   }
 
   @Bean
-  public static SpringPluginStatusProvider pluginStatusProvider(DynamicConfigService dynamicConfigService) {
+  public static SpringPluginStatusProvider pluginStatusProvider(
+      DynamicConfigService dynamicConfigService) {
     String configNamespace = PluginsConfigurationProperties.CONFIG_NAMESPACE;
     String defaultRootPath = PluginsConfigurationProperties.DEFAULT_ROOT_PATH;
-    return new SpringPluginStatusProvider(dynamicConfigService, configNamespace + "." + defaultRootPath);
+    return new SpringPluginStatusProvider(
+        dynamicConfigService, configNamespace + "." + defaultRootPath);
   }
 
   @Bean
@@ -179,7 +181,7 @@ public class PluginsAutoConfiguration {
 
   @Bean
   public static PluginInfoReleaseSource latestPluginInfoReleaseSource(
-    SpinnakerUpdateManager updateManager) {
+      SpinnakerUpdateManager updateManager) {
     return new LatestPluginInfoReleaseSource(updateManager);
   }
 

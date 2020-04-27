@@ -22,7 +22,6 @@ import com.netflix.spinnaker.kork.plugins.update.release.PluginInfoRelease
 import com.netflix.spinnaker.kork.plugins.update.release.source.PluginInfoReleaseSource
 import org.pf4j.update.PluginInfo
 
-
 class AggregatePluginInfoReleaseProvider(
   private val pluginInfoReleaseSources: List<PluginInfoReleaseSource>,
   private val strictPluginLoaderStatusProvider: SpringStrictPluginLoaderStatusProvider
@@ -46,8 +45,8 @@ class AggregatePluginInfoReleaseProvider(
     }
 
     pluginInfo.forEach { plugin ->
-      if (pluginInfoReleases.find { it.pluginId == plugin.id } == null
-        && strictPluginLoaderStatusProvider.isStrictPluginLoading()) {
+      if (pluginInfoReleases.find { it.pluginId == plugin.id } == null &&
+        strictPluginLoaderStatusProvider.isStrictPluginLoading()) {
         throw PluginReleaseNotFoundException(plugin.id, pluginInfoReleaseSources)
       }
     }
