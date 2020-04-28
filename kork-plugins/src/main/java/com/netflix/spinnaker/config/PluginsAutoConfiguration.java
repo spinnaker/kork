@@ -182,7 +182,7 @@ public class PluginsAutoConfiguration {
   @Bean
   public static PluginInfoReleaseSource latestPluginInfoReleaseSource(
       SpinnakerUpdateManager updateManager) {
-    return new LatestPluginInfoReleaseSource(updateManager);
+    return new LatestPluginInfoReleaseSource(updateManager, null);
   }
 
   @Bean
@@ -257,12 +257,14 @@ public class PluginsAutoConfiguration {
       SpinnakerPluginManager pluginManager,
       SpinnakerUpdateManager updateManager,
       PluginInfoReleaseProvider pluginInfoReleaseProvider,
+      SpringPluginStatusProvider springPluginStatusProvider,
       ApplicationEventPublisher applicationEventPublisher,
       List<InvocationAspect<? extends InvocationState>> invocationAspects) {
     return new ExtensionBeanDefinitionRegistryPostProcessor(
         pluginManager,
         updateManager,
         pluginInfoReleaseProvider,
+        springPluginStatusProvider,
         applicationEventPublisher,
         invocationAspects);
   }

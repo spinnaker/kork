@@ -44,6 +44,9 @@ class SpringPluginStatusProvider(
   override fun isPluginDisabled(pluginId: String): Boolean =
     !isEnabled(pluginId)
 
+  fun isPluginEnabled(pluginId: String): Boolean =
+    isEnabled(pluginId)
+
   override fun enablePlugin(pluginId: String) {
     log.info("Enabling plugin: $pluginId")
     propertySourceBackingStore[enabledPropertyName(pluginId)] = true

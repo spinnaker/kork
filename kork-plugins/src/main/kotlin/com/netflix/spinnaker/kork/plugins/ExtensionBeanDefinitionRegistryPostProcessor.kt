@@ -37,6 +37,7 @@ class ExtensionBeanDefinitionRegistryPostProcessor(
   private val pluginManager: SpinnakerPluginManager,
   private val updateManager: SpinnakerUpdateManager,
   private val pluginInfoReleaseProvider: PluginInfoReleaseProvider,
+  private val springPluginStatusProvider: SpringPluginStatusProvider,
   private val applicationEventPublisher: ApplicationEventPublisher,
   private val invocationAspects: List<InvocationAspect<*>>
 ) : BeanDefinitionRegistryPostProcessor {
@@ -52,7 +53,7 @@ class ExtensionBeanDefinitionRegistryPostProcessor(
 
     // 2) Determine the plugins for release from the list of enabled plugins
     val releases = updateManager.plugins
-      .filter { !pluginManager.statusProvider.isPluginDisabled(it.id) }
+      .filter { springPluginStatusProvider.isPluginEnabled(it.id) }
       .let { enabledPlugins -> pluginInfoReleaseProvider.getReleases(enabledPlugins) }
 
     // 3) Download releases, updating previously loaded plugins where necessary

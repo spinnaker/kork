@@ -45,12 +45,19 @@ class AggregatePluginInfoReleaseProvider(
     }
 
     pluginInfo.forEach { plugin ->
-      if (pluginInfoReleases.find { it.pluginId == plugin.id } == null &&
-        strictPluginLoaderStatusProvider.isStrictPluginLoading()) {
+      if (missingPluginWithStrictLoading(pluginInfoReleases, plugin)) {
         throw PluginReleaseNotFoundException(plugin.id, pluginInfoReleaseSources)
       }
     }
 
     return pluginInfoReleases
+  }
+
+  private fun missingPluginWithStrictLoading(
+    pluginInfoReleases: Set<PluginInfoRelease>,
+    pluginInfo: PluginInfo
+  ): Boolean {
+    return pluginInfoReleases.find { it.pluginId == pluginInfo.id } == null &&
+      strictPluginLoaderStatusProvider.isStrictPluginLoading()
   }
 }

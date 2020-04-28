@@ -27,7 +27,8 @@ import org.springframework.core.Ordered.HIGHEST_PRECEDENCE
  * Source the last published plugin info release.
  */
 class LatestPluginInfoReleaseSource(
-  private val updateManager: SpinnakerUpdateManager
+  private val updateManager: SpinnakerUpdateManager,
+  private val serviceName: String? = null
 ) : PluginInfoReleaseSource {
 
   private val log by lazy { LoggerFactory.getLogger(javaClass) }
@@ -37,12 +38,15 @@ class LatestPluginInfoReleaseSource(
   }
 
   private fun pluginInfoRelease(pluginInfo: PluginInfo): PluginInfoRelease? {
-    val latestRelease = updateManager.getLastPluginRelease(pluginInfo.id)
+    val latestRelease = if (serviceName == null)
+      updateManager.getLastPluginRelease(pluginInfo.id) else
+      updateManager.getLastPluginRelease(pluginInfo.id, serviceName)
+
     return if (latestRelease != null) {
-      log.info("Latest release version {} for plugin {}", latestRelease.version, pluginInfo.id)
+      log.info("Latest release version '{}' for plugin '{}'", latestRelease.version, pluginInfo.id)
       PluginInfoRelease(pluginInfo.id, latestRelease)
     } else {
-      log.info("Latest release version not found for plugin {}", pluginInfo.id)
+      log.info("Latest release version not found for plugin '{}'", pluginInfo.id)
       null
     }
   }

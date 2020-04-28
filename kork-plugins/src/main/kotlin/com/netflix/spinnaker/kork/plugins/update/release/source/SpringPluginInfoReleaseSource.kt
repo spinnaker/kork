@@ -39,10 +39,10 @@ class SpringPluginInfoReleaseSource(
     val pluginVersion = pluginStatusProvider.pluginVersion(pluginInfo.id)
     val release = pluginInfo.releases.firstOrNull { it.version == pluginVersion }
     return if (release != null) {
-      log.info("Spring configured release version {} for plugin {}", release.version, pluginInfo.id)
+      log.info("Spring configured release version '{}' for plugin '{}'", release.version, pluginInfo.id)
       PluginInfoRelease(pluginInfo.id, release)
     } else {
-      log.info("Spring configured release version not found for plugin {}", pluginInfo.id)
+      log.info("Spring configured release version not found for plugin '{}'", pluginInfo.id)
       null
     }
   }
