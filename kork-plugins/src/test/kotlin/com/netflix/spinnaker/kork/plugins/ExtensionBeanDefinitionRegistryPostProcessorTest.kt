@@ -116,6 +116,7 @@ class ExtensionBeanDefinitionRegistryPostProcessorTest : JUnit5Minutests {
     val pluginManager: SpinnakerPluginManager = mockk(relaxed = true)
     val updateManager: SpinnakerUpdateManager = mockk(relaxed = true)
     val pluginInfoReleaseProvider: PluginInfoReleaseProvider = mockk(relaxed = true)
+    val springPluginStatusProvider: SpringPluginStatusProvider = mockk(relaxed = true)
     val pluginWrapper: PluginWrapper = mockk(relaxed = true)
     val extensionFactory: ExtensionFactory = mockk(relaxed = true)
     val applicationEventPublisher: ApplicationEventPublisher = mockk(relaxed = true)
@@ -123,7 +124,7 @@ class ExtensionBeanDefinitionRegistryPostProcessorTest : JUnit5Minutests {
     val pluginDescriptor: SpinnakerPluginDescriptor = mockk(relaxed = true)
 
     val subject = ExtensionBeanDefinitionRegistryPostProcessor(pluginManager, updateManager,
-      pluginInfoReleaseProvider, applicationEventPublisher, invocationAspects)
+      pluginInfoReleaseProvider, springPluginStatusProvider, applicationEventPublisher, invocationAspects)
 
     init {
       every { extensionFactory.create(eq(FooExtension::class.java)) } returns FooExtension()
