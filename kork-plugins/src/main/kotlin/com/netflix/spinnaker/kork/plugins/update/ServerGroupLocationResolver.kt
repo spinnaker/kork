@@ -13,12 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package com.netflix.spinnaker.kork.plugins.update
 
-package com.netflix.spinnaker.kork.plugins.update.release
-
-import org.pf4j.update.PluginInfo
+import java.util.function.Supplier
 
 /**
- * A tuple of [pluginId] and [PluginInfo.PluginRelease]
+ * Contract to resolve the server group location (region, datacenter...) of the running service.
+ *
+ * Null will be returned if no location can be resolved.
  */
-data class PluginInfoRelease(val pluginId: String, var props: PluginInfo.PluginRelease)
+interface ServerGroupLocationResolver : Supplier<String?>

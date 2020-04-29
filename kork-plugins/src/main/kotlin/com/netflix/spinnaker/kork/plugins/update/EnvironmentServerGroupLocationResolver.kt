@@ -13,12 +13,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package com.netflix.spinnaker.kork.plugins.update
 
-package com.netflix.spinnaker.kork.plugins.update.release
-
-import org.pf4j.update.PluginInfo
+import org.springframework.core.env.Environment
 
 /**
- * A tuple of [pluginId] and [PluginInfo.PluginRelease]
+ * Sources the running service's server group location from the environment.
  */
-data class PluginInfoRelease(val pluginId: String, var props: PluginInfo.PluginRelease)
+class EnvironmentServerGroupLocationResolver(
+  private val environment: Environment
+) : ServerGroupLocationResolver {
+  override fun get(): String? =
+    SEARCH_CHAIN.firstOrNull { environment.getProperty(it) != null }
+
+  private companion object {
+    val SEARCH_CHAIN = listOf(
+      "EC2_REGION",
+      "spinnaker.extensibility.serverGroupLocation"
+    )
+  }
+}

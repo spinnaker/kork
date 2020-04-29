@@ -13,12 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package com.netflix.spinnaker.kork.plugins.update
 
-package com.netflix.spinnaker.kork.plugins.update.release
-
-import org.pf4j.update.PluginInfo
+import java.util.function.Supplier
 
 /**
- * A tuple of [pluginId] and [PluginInfo.PluginRelease]
+ * Contract to resolve the server group name of the running service.
+ *
+ * If the running service is clouddriver, the resulting value may be `clouddriver-main-v123`. Null will be returned
+ * if no server group name can be resolved.
  */
-data class PluginInfoRelease(val pluginId: String, var props: PluginInfo.PluginRelease)
+interface ServerGroupNameResolver : Supplier<String?>
