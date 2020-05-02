@@ -24,6 +24,7 @@ import com.netflix.spectator.api.Id
 import com.netflix.spectator.api.Registry
 import com.netflix.spectator.api.histogram.PercentileTimer
 import com.netflix.spinnaker.kork.plugins.SpinnakerPluginDescriptor
+import com.netflix.spinnaker.kork.plugins.api.internal.SpinnakerExtensionPoint
 import java.lang.reflect.InvocationTargetException
 import java.lang.reflect.Method
 import java.lang.reflect.Modifier
@@ -73,7 +74,7 @@ class MetricInvocationAspect(
   }
 
   override fun before(
-    target: Any,
+    target: SpinnakerExtensionPoint,
     proxy: Any,
     method: Method,
     args: Array<out Any>?,
