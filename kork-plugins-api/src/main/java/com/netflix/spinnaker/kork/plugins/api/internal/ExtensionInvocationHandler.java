@@ -19,7 +19,12 @@ package com.netflix.spinnaker.kork.plugins.api.internal;
 
 import java.lang.reflect.InvocationHandler;
 
+/**
+ * When proxying an extension class, implement this interface to provide a mechanism to obtain the
+ * underlying proxied class.
+ */
 public interface ExtensionInvocationHandler extends InvocationHandler {
 
+  /** Get the proxy target class. */
   Class<? extends SpinnakerExtensionPoint> getTargetClass();
 }

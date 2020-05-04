@@ -17,8 +17,8 @@
 package com.netflix.spinnaker.kork.plugins.proxy.aspects
 
 import com.netflix.spinnaker.kork.plugins.SpinnakerPluginDescriptor
-import com.netflix.spinnaker.kork.plugins.api.internal.SpinnakerExtensionPoint
 import com.netflix.spinnaker.kork.plugins.api.Meter
+import com.netflix.spinnaker.kork.plugins.api.internal.SpinnakerExtensionPoint
 import io.mockk.every
 import io.mockk.mockk
 import java.lang.reflect.Method
