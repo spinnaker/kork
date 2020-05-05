@@ -18,10 +18,10 @@ package com.netflix.spinnaker.kork.plugins.proxy.aspects
 
 import com.netflix.spinnaker.kork.plugins.SpinnakerPluginDescriptor
 import com.netflix.spinnaker.kork.plugins.api.Meter
-import com.netflix.spinnaker.kork.plugins.api.internal.SpinnakerExtensionPoint
 import io.mockk.every
 import io.mockk.mockk
 import java.lang.reflect.Method
+import org.pf4j.ExtensionPoint
 
 internal fun createPluginDescriptor(pluginId: String, version: String): SpinnakerPluginDescriptor {
   val descriptor: SpinnakerPluginDescriptor = mockk(relaxed = true)
@@ -46,7 +46,7 @@ internal fun createPrivateMethod(): Method {
   return SomeExtension::class.java.getDeclaredMethod("privateHelloWorld")
 }
 
-internal class SomeExtension : SpinnakerExtensionPoint {
+internal class SomeExtension : ExtensionPoint {
 
   /**
    * Public helloWorld method, exists to test public method instrumentation.

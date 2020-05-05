@@ -17,11 +17,10 @@
 package com.netflix.spinnaker.kork.plugins.proxy
 
 import com.netflix.spinnaker.kork.plugins.SpinnakerPluginDescriptor
-import com.netflix.spinnaker.kork.plugins.api.internal.ExtensionInvocationHandler
-import com.netflix.spinnaker.kork.plugins.api.internal.SpinnakerExtensionPoint
 import com.netflix.spinnaker.kork.plugins.proxy.aspects.InvocationAspect
 import com.netflix.spinnaker.kork.plugins.proxy.aspects.InvocationState
 import java.lang.RuntimeException
+import java.lang.reflect.InvocationHandler
 import java.lang.reflect.InvocationTargetException
 import java.lang.reflect.Method
 import java.lang.reflect.Proxy
@@ -31,16 +30,15 @@ import java.lang.reflect.Proxy
  * provides a pattern for instrumenting method invocation.
  */
 class ExtensionInvocationProxy(
-  private val target: SpinnakerExtensionPoint,
+  private val target: Any,
   private val invocationAspects: List<InvocationAspect<InvocationState>>,
   private val pluginDescriptor: SpinnakerPluginDescriptor
-) : ExtensionInvocationHandler {
+) : InvocationHandler {
 
   /**
-   * Target class is exposed here so we can determine extension type via
-   * [com.netflix.spinnaker.kork.plugins.api.internal.ExtensionClassProvider]
+   * Target class is exposed here so we can determine extension type via [ExtensionClassProvider]
    */
-  override fun getTargetClass(): Class<out SpinnakerExtensionPoint> {
+  internal fun getTargetClass(): Class<*> {
     return target.javaClass
   }
 
@@ -100,7 +98,7 @@ class ExtensionInvocationProxy(
 
   companion object {
     fun proxy(
-      target: SpinnakerExtensionPoint,
+      target: Any,
       invocationAspects: List<InvocationAspect<InvocationState>>,
       descriptor: SpinnakerPluginDescriptor
     ): Any {

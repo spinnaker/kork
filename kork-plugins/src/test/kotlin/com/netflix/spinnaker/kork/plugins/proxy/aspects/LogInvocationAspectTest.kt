@@ -18,7 +18,6 @@ package com.netflix.spinnaker.kork.plugins.proxy.aspects
 
 import com.netflix.spinnaker.kork.common.Header
 import com.netflix.spinnaker.kork.plugins.SpinnakerPluginDescriptor
-import com.netflix.spinnaker.kork.plugins.api.internal.SpinnakerExtensionPoint
 import dev.minutest.junit.JUnit5Minutests
 import dev.minutest.rootContext
 import io.mockk.mockk
@@ -68,7 +67,7 @@ class LogInvocationAspectTest : JUnit5Minutests {
     val pluginVersion: String = "0.0.1"
     val subject = LogInvocationAspect()
 
-    val target: SpinnakerExtensionPoint = SomeExtension()
+    val target: Any = SomeExtension()
     val proxy: Any = mockk(relaxed = true)
     val method: Method = createMethod()
     val args: Array<out Any> = arrayOf()
