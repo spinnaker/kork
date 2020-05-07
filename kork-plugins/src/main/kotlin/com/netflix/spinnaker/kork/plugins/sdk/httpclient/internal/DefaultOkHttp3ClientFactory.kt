@@ -68,7 +68,7 @@ class DefaultOkHttp3ClientFactory(
       }
       .let {
         // TODO(rz): Add plugin ID to the metrics. Requires refactoring existing metrics interceptor.
-        OkHttp3ClientConfiguration(RawOkHttpClientFactory().create(it, okHttpClientHttp3MetricsInterceptor), it).create()
+        OkHttp3ClientConfiguration(RawOkHttpClientFactory().create(it, listOf(okHttpClientHttp3MetricsInterceptor)), it).create()
       }
       .also {
         if (config.logging.level != LoggingLevel.NONE) {

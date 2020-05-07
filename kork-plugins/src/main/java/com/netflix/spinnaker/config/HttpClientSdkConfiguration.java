@@ -34,6 +34,7 @@ import com.netflix.spinnaker.kork.plugins.sdk.httpclient.internal.DefaultOkHttp3
 import com.netflix.spinnaker.okhttp.OkHttp3MetricsInterceptor;
 import com.netflix.spinnaker.okhttp.OkHttpClientConfigurationProperties;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import javax.inject.Provider;
 import okhttp3.OkHttpClient;
@@ -63,7 +64,8 @@ public class HttpClientSdkConfiguration {
     factories.add(new DefaultOkHttp3ClientFactory(okHttp3MetricsInterceptor));
 
     OkHttpClient rawClient =
-        new RawOkHttpClientFactory().create(okHttpClientProperties, okHttp3MetricsInterceptor);
+        new RawOkHttpClientFactory()
+            .create(okHttpClientProperties, Arrays.asList(okHttp3MetricsInterceptor));
     OkHttp3ClientConfiguration config =
         new OkHttp3ClientConfiguration(rawClient, okHttpClientProperties);
 
