@@ -20,13 +20,13 @@ import okhttp3.OkHttpClient;
 
 public abstract class OkHttpClientBuilderProvider {
 
-  private final OkHttpClient.Builder builder;
+  private final OkHttpClient okHttpClient;
   private final OkHttpClientConfigurationProperties okHttpClientConfigurationProperties;
 
   public OkHttpClientBuilderProvider(
       OkHttpClient okHttpClient,
       OkHttpClientConfigurationProperties okHttpClientConfigurationProperties) {
-    this.builder = okHttpClient.newBuilder();
+    this.okHttpClient = okHttpClient;
     this.okHttpClientConfigurationProperties = okHttpClientConfigurationProperties;
   }
 
@@ -39,9 +39,9 @@ public abstract class OkHttpClientBuilderProvider {
   }
 
   /** Apply host name verifier for the provided [baseUrl] if any */
-  public OkHttpClient.Builder applyHostNameVerifier(String baseUrl) {
+  public OkHttpClient.Builder applyHostNameVerifier(OkHttpClient.Builder builder, String baseUrl) {
     // Concrete impls will override.
-    return this.builder;
+    return builder;
   }
 
   /**
@@ -50,8 +50,8 @@ public abstract class OkHttpClientBuilderProvider {
    */
   public abstract OkHttpClient.Builder create();
 
-  public OkHttpClient.Builder getBuilder() {
-    return this.builder;
+  public OkHttpClient getClient() {
+    return this.okHttpClient;
   }
 
   public OkHttpClientConfigurationProperties getOkHttpClientConfigurationProperties() {

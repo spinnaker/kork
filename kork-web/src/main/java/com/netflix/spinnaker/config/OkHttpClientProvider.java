@@ -47,10 +47,10 @@ class OkHttpClientProvider {
       throw new SystemException(format("Failed to create HTTP client for url (%s)", endPointUrl));
     }
 
-    provider.create();
-    provider.applyHostNameVerifier(endPointUrl);
+    OkHttpClient.Builder builder = provider.create();
+    provider.applyHostNameVerifier(builder, endPointUrl);
 
-    return provider.getBuilder().build();
+    return builder.build();
   }
 
   /**

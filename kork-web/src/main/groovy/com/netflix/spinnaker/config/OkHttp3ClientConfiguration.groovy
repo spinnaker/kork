@@ -58,7 +58,7 @@ class OkHttp3ClientConfiguration extends OkHttpClientBuilderProvider {
   OkHttpClient.Builder create() {
 
     if (!okHttpClientConfigurationProperties.keyStore && !okHttpClientConfigurationProperties.trustStore) {
-      return builder
+      return client.newBuilder();
     }
 
     def sslContext = SSLContext.getInstance('TLS')
@@ -88,13 +88,13 @@ class OkHttp3ClientConfiguration extends OkHttpClientBuilderProvider {
     def trustManagers = trustManagerFactory.getTrustManagers()
     checkState(trustManagers.length == 1, "Found multiple trust managers; don't know which one to use")
     checkState(trustManagers.first() instanceof X509TrustManager, "Configured TrustManager is a %s, not an X509TrustManager; don't know how to configure it", trustManagers.first().class.getName())
-    builder.sslSocketFactory(sslContext.socketFactory, (X509TrustManager) trustManagers.first())
+    OkHttpClient.Builder builder = client.newBuilder().sslSocketFactory(sslContext.socketFactory, (X509TrustManager) trustManagers.first())
 
-    return applyConnectionSpecs()
+    return applyConnectionSpecs(builder);
   }
 
   @CompileDynamic
-  private OkHttpClient.Builder applyConnectionSpecs() {
+  private OkHttpClient.Builder applyConnectionSpecs(OkHttpClient.Builder builder) {
     def cipherSuites = (okHttpClientConfigurationProperties.cipherSuites ?: ConnectionSpec.MODERN_TLS.cipherSuites()*.javaName) as String[]
     def tlsVersions = (okHttpClientConfigurationProperties.tlsVersions ?: ConnectionSpec.MODERN_TLS.tlsVersions()*.javaName) as String[]
 
