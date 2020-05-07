@@ -16,8 +16,9 @@
 
 package com.netflix.spinnaker.config;
 
-import com.netflix.spinnaker.okhttp.OkHttp3MetricsInterceptor;
 import com.netflix.spinnaker.okhttp.OkHttpClientConfigurationProperties;
+import java.util.List;
+import okhttp3.Interceptor;
 import okhttp3.OkHttpClient;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
@@ -27,12 +28,13 @@ import org.springframework.context.annotation.Configuration;
 @EnableConfigurationProperties(OkHttpClientConfigurationProperties.class)
 class RawOkHttpClientConfiguration {
 
-  /** OkHttpClient instance to be reused it for all HTTP calls. */
+  /**
+   * Default {@link OkHttpClient} that is correctly configured for service-to-service communication.
+   */
   @Bean
   OkHttpClient okHttpClient(
       OkHttpClientConfigurationProperties okHttpClientConfigurationProperties,
-      OkHttp3MetricsInterceptor okHttp3MetricsInterceptor) {
-    return new RawOkHttpClientFactory()
-        .create(okHttpClientConfigurationProperties, okHttp3MetricsInterceptor);
+      List<Interceptor> interceptors) {
+    return new RawOkHttpClientFactory().create(okHttpClientConfigurationProperties, interceptors);
   }
 }

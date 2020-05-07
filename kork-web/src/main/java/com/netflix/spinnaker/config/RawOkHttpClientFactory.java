@@ -16,22 +16,23 @@
 
 package com.netflix.spinnaker.config;
 
-import com.netflix.spinnaker.okhttp.OkHttp3MetricsInterceptor;
 import com.netflix.spinnaker.okhttp.OkHttpClientConfigurationProperties;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 import okhttp3.ConnectionPool;
 import okhttp3.Dispatcher;
+import okhttp3.Interceptor;
 import okhttp3.OkHttpClient;
 
 public class RawOkHttpClientFactory {
 
   /**
-   * Returns a basic client which can be further customized for other needs upstream.(eg: SSL setup,
-   * name verifier etc)
+   * Returns a basic client which can be further customized for other needs in the {@link
+   * OkHttpClientProvider} implementations. (eg: SSL setup, name verifier etc)
    */
   public OkHttpClient create(
       OkHttpClientConfigurationProperties okHttpClientConfigurationProperties,
-      OkHttp3MetricsInterceptor okHttp3MetricsInterceptor) {
+      List<Interceptor> interceptors) {
     Dispatcher dispatcher = new Dispatcher();
     dispatcher.setMaxRequests(okHttpClientConfigurationProperties.getMaxRequests());
     dispatcher.setMaxRequestsPerHost(okHttpClientConfigurationProperties.getMaxRequestsPerHost());
@@ -53,9 +54,7 @@ public class RawOkHttpClientFactory {
                         .getKeepAliveDurationMs(),
                     TimeUnit.MILLISECONDS));
 
-    if (okHttp3MetricsInterceptor != null) {
-      okHttpClientBuilder.addInterceptor(okHttp3MetricsInterceptor);
-    }
+    interceptors.forEach(okHttpClientBuilder::addInterceptor);
 
     return okHttpClientBuilder.build();
   }
