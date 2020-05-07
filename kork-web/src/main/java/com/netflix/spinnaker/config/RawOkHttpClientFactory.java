@@ -54,7 +54,9 @@ public class RawOkHttpClientFactory {
                         .getKeepAliveDurationMs(),
                     TimeUnit.MILLISECONDS));
 
-    interceptors.forEach(okHttpClientBuilder::addInterceptor);
+    if (interceptors != null) {
+      interceptors.forEach(okHttpClientBuilder::addInterceptor);
+    }
 
     return okHttpClientBuilder.build();
   }

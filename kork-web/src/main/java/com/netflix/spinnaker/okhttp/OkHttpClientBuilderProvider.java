@@ -63,11 +63,12 @@ public abstract class OkHttpClientBuilderProvider {
     return okHttpClient.newBuilder();
   }
 
+  /** Creates a new OkHttpClient Builder from the client and applies custom host name verifier. */
   public OkHttpClient.Builder create(String url) {
     return applyHostNameVerifier(create(), url);
   }
 
-  public OkHttpClientConfigurationProperties getOkHttpClientConfigurationProperties() {
+  protected OkHttpClientConfigurationProperties getOkHttpClientConfigurationProperties() {
     return this.okHttpClientConfigurationProperties;
   }
 }
