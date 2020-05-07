@@ -16,16 +16,13 @@
 
 package com.netflix.spinnaker.config
 
-import okhttp3.Dispatcher
+import com.netflix.spinnaker.okhttp.OkHttpClientBuilderProvider
 
 import static com.google.common.base.Preconditions.checkState
-import com.netflix.spinnaker.okhttp.OkHttp3MetricsInterceptor
 import com.netflix.spinnaker.okhttp.OkHttpClientConfigurationProperties
-import com.netflix.spinnaker.okhttp.OkHttpMetricsInterceptor
 import groovy.transform.CompileDynamic
 import groovy.transform.CompileStatic
 import groovy.util.logging.Slf4j
-import okhttp3.ConnectionPool
 import okhttp3.ConnectionSpec
 import okhttp3.OkHttpClient
 import org.springframework.beans.factory.annotation.Autowired
@@ -38,50 +35,30 @@ import javax.net.ssl.X509TrustManager
 import java.security.KeyStore
 import java.security.NoSuchAlgorithmException
 import java.security.SecureRandom
-import java.util.concurrent.TimeUnit
 
 @Slf4j
 @CompileStatic
 @Component
-class OkHttp3ClientConfiguration {
-  private final OkHttpClientConfigurationProperties okHttpClientConfigurationProperties
-  private final OkHttp3MetricsInterceptor okHttp3MetricsInterceptor
+class OkHttp3ClientConfiguration extends OkHttpClientBuilderProvider {
 
   @Autowired
-  public OkHttp3ClientConfiguration(OkHttpClientConfigurationProperties okHttpClientConfigurationProperties,
-                                    OkHttp3MetricsInterceptor okHttp3MetricsInterceptor) {
-    this.okHttpClientConfigurationProperties = okHttpClientConfigurationProperties
-    this.okHttp3MetricsInterceptor = okHttp3MetricsInterceptor
+  OkHttp3ClientConfiguration(OkHttpClient okHttpClient,
+                             OkHttpClientConfigurationProperties okHttpClientConfigurationProperties) {
+    super(okHttpClient, okHttpClientConfigurationProperties)
   }
 
-  public OkHttp3ClientConfiguration(OkHttpClientConfigurationProperties okHttpClientConfigurationProperties) {
-    this.okHttpClientConfigurationProperties = okHttpClientConfigurationProperties
+  @Override
+  Boolean supports(String baseUrl) {
+    return baseUrl.startsWith("http://") || baseUrl.startsWith("https://")
   }
 
   /**
    * @return OkHttpClient w/ <optional> key and trust stores
    */
   OkHttpClient.Builder create() {
-    Dispatcher dispatcher = new Dispatcher()
-    dispatcher.setMaxRequests(okHttpClientConfigurationProperties.maxRequests)
-    dispatcher.setMaxRequestsPerHost(okHttpClientConfigurationProperties.maxRequestsPerHost)
-
-    OkHttpClient.Builder okHttpClientBuilder = new OkHttpClient.Builder()
-      .connectTimeout(okHttpClientConfigurationProperties.connectTimeoutMs, TimeUnit.MILLISECONDS)
-      .readTimeout(okHttpClientConfigurationProperties.readTimeoutMs, TimeUnit.MILLISECONDS)
-      .retryOnConnectionFailure(okHttpClientConfigurationProperties.retryOnConnectionFailure)
-      .dispatcher(dispatcher)
-      .connectionPool(new ConnectionPool(
-        okHttpClientConfigurationProperties.connectionPool.maxIdleConnections,
-        okHttpClientConfigurationProperties.connectionPool.keepAliveDurationMs,
-        TimeUnit.MILLISECONDS))
-
-    if (okHttp3MetricsInterceptor != null) {
-      okHttpClientBuilder.addInterceptor(okHttp3MetricsInterceptor)
-    }
 
     if (!okHttpClientConfigurationProperties.keyStore && !okHttpClientConfigurationProperties.trustStore) {
-      return okHttpClientBuilder
+      return builder
     }
 
     def sslContext = SSLContext.getInstance('TLS')
@@ -111,13 +88,13 @@ class OkHttp3ClientConfiguration {
     def trustManagers = trustManagerFactory.getTrustManagers()
     checkState(trustManagers.length == 1, "Found multiple trust managers; don't know which one to use")
     checkState(trustManagers.first() instanceof X509TrustManager, "Configured TrustManager is a %s, not an X509TrustManager; don't know how to configure it", trustManagers.first().class.getName())
-    okHttpClientBuilder.sslSocketFactory(sslContext.socketFactory, (X509TrustManager) trustManagers.first())
+    builder.sslSocketFactory(sslContext.socketFactory, (X509TrustManager) trustManagers.first())
 
-    return applyConnectionSpecs(okHttpClientBuilder)
+    return applyConnectionSpecs()
   }
 
   @CompileDynamic
-  private OkHttpClient.Builder applyConnectionSpecs(OkHttpClient.Builder okHttpClientBuilder) {
+  private OkHttpClient.Builder applyConnectionSpecs() {
     def cipherSuites = (okHttpClientConfigurationProperties.cipherSuites ?: ConnectionSpec.MODERN_TLS.cipherSuites()*.javaName) as String[]
     def tlsVersions = (okHttpClientConfigurationProperties.tlsVersions ?: ConnectionSpec.MODERN_TLS.tlsVersions()*.javaName) as String[]
 
@@ -126,6 +103,6 @@ class OkHttp3ClientConfiguration {
       .tlsVersions(tlsVersions)
       .build()
 
-    return okHttpClientBuilder.connectionSpecs([connectionSpec, ConnectionSpec.CLEARTEXT] as List<ConnectionSpec>)
+    return builder.connectionSpecs([connectionSpec, ConnectionSpec.CLEARTEXT] as List<ConnectionSpec>)
   }
 }

@@ -36,6 +36,7 @@ import com.netflix.spinnaker.okhttp.OkHttpClientConfigurationProperties;
 import java.util.ArrayList;
 import java.util.List;
 import javax.inject.Provider;
+import okhttp3.OkHttpClient;
 import org.springframework.boot.context.properties.bind.Bindable;
 import org.springframework.boot.context.properties.bind.Binder;
 import org.springframework.context.annotation.Bean;
@@ -61,8 +62,10 @@ public class HttpClientSdkConfiguration {
         new OkHttp3MetricsInterceptor(registry, false);
     factories.add(new DefaultOkHttp3ClientFactory(okHttp3MetricsInterceptor));
 
+    OkHttpClient rawClient =
+        new RawOkHttpClientFactory().create(okHttpClientProperties, okHttp3MetricsInterceptor);
     OkHttp3ClientConfiguration config =
-        new OkHttp3ClientConfiguration(okHttpClientProperties, okHttp3MetricsInterceptor);
+        new OkHttp3ClientConfiguration(rawClient, okHttpClientProperties);
 
     // TODO(rz): It'd be nice to make this customizable, but I'm not sure how to do that without
     //  bringing Jackson into the Plugin SDK (quite undesirable).
