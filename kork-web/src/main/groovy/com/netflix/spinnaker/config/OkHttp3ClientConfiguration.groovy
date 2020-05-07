@@ -57,12 +57,13 @@ class OkHttp3ClientConfiguration extends OkHttpClientBuilderProvider {
    */
   OkHttpClient.Builder create() {
 
+    OkHttpClient.Builder builder = super.create()
+
     if (!okHttpClientConfigurationProperties.keyStore && !okHttpClientConfigurationProperties.trustStore) {
-      return client.newBuilder();
+      return builder
     }
 
-    def sslContext = SSLContext.getInstance('TLS')
-
+    // init Keystore factory
     def keyManagerFactory = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm())
     def ks = KeyStore.getInstance(okHttpClientConfigurationProperties.keyStoreType)
     okHttpClientConfigurationProperties.keyStore.withInputStream {
@@ -70,6 +71,7 @@ class OkHttp3ClientConfiguration extends OkHttpClientBuilderProvider {
     }
     keyManagerFactory.init(ks, okHttpClientConfigurationProperties.keyStorePassword.toCharArray())
 
+    // init trust store factory.
     def trustManagerFactory = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm())
     def ts = KeyStore.getInstance(okHttpClientConfigurationProperties.trustStoreType)
     okHttpClientConfigurationProperties.trustStore.withInputStream {
@@ -84,13 +86,19 @@ class OkHttp3ClientConfiguration extends OkHttpClientBuilderProvider {
       log.error("Unable to fetch secure random instance for ${okHttpClientConfigurationProperties.secureRandomInstanceType}", e)
     }
 
+    def sslContext = SSLContext.getInstance('TLS')
     sslContext.init(keyManagerFactory.keyManagers, trustManagerFactory.trustManagers, secureRandom)
     def trustManagers = trustManagerFactory.getTrustManagers()
     checkState(trustManagers.length == 1, "Found multiple trust managers; don't know which one to use")
     checkState(trustManagers.first() instanceof X509TrustManager, "Configured TrustManager is a %s, not an X509TrustManager; don't know how to configure it", trustManagers.first().class.getName())
-    OkHttpClient.Builder builder = client.newBuilder().sslSocketFactory(sslContext.socketFactory, (X509TrustManager) trustManagers.first())
+    builder = builder.sslSocketFactory(sslContext.socketFactory, (X509TrustManager) trustManagers.first())
 
     return applyConnectionSpecs(builder);
+  }
+
+  @Override
+  OkHttpClient.Builder create(String url) {
+    applyHostNameVerifier(create(), url)
   }
 
   @CompileDynamic

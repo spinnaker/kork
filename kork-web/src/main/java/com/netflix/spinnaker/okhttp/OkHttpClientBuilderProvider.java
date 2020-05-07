@@ -30,7 +30,12 @@ public abstract class OkHttpClientBuilderProvider {
     this.okHttpClientConfigurationProperties = okHttpClientConfigurationProperties;
   }
 
-  /** Returns whether or not the provider supports the provided [baseUrl]. */
+  /**
+   * Returns whether or not the provider supports the provided url.
+   *
+   * @param baseUrl url
+   * @return true if supports the url given
+   */
   public abstract Boolean supports(String baseUrl);
 
   /** Allows custom implementations to adjust the url before making a call. */
@@ -38,20 +43,28 @@ public abstract class OkHttpClientBuilderProvider {
     return baseUrl;
   }
 
-  /** Apply host name verifier for the provided [baseUrl] if any */
+  /**
+   * Apply host name verifier for the provided url
+   *
+   * @param builder builder to operate on
+   * @param baseUrl url
+   * @return the builder.
+   */
   public OkHttpClient.Builder applyHostNameVerifier(OkHttpClient.Builder builder, String baseUrl) {
     // Concrete impls will override.
     return builder;
   }
 
   /**
-   * Creates an [OkHttpClient] Builder. The generated client builder is not set to talk to any
-   * endpoint and it just constructs a bare minimum client
+   * Creates a new OkHttpClient Builder from the client. The generated client builder is not set to
+   * talk to any endpoint and it just constructs a bare minimum client
    */
-  public abstract OkHttpClient.Builder create();
+  public OkHttpClient.Builder create() {
+    return okHttpClient.newBuilder();
+  }
 
-  public OkHttpClient getClient() {
-    return this.okHttpClient;
+  public OkHttpClient.Builder create(String url) {
+    return applyHostNameVerifier(create(), url);
   }
 
   public OkHttpClientConfigurationProperties getOkHttpClientConfigurationProperties() {

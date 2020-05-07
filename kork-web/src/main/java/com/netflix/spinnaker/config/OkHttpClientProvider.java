@@ -34,40 +34,38 @@ class OkHttpClientProvider {
   }
 
   /**
-   * consults the provider impls to decide which provider class can build a client for the given url
+   * Consults the provider impls to decide which provider class can build a client for the given url
    * and delegates to that provider to build a client.
    *
    * @param endPointUrl
    * @return okHttpClient
    */
   OkHttpClient getClient(String endPointUrl) {
-
     OkHttpClientBuilderProvider provider = findProvider(endPointUrl);
-    if (provider == null) {
-      throw new SystemException(format("Failed to create HTTP client for url (%s)", endPointUrl));
-    }
-
-    OkHttpClient.Builder builder = provider.create();
-    provider.applyHostNameVerifier(builder, endPointUrl);
-
-    return builder.build();
+    return provider.create(endPointUrl).build();
   }
 
   /**
-   * Get normalized URL as decided by the provider that can serve the presented Url.
+   * Get normalized url as decided by the provider that can serve the presented url.
    *
    * @param endPointUrl
    * @return
    */
   String getNormalizedUrl(String endPointUrl) {
-    OkHttpClientBuilderProvider provider = findProvider(endPointUrl);
-    return (provider != null) ? provider.getNormalizedUrl(endPointUrl) : null;
+    return findProvider(endPointUrl).getNormalizedUrl(endPointUrl);
   }
 
   private OkHttpClientBuilderProvider findProvider(String endPointUrl) {
-    return providers.stream()
-        .filter(provider -> provider.supports(endPointUrl))
-        .findFirst()
-        .orElse(null);
+    OkHttpClientBuilderProvider providerImpl =
+        providers.stream()
+            .filter(provider -> provider.supports(endPointUrl))
+            .findFirst()
+            .orElse(null);
+
+    if (providerImpl == null) {
+      throw new SystemException(format("No client provider found for url (%s)", endPointUrl));
+    }
+
+    return providerImpl;
   }
 }
