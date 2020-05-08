@@ -40,9 +40,11 @@ class ConfigFactory(
   /**
    * Create the plugin configuration given the [configClass] and [pluginId].
    */
-  fun createPluginConfig(configClass: Class<*>, pluginId: String): Any? {
-    val coordinates = PluginConfigCoordinates(pluginId)
-    return resolveConfiguration(coordinates, configClass)
+  fun createPluginConfig(configClass: Class<*>, pluginConfigId: String, pluginId: String?): Any? {
+    if (pluginId != null) {
+      return resolveConfiguration(PluginConfigCoordinates(pluginId, pluginConfigId), configClass)
+    }
+    return null
   }
 
   private fun resolveConfiguration(coordinates: ConfigCoordinates, configClass: Class<*>): Any? {

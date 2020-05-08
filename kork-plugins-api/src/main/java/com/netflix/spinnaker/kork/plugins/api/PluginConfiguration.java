@@ -12,6 +12,7 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
+ *
  */
 
 package com.netflix.spinnaker.kork.plugins.api;
@@ -22,23 +23,18 @@ import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
-import javax.annotation.Nonnull;
 
 /**
- * Denotes that a class provides extension configuration. For example:
+ * Denotes that a class provides plugin configuration. Corresponding config coordinates are defined
+ * at the plug ID:
  *
- * <pre>{@code
- * &#064;ExtensionConfiguration("my-extension")
- * public class MyExtensionConfiguration {
- *   private String someProperty;
- * }
- * }</pre>
+ * <p>spinnaker.extensibility.plugins.pluginId.config
  */
 @Alpha
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.TYPE)
 @Documented
-public @interface ExtensionConfiguration {
+public @interface PluginConfiguration {
 
   /**
    * The property value of the extension configuration. For example, if set to `netflix.orca-stage`
@@ -48,6 +44,5 @@ public @interface ExtensionConfiguration {
    *
    * @return
    */
-  @Nonnull
-  String value();
+  String value() default "";
 }
