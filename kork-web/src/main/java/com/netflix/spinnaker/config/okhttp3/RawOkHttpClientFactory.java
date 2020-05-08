@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.netflix.spinnaker.config;
+package com.netflix.spinnaker.config.okhttp3;
 
 import com.netflix.spinnaker.okhttp.OkHttpClientConfigurationProperties;
 import java.util.List;

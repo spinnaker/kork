@@ -16,13 +16,15 @@
 
 package com.netflix.spinnaker.config
 
-import com.netflix.spinnaker.okhttp.OkHttpClientBuilderProvider
+import okhttp3.Dispatcher
 
 import static com.google.common.base.Preconditions.checkState
+import com.netflix.spinnaker.okhttp.OkHttp3MetricsInterceptor
 import com.netflix.spinnaker.okhttp.OkHttpClientConfigurationProperties
 import groovy.transform.CompileDynamic
 import groovy.transform.CompileStatic
 import groovy.util.logging.Slf4j
+import okhttp3.ConnectionPool
 import okhttp3.ConnectionSpec
 import okhttp3.OkHttpClient
 import org.springframework.beans.factory.annotation.Autowired
@@ -35,35 +37,54 @@ import javax.net.ssl.X509TrustManager
 import java.security.KeyStore
 import java.security.NoSuchAlgorithmException
 import java.security.SecureRandom
+import java.util.concurrent.TimeUnit
 
 @Slf4j
 @CompileStatic
 @Component
-class OkHttp3ClientConfiguration extends OkHttpClientBuilderProvider {
+class OkHttp3ClientConfiguration {
+  private final OkHttpClientConfigurationProperties okHttpClientConfigurationProperties
+  private final OkHttp3MetricsInterceptor okHttp3MetricsInterceptor
 
   @Autowired
-  OkHttp3ClientConfiguration(OkHttpClient okHttpClient,
-                             OkHttpClientConfigurationProperties okHttpClientConfigurationProperties) {
-    super(okHttpClient, okHttpClientConfigurationProperties)
+  public OkHttp3ClientConfiguration(OkHttpClientConfigurationProperties okHttpClientConfigurationProperties,
+                                    OkHttp3MetricsInterceptor okHttp3MetricsInterceptor) {
+    this.okHttpClientConfigurationProperties = okHttpClientConfigurationProperties
+    this.okHttp3MetricsInterceptor = okHttp3MetricsInterceptor
   }
 
-  @Override
-  Boolean supports(String baseUrl) {
-    return baseUrl.startsWith("http://") || baseUrl.startsWith("https://")
+  public OkHttp3ClientConfiguration(OkHttpClientConfigurationProperties okHttpClientConfigurationProperties) {
+    this.okHttpClientConfigurationProperties = okHttpClientConfigurationProperties
   }
 
   /**
    * @return OkHttpClient w/ <optional> key and trust stores
    */
   OkHttpClient.Builder create() {
+    Dispatcher dispatcher = new Dispatcher()
+    dispatcher.setMaxRequests(okHttpClientConfigurationProperties.maxRequests)
+    dispatcher.setMaxRequestsPerHost(okHttpClientConfigurationProperties.maxRequestsPerHost)
 
-    OkHttpClient.Builder builder = super.create()
+    OkHttpClient.Builder okHttpClientBuilder = new OkHttpClient.Builder()
+      .connectTimeout(okHttpClientConfigurationProperties.connectTimeoutMs, TimeUnit.MILLISECONDS)
+      .readTimeout(okHttpClientConfigurationProperties.readTimeoutMs, TimeUnit.MILLISECONDS)
+      .retryOnConnectionFailure(okHttpClientConfigurationProperties.retryOnConnectionFailure)
+      .dispatcher(dispatcher)
+      .connectionPool(new ConnectionPool(
+        okHttpClientConfigurationProperties.connectionPool.maxIdleConnections,
+        okHttpClientConfigurationProperties.connectionPool.keepAliveDurationMs,
+        TimeUnit.MILLISECONDS))
 
-    if (!okHttpClientConfigurationProperties.keyStore && !okHttpClientConfigurationProperties.trustStore) {
-      return builder
+    if (okHttp3MetricsInterceptor != null) {
+      okHttpClientBuilder.addInterceptor(okHttp3MetricsInterceptor)
     }
 
-    // init Keystore factory
+    if (!okHttpClientConfigurationProperties.keyStore && !okHttpClientConfigurationProperties.trustStore) {
+      return okHttpClientBuilder
+    }
+
+    def sslContext = SSLContext.getInstance('TLS')
+
     def keyManagerFactory = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm())
     def ks = KeyStore.getInstance(okHttpClientConfigurationProperties.keyStoreType)
     okHttpClientConfigurationProperties.keyStore.withInputStream {
@@ -71,7 +92,6 @@ class OkHttp3ClientConfiguration extends OkHttpClientBuilderProvider {
     }
     keyManagerFactory.init(ks, okHttpClientConfigurationProperties.keyStorePassword.toCharArray())
 
-    // init trust store factory.
     def trustManagerFactory = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm())
     def ts = KeyStore.getInstance(okHttpClientConfigurationProperties.trustStoreType)
     okHttpClientConfigurationProperties.trustStore.withInputStream {
@@ -86,23 +106,17 @@ class OkHttp3ClientConfiguration extends OkHttpClientBuilderProvider {
       log.error("Unable to fetch secure random instance for ${okHttpClientConfigurationProperties.secureRandomInstanceType}", e)
     }
 
-    def sslContext = SSLContext.getInstance('TLS')
     sslContext.init(keyManagerFactory.keyManagers, trustManagerFactory.trustManagers, secureRandom)
     def trustManagers = trustManagerFactory.getTrustManagers()
     checkState(trustManagers.length == 1, "Found multiple trust managers; don't know which one to use")
     checkState(trustManagers.first() instanceof X509TrustManager, "Configured TrustManager is a %s, not an X509TrustManager; don't know how to configure it", trustManagers.first().class.getName())
-    builder = builder.sslSocketFactory(sslContext.socketFactory, (X509TrustManager) trustManagers.first())
+    okHttpClientBuilder.sslSocketFactory(sslContext.socketFactory, (X509TrustManager) trustManagers.first())
 
-    return applyConnectionSpecs(builder);
-  }
-
-  @Override
-  OkHttpClient.Builder create(String url) {
-    applyHostNameVerifier(create(), url)
+    return applyConnectionSpecs(okHttpClientBuilder)
   }
 
   @CompileDynamic
-  private OkHttpClient.Builder applyConnectionSpecs(OkHttpClient.Builder builder) {
+  private OkHttpClient.Builder applyConnectionSpecs(OkHttpClient.Builder okHttpClientBuilder) {
     def cipherSuites = (okHttpClientConfigurationProperties.cipherSuites ?: ConnectionSpec.MODERN_TLS.cipherSuites()*.javaName) as String[]
     def tlsVersions = (okHttpClientConfigurationProperties.tlsVersions ?: ConnectionSpec.MODERN_TLS.tlsVersions()*.javaName) as String[]
 
@@ -111,6 +125,6 @@ class OkHttp3ClientConfiguration extends OkHttpClientBuilderProvider {
       .tlsVersions(tlsVersions)
       .build()
 
-    return builder.connectionSpecs([connectionSpec, ConnectionSpec.CLEARTEXT] as List<ConnectionSpec>)
+    return okHttpClientBuilder.connectionSpecs([connectionSpec, ConnectionSpec.CLEARTEXT] as List<ConnectionSpec>)
   }
 }

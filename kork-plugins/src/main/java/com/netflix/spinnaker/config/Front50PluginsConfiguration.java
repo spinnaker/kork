@@ -69,9 +69,8 @@ public class Front50PluginsConfiguration {
                         "Unable to bind ok-http-client property to "
                             + OkHttpClientConfigurationProperties.class.getSimpleName()));
 
-    OkHttpClient rawClient = new RawOkHttpClientFactory().create(okHttpClientProperties, null);
     OkHttpClient okHttpClient =
-        new OkHttp3ClientConfiguration(rawClient, okHttpClientProperties)
+        new OkHttp3ClientConfiguration(okHttpClientProperties, null)
             .create()
             .retryOnConnectionFailure(okHttpClientProperties.isRetryOnConnectionFailure())
             .build();

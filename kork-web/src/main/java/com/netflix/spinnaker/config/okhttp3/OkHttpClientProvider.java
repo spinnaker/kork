@@ -14,12 +14,11 @@
  * limitations under the License.
  */
 
-package com.netflix.spinnaker.config;
+package com.netflix.spinnaker.config.okhttp3;
 
 import static java.lang.String.format;
 
 import com.netflix.spinnaker.kork.exceptions.SystemException;
-import com.netflix.spinnaker.okhttp.OkHttpClientBuilderProvider;
 import java.util.List;
 import okhttp3.OkHttpClient;
 import org.springframework.stereotype.Component;
@@ -42,11 +41,11 @@ class OkHttpClientProvider {
    */
   OkHttpClient getClient(String endPointUrl) {
     OkHttpClientBuilderProvider provider = findProvider(endPointUrl);
-    return provider.create(endPointUrl).build();
+    return provider.get(endPointUrl).build();
   }
 
   /**
-   * Get normalized url as decided by the provider that can serve the presented url.
+   * Get normalized url as decided by the provider.
    *
    * @param endPointUrl
    * @return

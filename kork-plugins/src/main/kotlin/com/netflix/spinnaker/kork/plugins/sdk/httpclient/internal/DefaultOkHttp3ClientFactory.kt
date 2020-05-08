@@ -16,7 +16,6 @@
 package com.netflix.spinnaker.kork.plugins.sdk.httpclient.internal
 
 import com.netflix.spinnaker.config.OkHttp3ClientConfiguration
-import com.netflix.spinnaker.config.RawOkHttpClientFactory
 import com.netflix.spinnaker.kork.exceptions.SystemException
 import com.netflix.spinnaker.kork.plugins.api.httpclient.HttpClientConfig
 import com.netflix.spinnaker.kork.plugins.api.httpclient.HttpClientConfig.LoggingConfig.LoggingLevel
@@ -68,7 +67,7 @@ class DefaultOkHttp3ClientFactory(
       }
       .let {
         // TODO(rz): Add plugin ID to the metrics. Requires refactoring existing metrics interceptor.
-        OkHttp3ClientConfiguration(RawOkHttpClientFactory().create(it, listOf(okHttpClientHttp3MetricsInterceptor)), it).create()
+        OkHttp3ClientConfiguration(it, okHttpClientHttp3MetricsInterceptor).create()
       }
       .also {
         if (config.logging.level != LoggingLevel.NONE) {
