@@ -70,7 +70,7 @@ public class Front50PluginsConfiguration {
                             + OkHttpClientConfigurationProperties.class.getSimpleName()));
 
     OkHttpClient okHttpClient =
-        new OkHttp3ClientConfiguration(okHttpClientProperties, null)
+        new OkHttp3ClientConfiguration(okHttpClientProperties)
             .create()
             .retryOnConnectionFailure(okHttpClientProperties.isRetryOnConnectionFailure())
             .build();
