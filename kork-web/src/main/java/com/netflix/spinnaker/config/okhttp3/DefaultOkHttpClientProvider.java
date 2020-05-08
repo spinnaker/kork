@@ -20,6 +20,7 @@ package com.netflix.spinnaker.config.okhttp3;
 import static com.google.common.base.Preconditions.checkState;
 import static java.lang.String.format;
 
+import com.netflix.spinnaker.config.ServiceConfigurationProperties;
 import com.netflix.spinnaker.kork.exceptions.SystemException;
 import com.netflix.spinnaker.okhttp.OkHttpClientConfigurationProperties;
 import java.io.FileInputStream;
@@ -58,14 +59,16 @@ public class DefaultOkHttpClientProvider implements OkHttpClientBuilderProvider 
   }
 
   @Override
-  public OkHttpClient.Builder get(String url) {
+  public OkHttpClient.Builder get(ServiceConfigurationProperties.Service service) {
     OkHttpClient.Builder builder = okHttpClient.newBuilder();
-    setSslFactory(builder, url);
+    setSSLSocketFactory(builder, service);
     applyConnectionSpecs(builder);
     return builder;
   }
 
-  protected OkHttpClient.Builder setSslFactory(OkHttpClient.Builder builder, String url) {
+  @Override
+  public OkHttpClient.Builder setSSLSocketFactory(
+      OkHttpClient.Builder builder, ServiceConfigurationProperties.Service service) {
 
     if (okHttpClientConfigurationProperties.getKeyStore() == null
         && okHttpClientConfigurationProperties.getTrustStore() == null) {
@@ -105,8 +108,9 @@ public class DefaultOkHttpClientProvider implements OkHttpClientBuilderProvider 
           trustManagers[0].getClass().getSimpleName());
       builder.sslSocketFactory(sslContext.getSocketFactory(), (X509TrustManager) trustManagers[0]);
     } catch (Exception e) {
-      log.error("Unable to set ssl socket factory for {}", url, e);
-      throw new SystemException(format("Unable to set ssl socket factory for (%s)", url), e);
+      log.error("Unable to set ssl socket factory for {}", service.getBaseUrl(), e);
+      throw new SystemException(
+          format("Unable to set ssl socket factory for (%s)", service.getBaseUrl()), e);
     }
 
     return builder;
@@ -139,5 +143,13 @@ public class DefaultOkHttpClientProvider implements OkHttpClientBuilderProvider 
     ConnectionSpec connectionSpec = connectionSpecBuilder.build();
 
     return builder.connectionSpecs(Arrays.asList(connectionSpec, ConnectionSpec.CLEARTEXT));
+  }
+
+  public OkHttpClient getOkHttpClient() {
+    return okHttpClient;
+  }
+
+  public OkHttpClientConfigurationProperties getOkHttpClientConfigurationProperties() {
+    return okHttpClientConfigurationProperties;
   }
 }

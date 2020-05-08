@@ -17,6 +17,7 @@
 
 package com.netflix.spinnaker.config.okhttp3;
 
+import com.netflix.spinnaker.config.ServiceConfigurationProperties;
 import okhttp3.OkHttpClient;
 
 public interface OkHttpClientBuilderProvider {
@@ -24,30 +25,33 @@ public interface OkHttpClientBuilderProvider {
   /**
    * Returns whether or not the provider supports the provided url.
    *
-   * @param baseUrl url
+   * @param service service configuration
    * @return true if supports the url given
    */
-  default Boolean supports(String baseUrl) {
-    return baseUrl.startsWith("http://") || baseUrl.startsWith("https://");
-  }
-
-  /** Allows custom implementations to adjust the url before making a call. */
-  default String getNormalizedUrl(String baseUrl) {
-    return baseUrl;
+  default Boolean supports(ServiceConfigurationProperties.Service service) {
+    return service.getBaseUrl().startsWith("http://")
+        || service.getBaseUrl().startsWith("https://");
   }
 
   /**
-   * Apply host name verifier for the provided url
+   * Set SSL socket factory with the provided keystore and truststore.
    *
    * @param builder builder to operate on
-   * @param baseUrl url
+   * @param service service config
    * @return the builder.
    */
-  default OkHttpClient.Builder setSSLSocketFactory(OkHttpClient.Builder builder, String baseUrl) {
+  default OkHttpClient.Builder setSSLSocketFactory(
+      OkHttpClient.Builder builder, ServiceConfigurationProperties.Service service) {
     // Concrete impls will override.
     return builder;
   }
 
   /** Creates a new OkHttpClient Builder from the client and applies custom host name verifier. */
-  OkHttpClient.Builder get(String url);
+  /**
+   * Creates a new OkHttpClient Builder for the provided service configuration.
+   *
+   * @param service
+   * @return
+   */
+  OkHttpClient.Builder get(ServiceConfigurationProperties.Service service);
 }

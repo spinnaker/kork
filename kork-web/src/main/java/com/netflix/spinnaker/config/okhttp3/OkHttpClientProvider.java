@@ -18,6 +18,7 @@ package com.netflix.spinnaker.config.okhttp3;
 
 import static java.lang.String.format;
 
+import com.netflix.spinnaker.config.ServiceConfigurationProperties;
 import com.netflix.spinnaker.kork.exceptions.SystemException;
 import java.util.List;
 import okhttp3.OkHttpClient;
@@ -33,36 +34,24 @@ class OkHttpClientProvider {
   }
 
   /**
-   * Consults the provider impls to decide which provider class can build a client for the given url
-   * and delegates to that provider to build a client.
+   * Consults the provider impls to decide which provider class can build a client for the given
+   * service config and delegates to that provider to build a client.
    *
-   * @param endPointUrl
+   * @param service service configuration
    * @return okHttpClient
    */
-  OkHttpClient getClient(String endPointUrl) {
-    OkHttpClientBuilderProvider provider = findProvider(endPointUrl);
-    return provider.get(endPointUrl).build();
+  OkHttpClient getClient(ServiceConfigurationProperties.Service service) {
+    OkHttpClientBuilderProvider provider = findProvider(service);
+    return provider.get(service).build();
   }
 
-  /**
-   * Get normalized url as decided by the provider.
-   *
-   * @param endPointUrl
-   * @return
-   */
-  String getNormalizedUrl(String endPointUrl) {
-    return findProvider(endPointUrl).getNormalizedUrl(endPointUrl);
-  }
-
-  private OkHttpClientBuilderProvider findProvider(String endPointUrl) {
+  private OkHttpClientBuilderProvider findProvider(ServiceConfigurationProperties.Service service) {
     OkHttpClientBuilderProvider providerImpl =
-        providers.stream()
-            .filter(provider -> provider.supports(endPointUrl))
-            .findFirst()
-            .orElse(null);
+        providers.stream().filter(provider -> provider.supports(service)).findFirst().orElse(null);
 
     if (providerImpl == null) {
-      throw new SystemException(format("No client provider found for url (%s)", endPointUrl));
+      throw new SystemException(
+          format("No client provider found for url (%s)", service.getBaseUrl()));
     }
 
     return providerImpl;
