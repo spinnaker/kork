@@ -17,7 +17,7 @@
 
 package com.netflix.spinnaker.config.okhttp3;
 
-import com.netflix.spinnaker.config.ServiceConfigurationProperties;
+import com.netflix.spinnaker.config.ServiceEndpoint;
 import okhttp3.OkHttpClient;
 
 public interface OkHttpClientBuilderProvider {
@@ -28,7 +28,7 @@ public interface OkHttpClientBuilderProvider {
    * @param service service configuration
    * @return true if supports the url given
    */
-  default Boolean supports(ServiceConfigurationProperties.Service service) {
+  default Boolean supports(ServiceEndpoint service) {
     return service.getBaseUrl().startsWith("http://")
         || service.getBaseUrl().startsWith("https://");
   }
@@ -41,7 +41,7 @@ public interface OkHttpClientBuilderProvider {
    * @return the builder.
    */
   default OkHttpClient.Builder setSSLSocketFactory(
-      OkHttpClient.Builder builder, ServiceConfigurationProperties.Service service) {
+      OkHttpClient.Builder builder, ServiceEndpoint service) {
     // Concrete impls will override.
     return builder;
   }
@@ -53,5 +53,12 @@ public interface OkHttpClientBuilderProvider {
    * @param service
    * @return
    */
-  OkHttpClient.Builder get(ServiceConfigurationProperties.Service service);
+  OkHttpClient.Builder get(ServiceEndpoint service);
+
+  /**
+   * Decides the order in which this provider is consulted.
+   *
+   * @return
+   */
+  Integer priority();
 }

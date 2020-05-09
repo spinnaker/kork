@@ -20,7 +20,7 @@ package com.netflix.spinnaker.config.okhttp3;
 import static com.google.common.base.Preconditions.checkState;
 import static java.lang.String.format;
 
-import com.netflix.spinnaker.config.ServiceConfigurationProperties;
+import com.netflix.spinnaker.config.ServiceEndpoint;
 import com.netflix.spinnaker.kork.exceptions.SystemException;
 import com.netflix.spinnaker.okhttp.OkHttpClientConfigurationProperties;
 import java.io.FileInputStream;
@@ -43,15 +43,16 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 @Component
-public class DefaultOkHttpClientProvider implements OkHttpClientBuilderProvider {
+public class DefaultOkHttpClientBuilderProvider implements OkHttpClientBuilderProvider {
 
-  private static final Logger log = LoggerFactory.getLogger(DefaultOkHttpClientProvider.class);
+  private static final Logger log =
+      LoggerFactory.getLogger(DefaultOkHttpClientBuilderProvider.class);
 
   private final OkHttpClient okHttpClient;
   private final OkHttpClientConfigurationProperties okHttpClientConfigurationProperties;
 
   @Autowired
-  public DefaultOkHttpClientProvider(
+  public DefaultOkHttpClientBuilderProvider(
       OkHttpClient okHttpClient,
       OkHttpClientConfigurationProperties okHttpClientConfigurationProperties) {
     this.okHttpClient = okHttpClient;
@@ -59,7 +60,7 @@ public class DefaultOkHttpClientProvider implements OkHttpClientBuilderProvider 
   }
 
   @Override
-  public OkHttpClient.Builder get(ServiceConfigurationProperties.Service service) {
+  public OkHttpClient.Builder get(ServiceEndpoint service) {
     OkHttpClient.Builder builder = okHttpClient.newBuilder();
     setSSLSocketFactory(builder, service);
     applyConnectionSpecs(builder);
@@ -67,8 +68,13 @@ public class DefaultOkHttpClientProvider implements OkHttpClientBuilderProvider 
   }
 
   @Override
+  public Integer priority() {
+    return 0;
+  }
+
+  @Override
   public OkHttpClient.Builder setSSLSocketFactory(
-      OkHttpClient.Builder builder, ServiceConfigurationProperties.Service service) {
+      OkHttpClient.Builder builder, ServiceEndpoint service) {
 
     if (okHttpClientConfigurationProperties.getKeyStore() == null
         && okHttpClientConfigurationProperties.getTrustStore() == null) {
