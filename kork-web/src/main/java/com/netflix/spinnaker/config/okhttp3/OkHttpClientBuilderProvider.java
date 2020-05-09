@@ -34,17 +34,17 @@ public interface OkHttpClientBuilderProvider {
   }
 
   /**
-   * Creates a new OkHttpClient Builder for the provided service.
+   * Creates a new and customized {@link OkHttpClient.Builder} for the provided service.
    *
-   * @param service
-   * @return
+   * @param service service config
+   * @return the builder
    */
   OkHttpClient.Builder get(ServiceEndpoint service);
 
   /**
    * Decides the order in which this provider is consulted.
    *
-   * @return
+   * @return the assigned priority
    */
   Integer priority();
 }
