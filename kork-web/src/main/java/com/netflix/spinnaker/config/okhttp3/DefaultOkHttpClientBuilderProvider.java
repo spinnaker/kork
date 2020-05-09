@@ -72,8 +72,7 @@ public class DefaultOkHttpClientBuilderProvider implements OkHttpClientBuilderPr
     return 0;
   }
 
-  @Override
-  public OkHttpClient.Builder setSSLSocketFactory(
+  protected OkHttpClient.Builder setSSLSocketFactory(
       OkHttpClient.Builder builder, ServiceEndpoint service) {
 
     if (okHttpClientConfigurationProperties.getKeyStore() == null

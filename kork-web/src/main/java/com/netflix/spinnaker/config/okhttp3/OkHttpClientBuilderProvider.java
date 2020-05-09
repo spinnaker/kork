@@ -23,7 +23,7 @@ import okhttp3.OkHttpClient;
 public interface OkHttpClientBuilderProvider {
 
   /**
-   * Returns whether or not the provider supports the provided url.
+   * Returns whether or not the provider supports the provided service endpoint.
    *
    * @param service service configuration
    * @return true if supports the url given
@@ -34,21 +34,7 @@ public interface OkHttpClientBuilderProvider {
   }
 
   /**
-   * Set SSL socket factory with the provided keystore and truststore.
-   *
-   * @param builder builder to operate on
-   * @param service service config
-   * @return the builder.
-   */
-  default OkHttpClient.Builder setSSLSocketFactory(
-      OkHttpClient.Builder builder, ServiceEndpoint service) {
-    // Concrete impls will override.
-    return builder;
-  }
-
-  /** Creates a new OkHttpClient Builder from the client and applies custom host name verifier. */
-  /**
-   * Creates a new OkHttpClient Builder for the provided service configuration.
+   * Creates a new OkHttpClient Builder for the provided service.
    *
    * @param service
    * @return
