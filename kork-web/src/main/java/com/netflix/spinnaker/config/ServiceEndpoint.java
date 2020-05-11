@@ -17,11 +17,16 @@
 
 package com.netflix.spinnaker.config;
 
+import javax.annotation.Nonnull;
+
+/** Endpoint config used to build clients. */
 public interface ServiceEndpoint {
 
   /** Name of the service */
+  @Nonnull
   public String getName();
 
   /** Base API url */
+  @Nonnull
   public String getBaseUrl();
 }
