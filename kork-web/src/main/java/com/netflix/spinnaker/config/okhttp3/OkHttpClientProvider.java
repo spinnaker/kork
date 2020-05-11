@@ -20,7 +20,6 @@ import static java.lang.String.format;
 
 import com.netflix.spinnaker.config.DefaultServiceEndpoint;
 import com.netflix.spinnaker.kork.exceptions.SystemException;
-import java.util.Comparator;
 import java.util.List;
 import okhttp3.OkHttpClient;
 import org.springframework.stereotype.Component;
@@ -48,11 +47,7 @@ class OkHttpClientProvider {
 
   private OkHttpClientBuilderProvider findProvider(DefaultServiceEndpoint service) {
     OkHttpClientBuilderProvider providerImpl =
-        providers.stream()
-            .sorted(Comparator.comparingInt(OkHttpClientBuilderProvider::priority).reversed())
-            .filter(provider -> provider.supports(service))
-            .findFirst()
-            .orElse(null);
+        providers.stream().filter(provider -> provider.supports(service)).findFirst().orElse(null);
 
     if (providerImpl == null) {
       throw new SystemException(

@@ -40,8 +40,11 @@ import okhttp3.TlsVersion;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.Ordered;
+import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
+@Order(Ordered.LOWEST_PRECEDENCE)
 @Component
 public class DefaultOkHttpClientBuilderProvider implements OkHttpClientBuilderProvider {
 
@@ -65,11 +68,6 @@ public class DefaultOkHttpClientBuilderProvider implements OkHttpClientBuilderPr
     setSSLSocketFactory(builder, service);
     applyConnectionSpecs(builder);
     return builder;
-  }
-
-  @Override
-  public Integer priority() {
-    return 0;
   }
 
   protected OkHttpClient.Builder setSSLSocketFactory(

@@ -40,11 +40,4 @@ public interface OkHttpClientBuilderProvider {
    * @return the builder
    */
   OkHttpClient.Builder get(ServiceEndpoint service);
-
-  /**
-   * Decides the order in which this provider is consulted.
-   *
-   * @return the assigned priority
-   */
-  Integer priority();
 }
