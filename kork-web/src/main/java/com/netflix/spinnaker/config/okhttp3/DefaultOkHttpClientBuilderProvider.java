@@ -147,12 +147,4 @@ public class DefaultOkHttpClientBuilderProvider implements OkHttpClientBuilderPr
 
     return builder.connectionSpecs(Arrays.asList(connectionSpec, ConnectionSpec.CLEARTEXT));
   }
-
-  public OkHttpClient getOkHttpClient() {
-    return okHttpClient;
-  }
-
-  public OkHttpClientConfigurationProperties getOkHttpClientConfigurationProperties() {
-    return okHttpClientConfigurationProperties;
-  }
 }

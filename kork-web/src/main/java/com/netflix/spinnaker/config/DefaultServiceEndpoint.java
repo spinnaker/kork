@@ -17,16 +17,18 @@
 
 package com.netflix.spinnaker.config;
 
-/** Represents an service endpoint URL and name. */
+import javax.annotation.Nonnull;
+
+/** Represents a service endpoint URL and name. */
 public class DefaultServiceEndpoint implements ServiceEndpoint {
 
   /** Name of the service */
-  private final String name;
+  @Nonnull private final String name;
 
   /** Base API url */
-  private final String baseUrl;
+  @Nonnull private final String baseUrl;
 
-  public DefaultServiceEndpoint(String name, String baseUrl) {
+  public DefaultServiceEndpoint(@Nonnull String name, @Nonnull String baseUrl) {
     this.name = name;
     this.baseUrl = baseUrl;
   }

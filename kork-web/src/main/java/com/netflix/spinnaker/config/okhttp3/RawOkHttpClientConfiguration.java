@@ -20,6 +20,7 @@ import com.netflix.spinnaker.okhttp.OkHttpClientConfigurationProperties;
 import java.util.List;
 import okhttp3.Interceptor;
 import okhttp3.OkHttpClient;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -32,6 +33,7 @@ class RawOkHttpClientConfiguration {
    * Default {@link OkHttpClient} that is correctly configured for service-to-service communication.
    */
   @Bean
+  @ConditionalOnMissingBean
   OkHttpClient okHttpClient(
       OkHttpClientConfigurationProperties okHttpClientConfigurationProperties,
       List<Interceptor> interceptors) {

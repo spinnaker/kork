@@ -46,14 +46,12 @@ class OkHttpClientProvider {
   }
 
   private OkHttpClientBuilderProvider findProvider(DefaultServiceEndpoint service) {
-    OkHttpClientBuilderProvider providerImpl =
-        providers.stream().filter(provider -> provider.supports(service)).findFirst().orElse(null);
-
-    if (providerImpl == null) {
-      throw new SystemException(
-          format("No client provider found for url (%s)", service.getBaseUrl()));
-    }
-
-    return providerImpl;
+    return providers.stream()
+        .filter(provider -> provider.supports(service))
+        .findFirst()
+        .orElseThrow(
+            () ->
+                new SystemException(
+                    format("No client provider found for url (%s)", service.getBaseUrl())));
   }
 }

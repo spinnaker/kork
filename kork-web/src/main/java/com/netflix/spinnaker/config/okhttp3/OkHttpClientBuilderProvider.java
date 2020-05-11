@@ -20,6 +20,10 @@ package com.netflix.spinnaker.config.okhttp3;
 import com.netflix.spinnaker.config.ServiceEndpoint;
 import okhttp3.OkHttpClient;
 
+/**
+ * Provider interface that concrete implementations will use to provide a customized {@link
+ * OkHttpClient.Builder}.
+ */
 public interface OkHttpClientBuilderProvider {
 
   /**
