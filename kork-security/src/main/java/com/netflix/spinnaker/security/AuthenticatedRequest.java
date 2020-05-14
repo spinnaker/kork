@@ -20,15 +20,13 @@ import static java.lang.String.format;
 
 import com.google.common.base.Preconditions;
 import com.netflix.spinnaker.kork.common.Header;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.Callable;
 import lombok.SneakyThrows;
 import org.slf4j.MDC;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.util.CollectionUtils;
 
 public class AuthenticatedRequest {
@@ -132,8 +130,8 @@ public class AuthenticatedRequest {
   }
 
   public static Optional<String> getSpinnakerUser(Object principal) {
-    return (principal instanceof User)
-        ? Optional.ofNullable(((User) principal).getUsername())
+    return (principal instanceof UserDetails)
+        ? Optional.ofNullable(((UserDetails) principal).getUsername())
         : get(Header.USER);
   }
 
@@ -142,10 +140,14 @@ public class AuthenticatedRequest {
   }
 
   public static Optional<String> getSpinnakerAccounts(Object principal) {
-    return (principal instanceof User
-            && !CollectionUtils.isEmpty(((User) principal).allowedAccounts))
-        ? Optional.of(String.join(",", ((User) principal).getAllowedAccounts()))
-        : get(Header.ACCOUNTS);
+    if (principal instanceof UserDetails) {
+      Collection<String> allowedAccounts =
+          AllowedAccountsAuthorities.getAllowedAccounts((UserDetails) principal);
+      if (!CollectionUtils.isEmpty(allowedAccounts)) {
+        return Optional.of(String.join(",", allowedAccounts));
+      }
+    }
+    return get(Header.ACCOUNTS);
   }
 
   /**
