@@ -28,7 +28,7 @@ class ConfigFactory(
   /**
    * Create the extension configuration given the [configClass], [extensionConfigId] and [pluginId].
    */
-  fun createExtensionConfig(configClass: Class<*>, extensionConfigId: String, pluginId: String?): Any? {
+  fun createExtensionConfig(configClass: Class<*>, pluginId: String?, extensionConfigId: String): Any? {
     val coordinates = if (pluginId != null) {
       ExtensionConfigCoordinates(pluginId, extensionConfigId)
     } else {
@@ -40,7 +40,7 @@ class ConfigFactory(
   /**
    * Create the plugin configuration given the [configClass] and [pluginId].
    */
-  fun createPluginConfig(configClass: Class<*>, pluginConfigId: String, pluginId: String?): Any? {
+  fun createPluginConfig(configClass: Class<*>, pluginId: String?, pluginConfigId: String): Any? {
     if (pluginId != null) {
       return resolveConfiguration(PluginConfigCoordinates(pluginId, pluginConfigId), configClass)
     }

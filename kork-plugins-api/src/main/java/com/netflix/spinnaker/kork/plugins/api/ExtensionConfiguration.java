@@ -23,31 +23,33 @@ import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
+import javax.annotation.Nonnull;
 
 /**
- * Denotes that a class provides plugin configuration. Classes annotated with @PluginConfiguration
- * can be injected at the PluginWrapper or the Extension POint
+ * Denotes that a class provides extension configuration. For example:
+ *
+ * <pre>{@code
+ * &#064;ExtensionConfiguration("my-extension")
+ * public class MyExtensionConfiguration {
+ *   private String someProperty;
+ * }
+ * }</pre>
  */
 @Alpha
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.TYPE)
 @Documented
-public @interface PluginConfiguration {
+@Deprecated
+public @interface ExtensionConfiguration {
 
   /**
-   * The property value of the configuration.
+   * The property value of the extension configuration. For example, if set to `netflix.orca-stage`
+   * the corresponding config coordinates would be:
    *
-   * <p>If the configuration is for an extension point and the config is `stage-extension`, the
-   * corresponding config coordinates would be:
-   *
-   * <p>`spinnaker.extensibility.plugins.pluginId.extensions.stage-extension.config`
-   *
-   * <p>If the configuration is for an plugin the config is `http-client`, the corresponding config
-   * coordinates would be:
-   *
-   * <p>`spinnaker.extensibility.plugins.pluginId.http-client.config`
+   * <p>`spinnaker.extensibility.plugins.pluginId.extensions.netflix.orca-stage.config`
    *
    * @return
    */
-  String value() default "";
+  @Nonnull
+  String value();
 }

@@ -16,6 +16,7 @@
 package com.netflix.spinnaker.kork.plugins
 
 import com.netflix.spinnaker.kork.exceptions.IntegrationException
+import com.netflix.spinnaker.kork.plugins.api.ExtensionConfiguration
 import com.netflix.spinnaker.kork.plugins.api.PluginConfiguration
 import com.netflix.spinnaker.kork.plugins.api.PluginSdks
 import com.netflix.spinnaker.kork.plugins.config.ConfigFactory
@@ -86,21 +87,28 @@ internal fun Class<*>.createWithConstructor(
       paramType.isAnnotationPresent(PluginConfiguration::class.java) && classKind == ClassKind.EXTENSION -> {
         configFactory.createExtensionConfig(
           paramType,
-          paramType.getAnnotation(PluginConfiguration::class.java).value,
-          pluginWrapper?.descriptor?.pluginId
+          pluginWrapper?.descriptor?.pluginId,
+          paramType.getAnnotation(PluginConfiguration::class.java).value
         )
       }
       paramType.isAnnotationPresent(PluginConfiguration::class.java) && classKind == ClassKind.PLUGIN -> {
         configFactory.createPluginConfig(
           paramType,
-          paramType.getAnnotation(PluginConfiguration::class.java).value,
-          pluginWrapper?.descriptor?.pluginId
+          pluginWrapper?.descriptor?.pluginId,
+          paramType.getAnnotation(PluginConfiguration::class.java).value
+        )
+      }
+      paramType.isAnnotationPresent(ExtensionConfiguration::class.java) -> {
+        configFactory.createExtensionConfig(
+          paramType,
+          pluginWrapper?.descriptor?.pluginId,
+          paramType.getAnnotation(ExtensionConfiguration::class.java).value
         )
       }
       else -> {
         throw IntegrationException("'$canonicalName' has unsupported " +
           "constructor argument type '${paramType.canonicalName}'.  Expected argument classes " +
-          "should be annotated with @ExtensionConfiguration, @PluginConfiguration, or implement PluginSdks.")
+          "should be annotated with @PluginConfiguration, or implement PluginSdks.")
       }
     }
   }
