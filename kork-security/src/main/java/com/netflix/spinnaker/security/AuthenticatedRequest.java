@@ -29,6 +29,7 @@ import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.util.CollectionUtils;
 
@@ -133,20 +134,115 @@ public class AuthenticatedRequest {
     }
   }
 
+  /**
+   * Prepare an authentication context to run as the supplied user wrapping the supplied action
+   *
+   * <p>The original authentication context is restored after the action completes.
+   *
+   * @param username the username to run as
+   * @param closure the action to run as the user
+   * @param <V> the return type of the supplied action
+   * @return an action that will run the supplied action as the supplied user
+   */
+  public static <V> Callable<V> runAs(String username, Callable<V> closure) {
+    return runAs(username, Collections.emptySet(), closure);
+  }
+
+  /**
+   * Prepare an authentication context to run as the supplied user wrapping the supplied action
+   *
+   * @param username the username to run as
+   * @param restoreOriginalContext whether the original authentication context should be restored
+   *     after the action completes
+   * @param closure the action to run as the user
+   * @param <V> the return type of the supplied action
+   * @return an action that will run the supplied action as the supplied user
+   */
+  public static <V> Callable<V> runAs(
+      String username, boolean restoreOriginalContext, Callable<V> closure) {
+    return runAs(username, Collections.emptySet(), restoreOriginalContext, closure);
+  }
+
+  /**
+   * Prepare an authentication context to run as the supplied user wrapping the supplied action
+   *
+   * <p>The original authentication context is restored after the action completes.
+   *
+   * @param username the username to run as
+   * @param allowedAccounts the allowed accounts for the user as an authorization fallback
+   * @param closure the action to run as the user
+   * @param <V> the return type of the supplied action
+   * @return an action that will run the supplied action as the supplied user
+   */
+  public static <V> Callable<V> runAs(
+      String username, Collection<String> allowedAccounts, Callable<V> closure) {
+    return runAs(username, allowedAccounts, true, closure);
+  }
+
+  /**
+   * Prepare an authentication context to run as the supplied user wrapping the supplied action
+   *
+   * @param username the username to run as
+   * @param allowedAccounts the allowed accounts for the user as an authorization fallback
+   * @param restoreOriginalContext whether the original authentication context should be restored
+   *     after the action completes
+   * @param closure the action to run as the user
+   * @param <V> the return type of the supplied action
+   * @return an action that will run the supplied action as the supplied user
+   */
+  public static <V> Callable<V> runAs(
+      String username,
+      Collection<String> allowedAccounts,
+      boolean restoreOriginalContext,
+      Callable<V> closure) {
+    final UserDetails user =
+        User.withUsername(username)
+            .password("")
+            .authorities(AllowedAccountsAuthorities.buildAllowedAccounts(allowedAccounts))
+            .build();
+    return wrapCallableForPrincipal(closure, restoreOriginalContext, user);
+  }
+
+  /**
+   * Propagates the current users authentication context when for the supplied action
+   *
+   * <p>The original authentication context is restored after the action completes.
+   *
+   * @param closure the action to run
+   * @param <V> the return type of the supplied action
+   * @return an action that will run propagating the current users authentication context
+   */
   public static <V> Callable<V> propagate(Callable<V> closure) {
-    return propagate(closure, true, principal());
+    return wrapCallableForPrincipal(closure, true, principal());
   }
 
+  /**
+   * Propagates the current users authentication context when for the supplied action
+   *
+   * @param closure the action to run
+   * @param restoreOriginalContext whether the original authentication context should be restored
+   *     after the action completes
+   * @param <V> the return type of the supplied action
+   * @return an action that will run propagating the current users authentication context
+   */
   public static <V> Callable<V> propagate(Callable<V> closure, boolean restoreOriginalContext) {
-    return propagate(closure, restoreOriginalContext, principal());
+    return wrapCallableForPrincipal(closure, restoreOriginalContext, principal());
   }
 
+  /** @deprecated use runAs instead to switch to a different user */
+  @Deprecated
   public static <V> Callable<V> propagate(Callable<V> closure, Object principal) {
-    return propagate(closure, true, principal);
+    return wrapCallableForPrincipal(closure, true, principal);
   }
 
-  /** Ensure an appropriate MDC context is available when {@code closure} is executed. */
+  /** @deprecated use runAs instead to switch to a different user */
+  @Deprecated
   public static <V> Callable<V> propagate(
+      Callable<V> closure, boolean restoreOriginalContext, Object principal) {
+    return wrapCallableForPrincipal(closure, restoreOriginalContext, principal);
+  }
+
+  private static <V> Callable<V> wrapCallableForPrincipal(
       Callable<V> closure, boolean restoreOriginalContext, Object principal) {
     String spinnakerUser = getSpinnakerUser(principal).orElse(null);
     String userOrigin = getSpinnakerUserOrigin().orElse(null);
@@ -157,7 +253,7 @@ public class AuthenticatedRequest {
 
     return () -> {
       // Deal with (set/reset) known X-SPINNAKER headers, all others will just stick around
-      Map originalMdc = MDC.getCopyOfContextMap();
+      Map<String, String> originalMdc = MDC.getCopyOfContextMap();
 
       try {
         setOrRemoveMdc(Header.USER.getHeader(), spinnakerUser);

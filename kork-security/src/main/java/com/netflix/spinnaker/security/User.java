@@ -39,7 +39,8 @@ import org.springframework.util.StringUtils;
  * interacting.
  *
  * @deprecated use org.springframework.security.core.userdetails.User and AllowedAccountsAuthorities
- *     to encode allowed accounts callers should program against UserDetails interface
+ *     to encode allowed accounts callers should program against UserDetails interface use runAs on
+ *     AuthenticatedRequest to switch users rather than supplying a principal directly.
  */
 @Deprecated
 public class User implements UserDetails {
