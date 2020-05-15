@@ -108,7 +108,7 @@ internal fun Class<*>.createWithConstructor(
       else -> {
         throw IntegrationException("'$canonicalName' has unsupported " +
           "constructor argument type '${paramType.canonicalName}'.  Expected argument classes " +
-          "should be annotated with @PluginConfiguration, or implement PluginSdks.")
+          "should be annotated with @PluginConfiguration or implement PluginSdks.")
       }
     }
   }
