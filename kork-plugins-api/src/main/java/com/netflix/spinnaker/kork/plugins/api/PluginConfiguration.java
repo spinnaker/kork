@@ -25,7 +25,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Denotes that a class provides plugin configuration. Classes annotated with @PluginConfiguration
+ * Denotes that a class provides plugin configuration. Classes annotated with [PluginConfiguration]
  * can be injected via the Plugin constructor or the Extension Point constructor.
  */
 @Alpha
