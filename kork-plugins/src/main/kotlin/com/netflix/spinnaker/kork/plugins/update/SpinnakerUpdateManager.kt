@@ -91,15 +91,16 @@ class SpinnakerUpdateManager(
 
         log.debug("Downloading plugin '{}' with version '{}'", release.pluginId, release.props.version)
         val tmpPath = downloadPluginRelease(release.pluginId, release.props.version)
-        val downloadedPluginPath = pluginManager.pluginsRoot.write(tmpPath)
+        if (tmpPath != null) {
+          val downloadedPluginPath = pluginManager.pluginsRoot.write(tmpPath)
+          log.debug("Downloaded plugin '{}'", release.pluginId)
+          applicationEventPublisher.publishEvent(
+            PluginDownloaded(this, PluginDownloaded.Status.SUCCEEDED, release.pluginId, release.props.version)
+          )
 
-        log.debug("Downloaded plugin '{}'", release.pluginId)
-        applicationEventPublisher.publishEvent(
-          PluginDownloaded(this, PluginDownloaded.Status.SUCCEEDED, release.pluginId, release.props.version)
-        )
-
-        downloadedPlugins.add(downloadedPluginPath)
-    }
+          downloadedPlugins.add(downloadedPluginPath)
+        }
+      }
 
     return downloadedPlugins
   }
@@ -150,8 +151,13 @@ class SpinnakerUpdateManager(
    *  service name is different than the service that executes this code.  Probably another reason
    *  to consider moving away from [UpdateManager].
    */
-  fun downloadPluginRelease(pluginId: String, version: String): Path {
-    return downloadPlugin(pluginId, version)
+  fun downloadPluginRelease(pluginId: String, version: String): Path? {
+    return try {
+      downloadPlugin(pluginId, version)
+    } catch (e: PluginRuntimeException) {
+      log.warn("Unable to download plugin release '{}'", pluginId)
+      null
+    }
   }
 
   /**

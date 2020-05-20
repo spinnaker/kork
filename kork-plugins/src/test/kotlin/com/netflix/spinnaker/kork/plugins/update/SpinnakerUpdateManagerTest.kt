@@ -118,6 +118,22 @@ class SpinnakerUpdateManagerTest : JUnit5Minutests {
       expectThat(subject.getLastPluginRelease(plugin.id, "orca")).isA<PluginInfo.PluginRelease>()
       expectThat(subject.getLastPluginRelease(plugin.id, "deck")).isNull()
     }
+
+    test("Plugins loaded, download new release that has an invalid path") {
+      addToLocalPlugins(createPlugin(paths.repository, "0.0.1"), paths).id
+
+      val plugin = createPlugin(paths.repository, "0.0.2", true)
+      changeRepository(subject, paths.repository, listOf(plugin))
+
+      pluginManager.loadPlugins()
+      expectThat(pluginManager.plugins).hasSize(1)
+
+      val releases = mutableSetOf(PluginInfoRelease(plugin.id, plugin.getReleases().first()))
+      subject.downloadPluginReleases(releases)
+
+      // Previously loaded plugin deleted - we do not load plugin because the URL is invalid
+      expectThat(pluginManager.plugins).hasSize(0)
+    }
   }
 
   private class Fixture {
@@ -158,6 +174,7 @@ class SpinnakerUpdateManagerTest : JUnit5Minutests {
     fun createPlugin(
       repository: Path,
       pluginVersion: String = "0.0.1",
+      invalidReleasePath: Boolean = false,
       className: String = "Generated"
     ): SpinnakerPluginInfo {
       val generatedPluginPath = Files.createTempDirectory("generated-plugin")
@@ -200,7 +217,7 @@ class SpinnakerUpdateManagerTest : JUnit5Minutests {
             requires = "orca>=0.0.0"
             version = pluginBuilder.version
             date = Date.from(Instant.now())
-            url = releasePath.toUri().toURL().toString()
+            url = if (!invalidReleasePath) releasePath.toUri().toURL().toString() else "F:/invalid/path"
           }
         )
       }

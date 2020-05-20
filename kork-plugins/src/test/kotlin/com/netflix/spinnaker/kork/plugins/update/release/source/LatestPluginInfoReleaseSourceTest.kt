@@ -62,11 +62,38 @@ class LatestPluginInfoReleaseSourceTest : JUnit5Minutests {
         .get { releases.find { it.pluginId == plugin1.id } }.isEqualTo(PluginInfoRelease(plugin1.id, plugin1ExpectedRelease))
         .get { releases.find { it.pluginId == plugin2.id } }.isEqualTo(PluginInfoRelease(plugin2.id, plugin2ExpectedRelease))
     }
+
+    test("Gets a release for a plugin when we have the service name") {
+      val expectedRelease = plugin1.getReleases().first()
+      every { updateManager.getLastPluginRelease(plugin1.id, any()) } returns expectedRelease
+
+      val releases = subjectWithServiceName.getReleases(pluginInfoList.subList(0, 1))
+
+      expectThat(releases).isA<Set<PluginInfoRelease>>()
+        .get { releases.size }.isEqualTo(1)
+        .get { releases.first() }.isEqualTo(PluginInfoRelease(plugin1.id, expectedRelease))
+    }
+
+    test("Gets releases for multiple plugins when we have the service name") {
+      val plugin1ExpectedRelease = plugin1.getReleases().first()
+      val plugin2ExpectedRelease = plugin2.getReleases().first()
+      every { updateManager.getLastPluginRelease(plugin1.id, any()) } returns plugin1ExpectedRelease
+      every { updateManager.getLastPluginRelease(plugin2.id, any()) } returns plugin2ExpectedRelease
+      every { updateManager.getLastPluginRelease(pluginNoReleases.id, any()) } returns null
+
+      val releases = subjectWithServiceName.getReleases(pluginInfoList)
+
+      expectThat(releases).isA<Set<PluginInfoRelease>>()
+        .get { releases.size }.isEqualTo(2)
+        .get { releases.find { it.pluginId == plugin1.id } }.isEqualTo(PluginInfoRelease(plugin1.id, plugin1ExpectedRelease))
+        .get { releases.find { it.pluginId == plugin2.id } }.isEqualTo(PluginInfoRelease(plugin2.id, plugin2ExpectedRelease))
+    }
   }
 
   private class Fixture {
     val pluginInfoList = mutableListOf(plugin1, plugin2, pluginNoReleases)
     val updateManager: SpinnakerUpdateManager = mockk(relaxed = true)
     val subject = LatestPluginInfoReleaseSource(updateManager)
+    val subjectWithServiceName = LatestPluginInfoReleaseSource(updateManager, "Deck")
   }
 }
