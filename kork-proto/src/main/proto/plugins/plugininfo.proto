@@ -1,0 +1,28 @@
+syntax = "proto3";
+
+package io.spinnaker.proto.plugins;
+
+import "google/protobuf/wrappers.proto";
+import "google/protobuf/timestamp.proto";
+
+option java_package = "com.netflix.spinnaker.kork.proto.plugins";
+option java_outer_classname = "SpinnakerProto";
+option java_multiple_files = true;
+
+message PluginInfo {
+  string id = 1;
+  string name = 2;
+  string description = 3;
+  string provider = 4;
+  string projectUrl = 5;
+  repeated PluginRelease releases = 6;
+}
+
+message PluginRelease {
+  string version = 1;
+  google.protobuf.Timestamp date = 2;
+  string requires = 3;
+  string url = 4;
+  string sha512sum = 5;
+  bool preferred = 6;
+}

@@ -26,6 +26,7 @@ if (spinnakerGradleVersion.endsWith('-SNAPSHOT')) {
 include(
   "spinnaker-dependencies",
   "kork-annotations",
+  "kork-api",
   "kork-artifacts",
   "kork-aws",
   "kork-bom",

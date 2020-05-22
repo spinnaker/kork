@@ -7,7 +7,9 @@ dependencies {
   implementation project(":kork-exceptions")
 
   api project(":kork-annotations")
+  api project(":kork-api")
   api project(":kork-exceptions")
+
   api "org.springframework.boot:spring-boot-autoconfigure"
   api "org.springframework.boot:spring-boot-starter-aop"
   api "org.springframework.boot:spring-boot-starter-actuator"
