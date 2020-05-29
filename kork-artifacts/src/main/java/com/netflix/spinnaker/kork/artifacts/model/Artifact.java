@@ -20,12 +20,12 @@ import com.fasterxml.jackson.annotation.JsonAnySetter;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
+import com.netflix.spinnaker.kork.annotations.MethodsReturnNonnullByDefault;
 import com.netflix.spinnaker.kork.annotations.NullableByDefault;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import javax.annotation.Nonnull;
-import javax.annotation.ParametersAreNullableByDefault;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -49,7 +49,6 @@ public final class Artifact {
   private String uuid;
 
   @Builder(toBuilder = true)
-  @ParametersAreNullableByDefault
   private Artifact(
       String type,
       boolean customKind,
@@ -134,6 +133,7 @@ public final class Artifact {
 
   @JsonIgnoreProperties("kind")
   @JsonPOJOBuilder(withPrefix = "")
+  @MethodsReturnNonnullByDefault
   public static class ArtifactBuilder {
     @Nonnull private Map<String, Object> metadata = new HashMap<>();
 
