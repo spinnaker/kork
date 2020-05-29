@@ -144,14 +144,11 @@ public class Artifact {
   @JsonIgnoreProperties("kind")
   @JsonPOJOBuilder(withPrefix = "")
   public static class ArtifactBuilder {
-    private Map<String, Object> metadata;
+    private Map<String, Object> metadata = new HashMap<>();
 
     // Add extra, unknown data to the metadata map:
     @JsonAnySetter
     public void putMetadata(String key, Object value) {
-      if (metadata == null) {
-        metadata = new HashMap<>();
-      }
       metadata.put(key, value);
     }
   }
