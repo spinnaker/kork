@@ -26,7 +26,6 @@ import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNullableByDefault;
 import lombok.Builder;
 import lombok.Value;
-import org.apache.commons.lang3.StringUtils;
 
 @JsonDeserialize(builder = ExpectedArtifact.ExpectedArtifactBuilder.class)
 @NonnullByDefault
@@ -100,8 +99,8 @@ public final class ExpectedArtifact {
     return true;
   }
 
-  private boolean matches(@Nullable String us, @Nullable String other) {
-    return StringUtils.isEmpty(us) || (other != null && patternMatches(us, other));
+  private boolean matches(String us, String other) {
+    return us.isEmpty() || patternMatches(us, other);
   }
 
   private boolean patternMatches(String us, String other) {
