@@ -36,7 +36,7 @@ import lombok.ToString;
 @EqualsAndHashCode
 @NonnullByDefault
 @JsonDeserialize(builder = Artifact.ArtifactBuilder.class)
-public class Artifact {
+public final class Artifact {
   private String type;
   private boolean customKind;
   private String name;
