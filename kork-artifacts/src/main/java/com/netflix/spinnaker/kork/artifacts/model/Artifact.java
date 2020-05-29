@@ -63,17 +63,6 @@ public class Artifact {
   @JsonProperty("uuid")
   private String uuid;
 
-  // This function existed to support deserialization; now that deserialization uses the inner
-  // builder class, we no longer need to support it on the outer class.  This function will be
-  // removed in a future release of kork.
-  @Deprecated
-  public void putMetadata(String key, Object value) {
-    if (metadata == null) {
-      metadata = new HashMap<>();
-    }
-    metadata.put(key, value);
-  }
-
   @JsonIgnoreProperties("kind")
   @JsonPOJOBuilder(withPrefix = "")
   public static class ArtifactBuilder {
