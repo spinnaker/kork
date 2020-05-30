@@ -139,8 +139,9 @@ public final class Artifact {
 
     // Add extra, unknown data to the metadata map:
     @JsonAnySetter
-    public void putMetadata(String key, Object value) {
+    public ArtifactBuilder putMetadata(String key, Object value) {
       metadata.put(key, value);
+      return this;
     }
   }
 }
