@@ -20,8 +20,8 @@ import com.fasterxml.jackson.annotation.JsonAnySetter;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
+import com.netflix.spinnaker.kork.annotations.FieldsAreNullableByDefault;
 import com.netflix.spinnaker.kork.annotations.MethodsReturnNonnullByDefault;
-import com.netflix.spinnaker.kork.annotations.NullableByDefault;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -34,7 +34,7 @@ import lombok.ToString;
 @Getter
 @ToString
 @EqualsAndHashCode
-@NullableByDefault
+@FieldsAreNullableByDefault
 @JsonDeserialize(builder = Artifact.ArtifactBuilder.class)
 public final class Artifact {
   private String type;
