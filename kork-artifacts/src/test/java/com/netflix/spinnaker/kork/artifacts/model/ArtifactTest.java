@@ -27,10 +27,7 @@ import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
 import org.assertj.core.api.AssertionsForClassTypes;
 import org.junit.jupiter.api.Test;
-import org.junit.platform.runner.JUnitPlatform;
-import org.junit.runner.RunWith;
 
-@RunWith(JUnitPlatform.class)
 final class ArtifactTest {
   private static final ObjectMapper objectMapper = new ObjectMapper();
 
