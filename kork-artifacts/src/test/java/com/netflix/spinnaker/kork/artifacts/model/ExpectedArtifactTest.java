@@ -23,8 +23,13 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import java.io.IOException;
+import java.util.function.Function;
+import java.util.stream.Stream;
 import org.assertj.core.api.AssertionsForClassTypes;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.platform.runner.JUnitPlatform;
 import org.junit.runner.RunWith;
 
@@ -93,5 +98,75 @@ final class ExpectedArtifactTest {
         .matchArtifact(Artifact.builder().type("gcs/object").build())
         .boundArtifact(Artifact.builder().type("gcs/object").name("my-artifact").build())
         .build();
+  }
+
+  @ParameterizedTest
+  @MethodSource("regexTestCases")
+  void testRegexMatching(String expectedName, String incomingName, boolean result) {
+    ExpectedArtifact expectedArtifact =
+        ExpectedArtifact.builder()
+            .id("test")
+            .matchArtifact(Artifact.builder().name(expectedName).build())
+            .build();
+    Artifact incomingArtifact = Artifact.builder().name(incomingName).build();
+    assertThat(expectedArtifact.matches(incomingArtifact)).isEqualTo(result);
+  }
+
+  private static Stream<Arguments> regexTestCases() {
+    return Stream.of(
+        Arguments.of("abc", "abcde", false),
+        Arguments.of("abc.*", "abcde", true),
+        Arguments.of("bc.*", "abcde", false),
+        Arguments.of(".*bc.*", "abcde", true),
+        Arguments.of("abcde$", "abcde", true),
+        Arguments.of("^abcde$", "abcde", true),
+        Arguments.of("abc", null, false),
+        Arguments.of("abc", "", false),
+        Arguments.of("", "abcde", true),
+        Arguments.of(null, "abcde", true));
+  }
+
+  @ParameterizedTest
+  @MethodSource("matchConstructors")
+  void testRequiredMatches(Function<String, Artifact> supplier) {
+    String matchString = "abcd";
+    String noMatchString = "zzz";
+
+    ExpectedArtifact expectedArtifact =
+        ExpectedArtifact.builder().id("test").matchArtifact(supplier.apply(matchString)).build();
+
+    assertThat(expectedArtifact.matches(supplier.apply(matchString))).isTrue();
+    assertThat(expectedArtifact.matches(supplier.apply(noMatchString))).isFalse();
+  }
+
+  private static Stream<Arguments> matchConstructors() {
+    return Stream.<Function<String, Artifact>>of(
+            s -> Artifact.builder().type(s).build(),
+            s -> Artifact.builder().name(s).build(),
+            s -> Artifact.builder().version(s).build(),
+            s -> Artifact.builder().location(s).build(),
+            s -> Artifact.builder().reference(s).build())
+        .map(Arguments::of);
+  }
+
+  @ParameterizedTest
+  @MethodSource("noMatchConstructors")
+  void testAllowedNonMatches(Function<String, Artifact> supplier) {
+    String matchString = "abcd";
+    String noMatchString = "zzz";
+
+    ExpectedArtifact expectedArtifact =
+        ExpectedArtifact.builder().id("test").matchArtifact(supplier.apply(matchString)).build();
+
+    assertThat(expectedArtifact.matches(supplier.apply(matchString))).isTrue();
+    assertThat(expectedArtifact.matches(supplier.apply(noMatchString))).isTrue();
+  }
+
+  private static Stream<Arguments> noMatchConstructors() {
+    return Stream.<Function<String, Artifact>>of(
+            s -> Artifact.builder().provenance(s).build(),
+            s -> Artifact.builder().uuid(s).build(),
+            s -> Artifact.builder().artifactAccount(s).build())
+        .map(Arguments::of);
   }
 }
