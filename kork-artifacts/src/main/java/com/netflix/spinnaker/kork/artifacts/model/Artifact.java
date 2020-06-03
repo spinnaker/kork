@@ -18,74 +18,150 @@ package com.netflix.spinnaker.kork.artifacts.model;
 
 import com.fasterxml.jackson.annotation.JsonAnySetter;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
+import com.netflix.spinnaker.kork.annotations.FieldsAreNullableByDefault;
+import com.netflix.spinnaker.kork.annotations.MethodsReturnNonnullByDefault;
 import java.util.HashMap;
 import java.util.Map;
-import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
+import java.util.Optional;
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import lombok.Builder;
-import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.ToString;
 
-@AllArgsConstructor(access = AccessLevel.PRIVATE)
-@Data
-@Builder(toBuilder = true)
+@Getter
+@ToString
+@EqualsAndHashCode
+@FieldsAreNullableByDefault
 @JsonDeserialize(builder = Artifact.ArtifactBuilder.class)
-public class Artifact {
-  @JsonProperty("type")
+public final class Artifact {
   private String type;
-
-  @JsonProperty("customKind")
   private boolean customKind;
-
-  @JsonProperty("name")
   private String name;
-
-  @JsonProperty("version")
   private String version;
-
-  @JsonProperty("location")
   private String location;
-
-  @JsonProperty("reference")
   private String reference;
-
-  @JsonProperty("metadata")
-  private Map<String, Object> metadata;
-
-  @JsonProperty("artifactAccount")
+  @Nonnull private Map<String, Object> metadata;
   private String artifactAccount;
-
-  @JsonProperty("provenance")
   private String provenance;
-
-  @JsonProperty("uuid")
   private String uuid;
 
-  // This function existed to support deserialization; now that deserialization uses the inner
-  // builder class, we no longer need to support it on the outer class.  This function will be
-  // removed in a future release of kork.
+  @Builder(toBuilder = true)
+  private Artifact(
+      String type,
+      boolean customKind,
+      String name,
+      String version,
+      String location,
+      String reference,
+      Map<String, Object> metadata,
+      String artifactAccount,
+      String provenance,
+      String uuid) {
+    this.type = type;
+    this.customKind = customKind;
+    this.name = name;
+    this.version = version;
+    this.location = location;
+    this.reference = reference;
+    this.metadata = Optional.ofNullable(metadata).orElseGet(HashMap::new);
+    this.artifactAccount = artifactAccount;
+    this.provenance = provenance;
+    this.uuid = uuid;
+  }
+
+  // All setters for this class are deprecated. In general, artifacts are passed around the pipeline
+  // context and are liberally serialized and deserialized, which makes mutating them fraught with
+  // peril (because you might or might not actually be operating on a copy of the artifact you
+  // actually want to mutate). In order to remove this cause of subtle bugs, this class will soon
+  // become immutable and these setters will be removed.
+
+  // The encouraged pattern for adding a field to an artifact is:
+  // Artifact newArtifact = artifact.toBuilder().artifactAccount("my-account").build()
+
   @Deprecated
-  public void putMetadata(String key, Object value) {
-    if (metadata == null) {
-      metadata = new HashMap<>();
-    }
-    metadata.put(key, value);
+  public void setType(String type) {
+    this.type = type;
+  }
+
+  @Deprecated
+  public void setCustomKind(boolean customKind) {
+    this.customKind = customKind;
+  }
+
+  @Deprecated
+  public void setName(String name) {
+    this.name = name;
+  }
+
+  @Deprecated
+  public void setVersion(String version) {
+    this.version = version;
+  }
+
+  @Deprecated
+  public void setLocation(String location) {
+    this.location = location;
+  }
+
+  @Deprecated
+  public void setReference(String reference) {
+    this.reference = reference;
+  }
+
+  @Deprecated
+  public void setMetadata(Map<String, Object> metadata) {
+    this.metadata = Optional.ofNullable(metadata).orElseGet(HashMap::new);
+  }
+
+  /**
+   * This function is deprecated in favor of using {@link Artifact#getMetadata(String)} to get the
+   * particular key of interest.
+   *
+   * <p>The reason is that we would like the metadata to be (at least shallowly) immutable, and it
+   * is much easier to safely enforce that by avoiding giving callers access to the raw map in the
+   * first place.
+   */
+  @Deprecated
+  @Nonnull
+  public Map<String, Object> getMetadata() {
+    return metadata;
+  }
+
+  @Nullable
+  public Object getMetadata(String key) {
+    return metadata.get(key);
+  }
+
+  @Deprecated
+  public void setArtifactAccount(String artifactAccount) {
+    this.artifactAccount = artifactAccount;
+  }
+
+  @Deprecated
+  public void setProvenance(String provenance) {
+    this.provenance = provenance;
+  }
+
+  @Deprecated
+  public void setUuid(String uuid) {
+    this.uuid = uuid;
   }
 
   @JsonIgnoreProperties("kind")
   @JsonPOJOBuilder(withPrefix = "")
+  @MethodsReturnNonnullByDefault
   public static class ArtifactBuilder {
-    private Map<String, Object> metadata;
+    @Nonnull private Map<String, Object> metadata = new HashMap<>();
 
     // Add extra, unknown data to the metadata map:
     @JsonAnySetter
-    public void putMetadata(String key, Object value) {
-      if (metadata == null) {
-        metadata = new HashMap<>();
-      }
+    public ArtifactBuilder putMetadata(String key, Object value) {
       metadata.put(key, value);
+      return this;
     }
   }
 }
