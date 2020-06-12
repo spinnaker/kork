@@ -19,6 +19,7 @@ package com.netflix.spinnaker.kork.artifacts.model;
 import com.fasterxml.jackson.annotation.JsonAnySetter;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonNaming;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 import com.netflix.spinnaker.kork.annotations.FieldsAreNullableByDefault;
 import com.netflix.spinnaker.kork.annotations.MethodsReturnNonnullByDefault;
@@ -37,6 +38,8 @@ import lombok.ToString;
 @EqualsAndHashCode
 @FieldsAreNullableByDefault
 @JsonDeserialize(builder = Artifact.ArtifactBuilder.class)
+// Use camelCase regardless of the ObjectMapper configuration. (Detailed comment in ArtifactTest.)
+@JsonNaming
 public final class Artifact {
   private String type;
   private boolean customKind;
@@ -154,8 +157,14 @@ public final class Artifact {
   @JsonIgnoreProperties("kind")
   @JsonPOJOBuilder(withPrefix = "")
   @MethodsReturnNonnullByDefault
+  @JsonNaming
   public static class ArtifactBuilder {
     @Nonnull private Map<String, Object> metadata = new HashMap<>();
+
+    public Artifact.ArtifactBuilder metadata(@Nullable Map<String, Object> metadata) {
+      this.metadata = Optional.ofNullable(metadata).orElseGet(HashMap::new);
+      return this;
+    }
 
     // Add extra, unknown data to the metadata map:
     @JsonAnySetter
