@@ -15,9 +15,12 @@
  */
 package com.netflix.spinnaker.kork.plugins.api.servicesdk;
 
+import com.netflix.spinnaker.kork.annotations.Beta;
+
 /**
  * Marker interface for service-specific SDKs.
  *
  * <p>A service may expose additional SDKs that are specific to itself.
  */
+@Beta
 public interface ServiceSdk {}

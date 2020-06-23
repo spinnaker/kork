@@ -18,6 +18,7 @@ package com.netflix.spinnaker.kork.plugins.sdk
 import com.netflix.spinnaker.kork.exceptions.IntegrationException
 import com.netflix.spinnaker.kork.exceptions.SystemException
 import com.netflix.spinnaker.kork.plugins.api.PluginSdks
+import com.netflix.spinnaker.kork.plugins.api.environment.Environment
 import com.netflix.spinnaker.kork.plugins.api.httpclient.HttpClientRegistry
 import com.netflix.spinnaker.kork.plugins.api.serde.SerdeService
 import com.netflix.spinnaker.kork.plugins.api.servicesdk.ServiceSdk
@@ -29,6 +30,9 @@ import com.netflix.spinnaker.kork.plugins.api.yaml.YamlResourceLoader
 class PluginSdksImpl(
   private val sdkServices: List<Any>
 ) : PluginSdks {
+
+  override fun environment(): Environment =
+    service(Environment::class.java)
 
   override fun http(): HttpClientRegistry =
     service(HttpClientRegistry::class.java)

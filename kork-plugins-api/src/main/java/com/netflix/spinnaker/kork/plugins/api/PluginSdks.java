@@ -16,6 +16,7 @@
 package com.netflix.spinnaker.kork.plugins.api;
 
 import com.netflix.spinnaker.kork.annotations.Beta;
+import com.netflix.spinnaker.kork.plugins.api.environment.Environment;
 import com.netflix.spinnaker.kork.plugins.api.httpclient.HttpClient;
 import com.netflix.spinnaker.kork.plugins.api.httpclient.HttpClientRegistry;
 import com.netflix.spinnaker.kork.plugins.api.serde.SerdeService;
@@ -40,7 +41,13 @@ import javax.annotation.Nonnull;
  * }
  * }</pre>
  */
+@Beta
 public interface PluginSdks {
+
+  /** Get the plugin {@link Environment}. */
+  @Beta
+  @Nonnull
+  Environment environment();
 
   /** Get the {@link HttpClientRegistry}, containing all configured {@link HttpClient}s. */
   @Beta

@@ -15,18 +15,19 @@
  *
  */
 
-package com.netflix.spinnaker.kork.plugins.api.internal;
+package com.netflix.spinnaker.config;
 
-import com.netflix.spinnaker.kork.annotations.Beta;
-import java.lang.reflect.InvocationHandler;
+import com.netflix.spinnaker.kork.plugins.sdk.SdkFactory;
+import com.netflix.spinnaker.kork.plugins.sdk.environment.EnvironmentSdkFactory;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.core.env.Environment;
 
-/**
- * When proxying an extension class, implement this interface to provide a mechanism to obtain the
- * underlying proxied class.
- */
-@Beta
-public interface ExtensionInvocationHandler extends InvocationHandler {
+@Configuration
+public class EnvironmentSdkConfiguration {
 
-  /** Get the proxy target class. */
-  Class<? extends SpinnakerExtensionPoint> getTargetClass();
+  @Bean
+  public static SdkFactory environment(Environment environment) {
+    return new EnvironmentSdkFactory(environment);
+  }
 }

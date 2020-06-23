@@ -17,9 +17,11 @@
 
 package com.netflix.spinnaker.kork.plugins.api.internal;
 
+import com.netflix.spinnaker.kork.annotations.Beta;
 import org.pf4j.ExtensionPoint;
 
 /** Designates a Spinnaker interface or abstract class as a PF4J {@link ExtensionPoint}. */
+@Beta
 public interface SpinnakerExtensionPoint extends ExtensionPoint {
 
   /**
