@@ -17,6 +17,8 @@
 package com.netflix.spinnaker.kork.plugins
 
 import com.github.zafarkhaja.semver.Version
+import com.netflix.spinnaker.kork.version.ServiceVersion.DEFAULT_VERSION
+import com.netflix.spinnaker.kork.version.ServiceVersion.UNKNOWN_VERSION
 import org.pf4j.VersionManager
 import org.pf4j.util.StringUtils
 import org.slf4j.LoggerFactory
@@ -32,6 +34,13 @@ class SpinnakerServiceVersionManager(
   private val log by lazy { LoggerFactory.getLogger(javaClass) }
 
   override fun checkVersionConstraint(version: String, requires: String): Boolean {
+    val serviceVersion = if (version == UNKNOWN_VERSION) {
+      // If the service version is unknown, the version checks below will fail. Rather than exploding
+      // because metadata is incorrect, set the version to the default: 0.0.0
+      DEFAULT_VERSION
+    } else {
+      version
+    }
 
     if (requires.isEmpty()) {
       log.warn("Loading plugin with empty Plugin-Requires attribute!")
@@ -45,7 +54,7 @@ class SpinnakerServiceVersionManager(
 
     if (requirements != null) {
       val constraint = requirements.operator.symbol + requirements.version
-      return StringUtils.isNullOrEmpty(constraint) || Version.valueOf(version).satisfies(constraint)
+      return StringUtils.isNullOrEmpty(constraint) || Version.valueOf(serviceVersion).satisfies(constraint)
     }
 
     return false
