@@ -41,16 +41,16 @@ import lombok.ToString;
 // Use camelCase regardless of the ObjectMapper configuration. (Detailed comment in ArtifactTest.)
 @JsonNaming
 public final class Artifact {
-  private String type;
-  private boolean customKind;
-  private String name;
-  private String version;
-  private String location;
-  private String reference;
-  @Nonnull private Map<String, Object> metadata;
-  private String artifactAccount;
-  private String provenance;
-  private String uuid;
+  private final String type;
+  private final boolean customKind;
+  private final String name;
+  private final String version;
+  private final String location;
+  private final String reference;
+  @Nonnull private final Map<String, Object> metadata;
+  private final String artifactAccount;
+  private final String provenance;
+  private final String uuid;
 
   @Builder(toBuilder = true)
   private Artifact(
