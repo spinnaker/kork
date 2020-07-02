@@ -27,41 +27,54 @@ import java.util.regex.Pattern
  * - `operator` is a version constraint operator (`>`, `<`, `>=`, `<=`)
  * - `version` is the service version that is being constrained
  *
- * TODO(jonsie): Add range constraint support (>= 1.0.0 & < 2.0.0)
  */
 object VersionRequirementsParser {
 
   private val SUPPORTS_PATTERN = Pattern.compile(
-    "^(?<service>[\\w\\-]+)(?<operator>[><=]{1,2})(?<version>[0-9]+\\.[0-9]+\\.[0-9]+)$")
+    "^(?<service>[\\w\\-]+)(?<operator>[><=]{1,2})(?<version>[0-9]+\\.[0-9]+\\.[0-9]+)( & (?<rOperator>[><=]{1,2})(?<rVersion>[0-9]+\\.[0-9]+\\.[0-9]+))?$")
 
   private const val SUPPORTS_PATTERN_SERVICE_GROUP = "service"
   private const val SUPPORTS_PATTERN_OPERATOR_GROUP = "operator"
   private const val SUPPORTS_PATTERN_VERSION_GROUP = "version"
+  private const val SUPPORTS_PATTERN_RANGE_OPERATOR_GROUP = "rOperator"
+  private const val SUPPORTS_PATTERN_RANGE_VERSION_GROUP = "rVersion"
 
   /**
    * Parse a single version.
    */
-  fun parse(version: String): VersionRequirements {
-    return SUPPORTS_PATTERN.matcher(version)
+  fun parse(version: String): List<VersionRequirements> {
+    SUPPORTS_PATTERN.matcher(version)
       .also {
         if (!it.matches()) {
           throw InvalidPluginVersionRequirementException(version)
         }
       }
       .let {
-        VersionRequirements(
+        val versions = mutableListOf(VersionRequirements(
           service = it.group(SUPPORTS_PATTERN_SERVICE_GROUP),
           operator = VersionRequirementOperator.from(it.group(SUPPORTS_PATTERN_OPERATOR_GROUP)),
           version = it.group(SUPPORTS_PATTERN_VERSION_GROUP)
-        )
+        ))
+        if (!it.group(SUPPORTS_PATTERN_RANGE_OPERATOR_GROUP).isNullOrBlank()) {
+          versions.add(VersionRequirements(
+            service = it.group(SUPPORTS_PATTERN_SERVICE_GROUP),
+            operator = VersionRequirementOperator.from(it.group(SUPPORTS_PATTERN_RANGE_OPERATOR_GROUP)),
+            version = it.group(SUPPORTS_PATTERN_RANGE_VERSION_GROUP)))
+        }
+        return versions
       }
   }
 
   /**
    * Parse a list of comma-delimited versions.
    */
-  fun parseAll(version: String): List<VersionRequirements> =
-    version.split(',').map { parse(it.trim()) }
+  fun parseAll(version: String): List<VersionRequirements> {
+    val result = mutableListOf<VersionRequirements>()
+    version.split(',').forEach {
+      result.addAll(parse(it.trim()))
+    }
+    return result
+  }
 
   /**
    * Convert a list of [VersionRequirements] into a string.
