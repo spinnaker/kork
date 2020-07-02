@@ -41,11 +41,13 @@ class SpinnakerServiceVersionManager(
     val requirements =
       VersionRequirementsParser
         .parseAll(requires)
-        .find { it.service.equals(serviceName, ignoreCase = true) }
+        .filter { it.service.equals(serviceName, ignoreCase = true) }
 
-    if (requirements != null) {
-      val constraint = requirements.operator.symbol + requirements.version
-      return StringUtils.isNullOrEmpty(constraint) || Version.valueOf(version).satisfies(constraint)
+    if (requirements.isNotEmpty()) {
+      return requirements.all {
+        val constraint = it.operator.symbol + it.version
+        StringUtils.isNullOrEmpty(constraint) || Version.valueOf(version).satisfies(constraint)
+      }
     }
 
     return false

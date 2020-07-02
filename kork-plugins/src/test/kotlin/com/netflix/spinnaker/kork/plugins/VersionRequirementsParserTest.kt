@@ -29,10 +29,24 @@ class VersionRequirementsParserTest : JUnit5Minutests {
   fun tests() = rootContext {
     test("parses a version string") {
       expectThat(VersionRequirementsParser.parse("clouddriver>=1.0.0"))
+        .hasSize(1)
         .and {
-          get { service }.isEqualTo("clouddriver")
-          get { operator }.isEqualTo(VersionRequirementOperator.GT_EQ)
-          get { version }.isEqualTo("1.0.0")
+          get { this[0].service }.isEqualTo("clouddriver")
+          get { this[0].operator }.isEqualTo(VersionRequirementOperator.GT_EQ)
+          get { this[0].version }.isEqualTo("1.0.0")
+        }
+    }
+
+    test("parses a version string with range constraint") {
+      expectThat(VersionRequirementsParser.parse("clouddriver>=1.0.0 & <2.0.0"))
+        .hasSize(2)
+        .and {
+          get { this[0].service }.isEqualTo("clouddriver")
+          get { this[0].operator }.isEqualTo(VersionRequirementOperator.GT_EQ)
+          get { this[0].version }.isEqualTo("1.0.0")
+          get { this[1].service }.isEqualTo("clouddriver")
+          get { this[1].operator }.isEqualTo(VersionRequirementOperator.LT)
+          get { this[1].version }.isEqualTo("2.0.0")
         }
     }
 
