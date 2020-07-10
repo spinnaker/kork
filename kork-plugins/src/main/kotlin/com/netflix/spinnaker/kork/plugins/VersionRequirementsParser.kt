@@ -47,7 +47,12 @@ object VersionRequirementsParser {
         if (!it.matches()) {
           throw InvalidPluginVersionRequirementException(version)
         }
-        try { CONSTRAINT_VALIDATOR.satisfies(it.group(SUPPORTS_PATTERN_CONSTRAINT_GROUP)) } catch (e: ParseException) { throw InvalidPluginVersionRequirementException(version) }
+        // we use semver to validate that the constraint is valid.
+        try {
+          CONSTRAINT_VALIDATOR.satisfies(it.group(SUPPORTS_PATTERN_CONSTRAINT_GROUP))
+        } catch (e: ParseException) {
+          throw InvalidPluginVersionRequirementException(version)
+        }
       }
       .let {
         VersionRequirements(
