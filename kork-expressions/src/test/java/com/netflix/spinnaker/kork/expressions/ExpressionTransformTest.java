@@ -97,10 +97,7 @@ class ExpressionTransformTest {
         new ExpressionTransform(parserContext, parser, Function.identity())
             .transformList(input, new StandardEvaluationContext(), summary, Collections.emptyMap());
 
-    // TODO(ezimanyi): This appears incorrect; expression evaluation should not be flattening nested
-    // lists. Instead, the output should be exactly equal to the input.
-    List<Object> expectedResult = Collections.singletonList("value");
-    assertThat(evaluated).isEqualTo(expectedResult);
+    assertThat(evaluated).isEqualTo(input);
   }
 
   @Test
