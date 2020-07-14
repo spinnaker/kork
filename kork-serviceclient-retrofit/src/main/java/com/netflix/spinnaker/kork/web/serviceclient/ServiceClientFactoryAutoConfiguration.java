@@ -18,9 +18,7 @@
 package com.netflix.spinnaker.kork.web.serviceclient;
 
 import com.netflix.spinnaker.config.okhttp3.OkHttpClientProvider;
-import com.netflix.spinnaker.retrofit.RetrofitConfigurationProperties;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import retrofit.RequestInterceptor;
@@ -28,7 +26,6 @@ import retrofit.RestAdapter;
 
 @Configuration
 @ConditionalOnProperty(value = "serviceclient.enabled", matchIfMissing = true)
-@EnableConfigurationProperties(RetrofitConfigurationProperties.class)
 public class ServiceClientFactoryAutoConfiguration {
 
   @Bean
