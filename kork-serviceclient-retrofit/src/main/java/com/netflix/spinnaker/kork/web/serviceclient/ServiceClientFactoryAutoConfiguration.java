@@ -18,9 +18,12 @@
 package com.netflix.spinnaker.kork.web.serviceclient;
 
 import com.netflix.spinnaker.config.okhttp3.OkHttpClientProvider;
+import java.util.List;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.Ordered;
+import org.springframework.core.annotation.Order;
 import retrofit.RequestInterceptor;
 import retrofit.RestAdapter;
 
@@ -29,11 +32,17 @@ import retrofit.RestAdapter;
 public class ServiceClientFactoryAutoConfiguration {
 
   @Bean
-  ServiceClientFactory<RestAdapter.Builder> serviceClientFactory(
+  @Order(Ordered.LOWEST_PRECEDENCE)
+  ServiceClientFactory serviceClientFactory(
       RestAdapter.LogLevel retrofitLogLevel,
       OkHttpClientProvider clientProvider,
       RequestInterceptor spinnakerRequestInterceptor) {
     return new DefaultServiceClientFactory(
         retrofitLogLevel, clientProvider, spinnakerRequestInterceptor);
+  }
+
+  @Bean
+  ServiceClientProvider serviceClientProvider(List<ServiceClientFactory> serviceClientFactories) {
+    return new ServiceClientProvider(serviceClientFactories);
   }
 }

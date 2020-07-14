@@ -19,12 +19,8 @@ package com.netflix.spinnaker.kork.web.serviceclient;
 
 import com.netflix.spinnaker.config.ServiceEndpoint;
 
-/**
- * Factory to build clients/builders that help to make remote http calls.
- *
- * @param <B> represents client builder type
- */
-public interface ServiceClientFactory<B> {
+/** Factory to build clients/builders that help to make remote http calls. */
+public interface ServiceClientFactory {
 
   /**
    * Builds a concrete client capable of making HTTP calls.
@@ -34,11 +30,10 @@ public interface ServiceClientFactory<B> {
    * @param <T> type of client , usually a interface with all the remote method definitions.
    * @return a implementation of the type of client given.
    */
-  public <T> T create(Class<T> type, ServiceEndpoint serviceEndpoint);
+  public <T> T getClient(Class<T> type, ServiceEndpoint serviceEndpoint);
 
   /**
-   * Initializes and returns the underlying client builder implementation for further customizations
-   * as needed.
+   * Decide if this factory can support the endpoint provided.
    *
    * @param type client type
    * @param serviceEndpoint endpoint configuration
@@ -46,5 +41,7 @@ public interface ServiceClientFactory<B> {
    *     definitions.
    * @return a client builder
    */
-  public <T> B build(Class<T> type, ServiceEndpoint serviceEndpoint);
+  public default <T> boolean supports(Class<T> type, ServiceEndpoint serviceEndpoint) {
+    return true;
+  }
 }

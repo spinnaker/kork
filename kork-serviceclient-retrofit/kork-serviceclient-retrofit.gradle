@@ -5,9 +5,9 @@ dependencies {
 
   implementation project(":kork-web")
 
-  api "com.squareup.retrofit:retrofit"
-  api "com.jakewharton.retrofit:retrofit1-okhttp3-client"
-  api "com.squareup.retrofit:converter-jackson"
+  implementation "com.squareup.retrofit:retrofit"
+  implementation "com.jakewharton.retrofit:retrofit1-okhttp3-client"
+  implementation "com.squareup.retrofit:converter-jackson"
 
   testImplementation "org.spockframework:spock-core"
   testImplementation "org.spockframework:spock-spring"

@@ -31,7 +31,7 @@ import retrofit.RestAdapter;
 import retrofit.converter.JacksonConverter;
 
 @NonnullByDefault
-public class DefaultServiceClientFactory implements ServiceClientFactory<RestAdapter.Builder> {
+public class DefaultServiceClientFactory implements ServiceClientFactory {
 
   private final RestAdapter.LogLevel retrofitLogLevel;
   private final OkHttpClientProvider clientProvider;
@@ -47,12 +47,7 @@ public class DefaultServiceClientFactory implements ServiceClientFactory<RestAda
   }
 
   @Override
-  public <T> T create(Class<T> type, ServiceEndpoint serviceEndpoint) {
-    return build(type, serviceEndpoint).build().create(type);
-  }
-
-  @Override
-  public <T> RestAdapter.Builder build(Class<T> type, ServiceEndpoint serviceEndpoint) {
+  public <T> T getClient(Class<T> type, ServiceEndpoint serviceEndpoint) {
     Endpoint endpoint = newFixedEndpoint(serviceEndpoint.getBaseUrl());
     return new RestAdapter.Builder()
         .setRequestInterceptor(spinnakerRequestInterceptor)
@@ -64,6 +59,8 @@ public class DefaultServiceClientFactory implements ServiceClientFactory<RestAda
                     new DefaultServiceEndpoint(
                         serviceEndpoint.getName(), serviceEndpoint.getBaseUrl()))))
         .setLogLevel(retrofitLogLevel)
-        .setLog(new Slf4jRetrofitLogger(type));
+        .setLog(new Slf4jRetrofitLogger(type))
+        .build()
+        .create(type);
   }
 }
