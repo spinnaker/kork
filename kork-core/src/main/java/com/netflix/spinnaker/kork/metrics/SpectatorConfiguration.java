@@ -16,15 +16,21 @@
 
 package com.netflix.spinnaker.kork.metrics;
 
+import com.netflix.spectator.api.Clock;
+import com.netflix.spectator.api.DefaultRegistry;
 import com.netflix.spectator.api.Registry;
 import com.netflix.spectator.api.Spectator;
 import com.netflix.spectator.gc.GcLogger;
 import com.netflix.spectator.jvm.Jmx;
 import com.netflix.spectator.micrometer.MicrometerRegistry;
 import io.micrometer.core.instrument.MeterRegistry;
+import java.util.List;
 import javax.annotation.PreDestroy;
+import org.springframework.boot.actuate.autoconfigure.metrics.MeterRegistryCustomizer;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -36,8 +42,32 @@ public class SpectatorConfiguration {
 
   @Bean
   @ConditionalOnMissingBean(Registry.class)
-  Registry registry(MeterRegistry meterRegistry) {
-    return new MicrometerRegistry(meterRegistry);
+  @ConditionalOnProperty(
+      prefix = "spectator.micrometer-registry",
+      name = "enabled",
+      havingValue = "true")
+  Registry micrometerRegistry(MeterRegistry registry) {
+    return new MicrometerRegistry(registry);
+  }
+
+  @Bean
+  @ConditionalOnMissingBean(Registry.class)
+  @ConditionalOnProperty(
+      prefix = "spectator.micrometer-registry",
+      name = "enabled",
+      havingValue = "false",
+      matchIfMissing = true)
+  Registry defaultRegistry() {
+    return new DefaultRegistry(Clock.SYSTEM);
+  }
+
+  @Bean
+  @ConditionalOnBean(name = "defaultRegistry")
+  public SpectatorMeterRegistry spectatorMeterRegistry(
+      Registry spectatorRegistry, List<MeterRegistryCustomizer<MeterRegistry>> customizers) {
+    SpectatorMeterRegistry registry = new SpectatorMeterRegistry(spectatorRegistry);
+    customizers.forEach(c -> c.customize(registry));
+    return registry;
   }
 
   @Bean
