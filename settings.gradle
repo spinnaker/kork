@@ -51,6 +51,7 @@ include(
   "kork-secrets-aws",
   "kork-secrets-gcp",
   "kork-security",
+  "kork-serviceclient-retrofit",
   "kork-sql",
   "kork-sql-test",
   "kork-stackdriver",
