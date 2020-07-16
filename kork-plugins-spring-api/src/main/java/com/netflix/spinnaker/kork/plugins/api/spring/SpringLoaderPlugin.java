@@ -17,6 +17,8 @@
 package com.netflix.spinnaker.kork.plugins.api.spring;
 
 import com.netflix.spinnaker.kork.annotations.Alpha;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import org.pf4j.PluginWrapper;
@@ -45,6 +47,8 @@ public abstract class SpringLoaderPlugin extends PrivilegedSpringPlugin {
 
   @Override
   public void registerBeanDefinitions(BeanDefinitionRegistry registry) {
+    final String springLoaderBeanName = wrapper.getPluginId() + "." + SpringLoader.class.getName();
+
     ClassLoader pluginClassLoader = getClass().getClassLoader();
     BeanDefinition springLoaderBeanDefinition =
         BeanDefinitionBuilder.genericBeanDefinition(SpringLoader.class)
@@ -55,16 +59,21 @@ public abstract class SpringLoaderPlugin extends PrivilegedSpringPlugin {
             .addConstructorArgValue(getPackagesToScan())
             .addConstructorArgValue(getClassesToRegister())
             .getBeanDefinition();
-    try {
-      registerBean(springLoaderBeanDefinition, registry);
-    } catch (ClassNotFoundException e) {
-      throw new IllegalStateException(e);
-    }
+    registry.registerBeanDefinition(springLoaderBeanName, springLoaderBeanDefinition);
 
     // delay controller mapping until after the plugin has a chance to load its own controllers
-    registry
-        .getBeanDefinition("requestMappingHandlerMapping")
-        .setDependsOn("com.netflix.spinnaker.kork.plugins.api.spring.SpringLoader");
+    final BeanDefinition requestMappingHandlerMapping =
+        registry.getBeanDefinition("requestMappingHandlerMapping");
+    final String[] mappingDependsOnArray = requestMappingHandlerMapping.getDependsOn();
+    final List<String> mappingDependsOn;
+    if (mappingDependsOnArray == null) {
+      mappingDependsOn = new ArrayList<>();
+    } else {
+      mappingDependsOn = new ArrayList<>(Arrays.asList(mappingDependsOnArray));
+    }
+    mappingDependsOn.add(springLoaderBeanName);
+    requestMappingHandlerMapping.setDependsOn(
+        mappingDependsOn.toArray(new String[mappingDependsOn.size()]));
   }
 
   /** Specify plugin packages to scan for beans. */
