@@ -40,7 +40,7 @@ class SpringLoaderPluginTest : JUnit5Minutests {
     test("should register SpringLoader") {
       plugin.registerBeanDefinitions(registry)
       verify(exactly = 1) { registry.registerBeanDefinition(
-        "com.netflix.spinnaker.kork.plugins.api.spring.SpringLoader",
+        "plugin1.com.netflix.spinnaker.kork.plugins.api.spring.SpringLoader",
         BeanDefinitionBuilder.genericBeanDefinition(SpringLoader::class.java)
           .setScope(BeanDefinition.SCOPE_SINGLETON)
           .setAutowireMode(AutowireCapableBeanFactory.AUTOWIRE_NO)
@@ -59,7 +59,7 @@ class SpringLoaderPluginTest : JUnit5Minutests {
       plugin.registerBeanDefinitions(registry)
 
       Assertions.assertThat(mappingBeanDefinition.dependsOn)
-        .isEqualTo(listOf("com.netflix.spinnaker.kork.plugins.api.spring.SpringLoader").toTypedArray())
+        .isEqualTo(listOf("plugin1.com.netflix.spinnaker.kork.plugins.api.spring.SpringLoader").toTypedArray())
     }
 
   }
@@ -68,5 +68,8 @@ class SpringLoaderPluginTest : JUnit5Minutests {
     val registry: BeanDefinitionRegistry = mockk(relaxed = true)
     val pluginWrapper: PluginWrapper = mockk(relaxed = true)
     val plugin: SpringLoaderPlugin = TestSpringLoaderPlugin(pluginWrapper)
+    init {
+      every { pluginWrapper.pluginId } returns "plugin1"
+    }
   }
 }
