@@ -28,8 +28,8 @@ import retrofit.RequestInterceptor;
 import retrofit.RestAdapter;
 
 @Configuration
-@ConditionalOnProperty(value = "serviceclient.enabled", matchIfMissing = true)
-public class ServiceClientFactoryAutoConfiguration {
+@ConditionalOnProperty(value = "retrofit.enabled", matchIfMissing = true)
+public class RetrofitServiceFactoryAutoConfiguration {
 
   @Bean
   @Order(Ordered.LOWEST_PRECEDENCE)
@@ -37,12 +37,12 @@ public class ServiceClientFactoryAutoConfiguration {
       RestAdapter.LogLevel retrofitLogLevel,
       OkHttpClientProvider clientProvider,
       RequestInterceptor spinnakerRequestInterceptor) {
-    return new DefaultServiceClientFactory(
+    return new DefaultRetrofitServiceFactory(
         retrofitLogLevel, clientProvider, spinnakerRequestInterceptor);
   }
 
   @Bean
-  ServiceClientProvider serviceClientProvider(List<ServiceClientFactory> serviceClientFactories) {
-    return new ServiceClientProvider(serviceClientFactories);
+  RetrofitServiceProvider serviceClientProvider(List<ServiceClientFactory> serviceClientFactories) {
+    return new RetrofitServiceProvider(serviceClientFactories);
   }
 }

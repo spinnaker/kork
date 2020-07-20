@@ -34,14 +34,14 @@ import org.springframework.context.annotation.Configuration
 import strikt.api.expect
 import strikt.assertions.isEqualTo
 
-class ServiceClientProviderTest  : JUnit5Minutests {
+class RetrofitServiceProviderTest  : JUnit5Minutests {
 
   fun tests() = rootContext {
     derivedContext<ApplicationContextRunner>("no configuration") {
       fixture {
         ApplicationContextRunner()
           .withConfiguration(AutoConfigurations.of(
-            ServiceClientFactoryAutoConfiguration::class.java,
+            RetrofitServiceFactoryAutoConfiguration::class.java,
             RetrofitConfiguration::class.java,
             TestConfiguration::class.java
           ))
@@ -50,7 +50,7 @@ class ServiceClientProviderTest  : JUnit5Minutests {
       test("initializes service client provider") {
         run { ctx: AssertableApplicationContext ->
           expect {
-            that(ctx.getBeansOfType(ServiceClientProvider::class.java)).get { size }.isEqualTo(1)
+            that(ctx.getBeansOfType(RetrofitServiceProvider::class.java)).get { size }.isEqualTo(1)
           }
         }
       }

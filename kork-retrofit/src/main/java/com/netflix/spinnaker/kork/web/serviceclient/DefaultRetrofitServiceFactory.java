@@ -31,13 +31,13 @@ import retrofit.RestAdapter;
 import retrofit.converter.JacksonConverter;
 
 @NonnullByDefault
-public class DefaultServiceClientFactory implements ServiceClientFactory {
+public class DefaultRetrofitServiceFactory implements ServiceClientFactory {
 
   private final RestAdapter.LogLevel retrofitLogLevel;
   private final OkHttpClientProvider clientProvider;
   private final RequestInterceptor spinnakerRequestInterceptor;
 
-  DefaultServiceClientFactory(
+  DefaultRetrofitServiceFactory(
       RestAdapter.LogLevel retrofitLogLevel,
       OkHttpClientProvider clientProvider,
       RequestInterceptor spinnakerRequestInterceptor) {
@@ -47,7 +47,7 @@ public class DefaultServiceClientFactory implements ServiceClientFactory {
   }
 
   @Override
-  public <T> T getClient(Class<T> type, ServiceEndpoint serviceEndpoint) {
+  public <T> T create(Class<T> type, ServiceEndpoint serviceEndpoint) {
     Endpoint endpoint = newFixedEndpoint(serviceEndpoint.getBaseUrl());
     return new RestAdapter.Builder()
         .setRequestInterceptor(spinnakerRequestInterceptor)

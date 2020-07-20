@@ -26,17 +26,25 @@ import java.util.List;
 
 /** Provider that returns a suitable service client capable of making http calls. */
 @NonnullByDefault
-public class ServiceClientProvider {
+public class RetrofitServiceProvider {
 
   private final List<ServiceClientFactory> serviceClientFactories;
 
-  ServiceClientProvider(List<ServiceClientFactory> serviceClientFactories) {
+  RetrofitServiceProvider(List<ServiceClientFactory> serviceClientFactories) {
     this.serviceClientFactories = serviceClientFactories;
   }
 
-  public <T> T getClient(Class<T> type, ServiceEndpoint serviceEndpoint) {
+  /**
+   * Returns the concrete retrofit service client
+   *
+   * @param type retrofit interface type
+   * @param serviceEndpoint endpoint definition
+   * @param <T> type of client , usually a interface with all the remote method definitions.
+   * @return the retrofit interface implementation
+   */
+  public <T> T getService(Class<T> type, ServiceEndpoint serviceEndpoint) {
     ServiceClientFactory serviceClientFactory = findProvider(type, serviceEndpoint);
-    return serviceClientFactory.getClient(type, serviceEndpoint);
+    return serviceClientFactory.create(type, serviceEndpoint);
   }
 
   private ServiceClientFactory findProvider(Class<?> type, ServiceEndpoint service) {
