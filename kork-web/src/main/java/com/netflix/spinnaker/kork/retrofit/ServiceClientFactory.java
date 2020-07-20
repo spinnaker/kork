@@ -15,7 +15,7 @@
  *
  */
 
-package com.netflix.spinnaker.kork.web.serviceclient;
+package com.netflix.spinnaker.kork.retrofit;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.netflix.spinnaker.config.ServiceEndpoint;

@@ -15,7 +15,7 @@
  *
  */
 
-package com.netflix.spinnaker.kork.web.serviceclient;
+package com.netflix.spinnaker.kork.retrofit;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.netflix.spinnaker.config.okhttp3.OkHttpClientProvider;
@@ -38,7 +38,7 @@ public class RetrofitServiceFactoryAutoConfiguration {
       RestAdapter.LogLevel retrofitLogLevel,
       OkHttpClientProvider clientProvider,
       RequestInterceptor spinnakerRequestInterceptor) {
-    return new DefaultRetrofitServiceFactory(
+    return new RetrofitServiceFactory(
         retrofitLogLevel, clientProvider, spinnakerRequestInterceptor);
   }
 

@@ -15,7 +15,7 @@
  *
  */
 
-package com.netflix.spinnaker.kork.web.serviceclient;
+package com.netflix.spinnaker.kork.retrofit;
 
 import static java.lang.String.format;
 

@@ -15,7 +15,7 @@
  *
  */
 
-package com.netflix.spinnaker.kork.web.serviceclient;
+package com.netflix.spinnaker.kork.retrofit;
 
 import static retrofit.Endpoints.newFixedEndpoint;
 
@@ -32,13 +32,13 @@ import retrofit.RestAdapter;
 import retrofit.converter.JacksonConverter;
 
 @NonnullByDefault
-class DefaultRetrofitServiceFactory implements ServiceClientFactory {
+class RetrofitServiceFactory implements ServiceClientFactory {
 
   private final RestAdapter.LogLevel retrofitLogLevel;
   private final OkHttpClientProvider clientProvider;
   private final RequestInterceptor spinnakerRequestInterceptor;
 
-  DefaultRetrofitServiceFactory(
+  RetrofitServiceFactory(
       RestAdapter.LogLevel retrofitLogLevel,
       OkHttpClientProvider clientProvider,
       RequestInterceptor spinnakerRequestInterceptor) {
