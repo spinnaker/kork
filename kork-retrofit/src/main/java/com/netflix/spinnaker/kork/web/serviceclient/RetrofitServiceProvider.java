@@ -19,6 +19,7 @@ package com.netflix.spinnaker.kork.web.serviceclient;
 
 import static java.lang.String.format;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.netflix.spinnaker.config.ServiceEndpoint;
 import com.netflix.spinnaker.kork.annotations.NonnullByDefault;
 import com.netflix.spinnaker.kork.exceptions.SystemException;
@@ -29,9 +30,12 @@ import java.util.List;
 public class RetrofitServiceProvider {
 
   private final List<ServiceClientFactory> serviceClientFactories;
+  private final ObjectMapper objectMapper;
 
-  RetrofitServiceProvider(List<ServiceClientFactory> serviceClientFactories) {
+  RetrofitServiceProvider(
+      List<ServiceClientFactory> serviceClientFactories, ObjectMapper objectMapper) {
     this.serviceClientFactories = serviceClientFactories;
+    this.objectMapper = objectMapper;
   }
 
   /**
@@ -44,7 +48,22 @@ public class RetrofitServiceProvider {
    */
   public <T> T getService(Class<T> type, ServiceEndpoint serviceEndpoint) {
     ServiceClientFactory serviceClientFactory = findProvider(type, serviceEndpoint);
-    return serviceClientFactory.create(type, serviceEndpoint);
+    return serviceClientFactory.create(type, serviceEndpoint, objectMapper);
+  }
+
+  /**
+   * Returns the concrete retrofit service client
+   *
+   * @param type retrofit interface type
+   * @param serviceEndpoint endpoint definition
+   * @param objectMapper object mapper for conversion
+   * @param <T> type of client , usually a interface with all the remote method definitions.
+   * @return the retrofit interface implementation
+   */
+  public <T> T getService(
+      Class<T> type, ServiceEndpoint serviceEndpoint, ObjectMapper objectMapper) {
+    ServiceClientFactory serviceClientFactory = findProvider(type, serviceEndpoint);
+    return serviceClientFactory.create(type, serviceEndpoint, objectMapper);
   }
 
   private ServiceClientFactory findProvider(Class<?> type, ServiceEndpoint service) {

@@ -17,6 +17,7 @@
 
 package com.netflix.spinnaker.kork.web.serviceclient;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.netflix.spinnaker.config.ServiceEndpoint;
 
 /** Factory to build a client for a service. */
@@ -30,7 +31,7 @@ public interface ServiceClientFactory {
    * @param <T> type of client , usually a interface with all the remote method definitions.
    * @return a implementation of the type of client given.
    */
-  public <T> T create(Class<T> type, ServiceEndpoint serviceEndpoint);
+  public <T> T create(Class<T> type, ServiceEndpoint serviceEndpoint, ObjectMapper objectMapper);
 
   /**
    * Decide if this factory can support the endpoint provided.

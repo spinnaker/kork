@@ -19,6 +19,7 @@ package com.netflix.spinnaker.kork.web.serviceclient;
 
 import static retrofit.Endpoints.newFixedEndpoint;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.jakewharton.retrofit.Ok3Client;
 import com.netflix.spinnaker.config.DefaultServiceEndpoint;
 import com.netflix.spinnaker.config.ServiceEndpoint;
@@ -31,7 +32,7 @@ import retrofit.RestAdapter;
 import retrofit.converter.JacksonConverter;
 
 @NonnullByDefault
-public class DefaultRetrofitServiceFactory implements ServiceClientFactory {
+class DefaultRetrofitServiceFactory implements ServiceClientFactory {
 
   private final RestAdapter.LogLevel retrofitLogLevel;
   private final OkHttpClientProvider clientProvider;
@@ -47,11 +48,11 @@ public class DefaultRetrofitServiceFactory implements ServiceClientFactory {
   }
 
   @Override
-  public <T> T create(Class<T> type, ServiceEndpoint serviceEndpoint) {
+  public <T> T create(Class<T> type, ServiceEndpoint serviceEndpoint, ObjectMapper objectMapper) {
     Endpoint endpoint = newFixedEndpoint(serviceEndpoint.getBaseUrl());
     return new RestAdapter.Builder()
         .setRequestInterceptor(spinnakerRequestInterceptor)
-        .setConverter(new JacksonConverter())
+        .setConverter(new JacksonConverter(objectMapper))
         .setEndpoint(endpoint)
         .setClient(
             new Ok3Client(

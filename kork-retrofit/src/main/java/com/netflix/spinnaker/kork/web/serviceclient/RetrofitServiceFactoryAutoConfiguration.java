@@ -17,6 +17,7 @@
 
 package com.netflix.spinnaker.kork.web.serviceclient;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.netflix.spinnaker.config.okhttp3.OkHttpClientProvider;
 import java.util.List;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -42,7 +43,8 @@ public class RetrofitServiceFactoryAutoConfiguration {
   }
 
   @Bean
-  RetrofitServiceProvider serviceClientProvider(List<ServiceClientFactory> serviceClientFactories) {
-    return new RetrofitServiceProvider(serviceClientFactories);
+  RetrofitServiceProvider serviceClientProvider(
+      List<ServiceClientFactory> serviceClientFactories, ObjectMapper objectMapper) {
+    return new RetrofitServiceProvider(serviceClientFactories, objectMapper);
   }
 }

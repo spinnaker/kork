@@ -17,6 +17,7 @@
 
 package com.netflix.spinnaker.kork.web.serviceclient
 
+import com.fasterxml.jackson.databind.ObjectMapper
 import com.netflix.spinnaker.config.RetrofitConfiguration
 import com.netflix.spinnaker.config.okhttp3.DefaultOkHttpClientBuilderProvider
 import com.netflix.spinnaker.config.okhttp3.OkHttpClientProvider
@@ -75,6 +76,11 @@ private open class TestConfiguration {
   @Bean
   open fun spinnakerRequestInterceptor(): SpinnakerRequestInterceptor {
     return SpinnakerRequestInterceptor(OkHttpClientConfigurationProperties())
+  }
+
+  @Bean
+  open fun objectMapper(): ObjectMapper {
+    return  ObjectMapper()
   }
 
 }
