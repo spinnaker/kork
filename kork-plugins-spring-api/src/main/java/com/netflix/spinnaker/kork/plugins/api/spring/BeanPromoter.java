@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 Netflix, Inc.
+ * Copyright 2020 Armory, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -12,17 +12,10 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
-package com.netflix.spinnaker.kork;
 
-import com.netflix.spinnaker.kork.archaius.ArchaiusConfiguration;
-import com.netflix.spinnaker.kork.eureka.EurekaConfiguration;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Import;
+package com.netflix.spinnaker.kork.plugins.api.spring;
 
-@Configuration
-@ConditionalOnProperty("eureka.enabled")
-@Import({ArchaiusConfiguration.class, EurekaConfiguration.class})
-public class EurekaDiscoveryAutoConfiguration {}
+public interface BeanPromoter {
+  void promote(String beanName, Object bean, Class beanClass, boolean isPrimary);
+}

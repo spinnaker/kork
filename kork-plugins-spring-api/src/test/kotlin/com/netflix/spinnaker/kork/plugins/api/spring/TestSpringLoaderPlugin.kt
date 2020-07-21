@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 Netflix, Inc.
+ * Copyright 2020 Armory, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -12,15 +12,22 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
-package com.netflix.spinnaker.kork.archaius;
+package com.netflix.spinnaker.kork.plugins.api.spring
 
-public interface ClasspathPropertySource {
-  String getBaseName();
+import org.pf4j.PluginWrapper
 
-  default boolean supportsProfile(String profile) {
-    return true;
+internal class TestSpringLoaderPlugin(wrapper: PluginWrapper) : SpringLoaderPlugin(wrapper) {
+
+
+  override fun getPackagesToScan(): List<String?>? {
+    return listOf("io.armory.plugin.example.spring")
   }
+
+  override fun getClassesToRegister(): List<Class<*>?>? {
+    return listOf(MyService::class.java)
+  }
+
+  internal class MyService
 }

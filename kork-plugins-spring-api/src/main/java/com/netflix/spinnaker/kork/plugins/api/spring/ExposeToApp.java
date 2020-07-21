@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 Netflix, Inc.
+ * Copyright 2020 Armory, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -12,22 +12,14 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
-package com.netflix.spinnaker.kork.archaius;
+package com.netflix.spinnaker.kork.plugins.api.spring;
 
-import java.util.Objects;
+import java.lang.annotation.*;
 
-public class DefaultClasspathPropertySource implements ClasspathPropertySource {
-  private final String baseName;
-
-  public DefaultClasspathPropertySource(String baseName) {
-    this.baseName = Objects.requireNonNull(baseName, "baseName");
-  }
-
-  @Override
-  public String getBaseName() {
-    return baseName;
-  }
-}
+/** Indicates that a plugin bean should be elevated to the application's context. */
+@Target({ElementType.TYPE, ElementType.METHOD})
+@Retention(RetentionPolicy.RUNTIME)
+@Documented
+public @interface ExposeToApp {}

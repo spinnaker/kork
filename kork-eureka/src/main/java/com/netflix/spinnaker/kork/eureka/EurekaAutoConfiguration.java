@@ -23,27 +23,32 @@ import com.netflix.discovery.EurekaClient;
 import com.netflix.discovery.EurekaClientConfig;
 import com.netflix.eventbus.impl.EventBusImpl;
 import com.netflix.eventbus.spi.EventBus;
+import com.netflix.spinnaker.kork.discovery.DiscoveryAutoConfiguration;
 import java.util.Map;
 import java.util.Objects;
 import javax.inject.Provider;
 import org.springframework.boot.actuate.health.HealthAggregator;
 import org.springframework.boot.actuate.health.HealthIndicator;
+import org.springframework.boot.autoconfigure.AutoConfigureBefore;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.*;
 
 @Configuration
+@ConditionalOnProperty("eureka.enabled")
 @EnableConfigurationProperties(EurekaConfigurationProperties.class)
-public class EurekaConfiguration {
+@AutoConfigureBefore(DiscoveryAutoConfiguration.class)
+public class EurekaAutoConfiguration {
 
   @Bean
   public EventBus eventBus() {
     return new EventBusImpl();
   }
 
+  /** @deprecated use EurekaClient rather than DiscoveryClient */
   @Bean
-  @Deprecated // prefer to use EurekaClient interface rather than directly depending on
-  // DiscoveryClient
+  @Deprecated
   public DiscoveryClient discoveryClient(
       ApplicationInfoManager applicationInfoManager,
       EurekaClientConfig eurekaClientConfig,
@@ -69,14 +74,12 @@ public class EurekaConfiguration {
   }
 
   @Bean
-  @DependsOn("environmentBackedConfig")
   EurekaInstanceConfig eurekaInstanceConfig(
       EurekaConfigurationProperties eurekaConfigurationProperties) {
     return new CloudInstanceConfig(eurekaConfigurationProperties.getInstance().getNamespace());
   }
 
   @Bean
-  @DependsOn("environmentBackedConfig")
   EurekaClientConfig eurekaClientConfig(
       EurekaConfigurationProperties eurekaConfigurationProperties) {
     return new DefaultEurekaClientConfig(eurekaConfigurationProperties.getClient().getNamespace());

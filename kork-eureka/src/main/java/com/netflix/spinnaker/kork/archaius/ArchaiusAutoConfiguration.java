@@ -21,8 +21,7 @@ import com.netflix.config.AbstractPollingScheduler;
 import com.netflix.config.ConfigurationManager;
 import com.netflix.config.DynamicConfiguration;
 import com.netflix.config.FixedDelayPollingScheduler;
-import com.netflix.spinnaker.kork.exceptions.SystemException;
-import java.io.IOException;
+import com.netflix.spinnaker.kork.eureka.EurekaAutoConfiguration;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import javax.annotation.PreDestroy;
@@ -30,38 +29,42 @@ import org.apache.commons.configuration.AbstractConfiguration;
 import org.apache.commons.configuration.CompositeConfiguration;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.config.BeanPostProcessor;
+import org.springframework.boot.autoconfigure.AutoConfigureBefore;
+import org.springframework.boot.autoconfigure.AutoConfigureOrder;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.Ordered;
-import org.springframework.core.env.MutablePropertySources;
-import org.springframework.core.io.Resource;
-import org.springframework.core.io.support.ResourcePropertySource;
 
 @Configuration
 @ConditionalOnProperty("archaius.enabled")
-public class ArchaiusConfiguration {
+@AutoConfigureOrder(Ordered.HIGHEST_PRECEDENCE + 10)
+@AutoConfigureBefore(EurekaAutoConfiguration.class)
+public class ArchaiusAutoConfiguration {
 
-  /** This is a BeanPostProcessor to ensure early initialization only. */
-  static class ArchaiusInitializingBeanPostProcessor implements BeanPostProcessor, Ordered {
-    private final ConfigurableApplicationContext applicationContext;
+  /**
+   * This is a BeanPostProcessor only to cause early initialization before any of the beans in
+   * EurekaAutoConfiguration.
+   *
+   * <p>We can't rely on the AutoConfiguration ordering annotations for bean instantiation ordering,
+   * they only serve to ensure bean definitions are registered so Conditional annotations work as
+   * expected.
+   *
+   * <p>Since we don't have a direct dependency between the Eureka beans and these ones, we are at
+   * the mercy of the context if someone directly asks for a EurekaClient.
+   */
+  static class ArchaiusInitializer implements BeanPostProcessor {
     private final AbstractPollingScheduler pollingScheduler;
-    private final SpringEnvironmentPolledConfigurationSource polledConfigurationSource;
-    private final List<ClasspathPropertySource> propertyBindings;
     private final DynamicConfiguration configurationInstance;
 
-    public ArchaiusInitializingBeanPostProcessor(
+    public ArchaiusInitializer(
         ConfigurableApplicationContext applicationContext,
         AbstractPollingScheduler pollingScheduler,
-        SpringEnvironmentPolledConfigurationSource polledConfigurationSource,
-        List<ClasspathPropertySource> propertyBindings) {
-      this.applicationContext = Objects.requireNonNull(applicationContext, "applicationContext");
+        SpringEnvironmentPolledConfigurationSource polledConfigurationSource) {
+      Objects.requireNonNull(applicationContext, "applicationContext");
       this.pollingScheduler = Objects.requireNonNull(pollingScheduler, "pollingScheduler");
-      this.polledConfigurationSource =
-          Objects.requireNonNull(polledConfigurationSource, "polledConfigurationSource");
-      this.propertyBindings = propertyBindings != null ? propertyBindings : Collections.emptyList();
-      initPropertyBindings();
+      Objects.requireNonNull(polledConfigurationSource, "polledConfigurationSource");
 
       DynamicConfiguration installedConfiguration = null;
       if (!ConfigurationManager.isConfigurationInstalled()) {
@@ -91,44 +94,6 @@ public class ArchaiusConfiguration {
       }
     }
 
-    private void initPropertyBindings() {
-      MutablePropertySources sources = applicationContext.getEnvironment().getPropertySources();
-      Set<String> activeProfiles =
-          new HashSet<>(Arrays.asList(applicationContext.getEnvironment().getActiveProfiles()));
-      for (ClasspathPropertySource binding : propertyBindings) {
-        for (String profile : activeProfiles) {
-          if (binding.supportsProfile(profile)) {
-            res(binding.getBaseName(), profile).ifPresent(sources::addLast);
-          }
-        }
-        res(binding.getBaseName(), null).ifPresent(sources::addLast);
-      }
-    }
-
-    private Optional<ResourcePropertySource> res(String base, String profile) {
-      String name = base;
-      String res = "/" + base;
-      if (profile != null && !profile.isEmpty()) {
-        name += ": " + profile;
-        res += "-" + profile;
-      }
-      res += ".properties";
-      Resource r = applicationContext.getResource(res);
-      if (r.exists()) {
-        try {
-          return Optional.of(new ResourcePropertySource(name, r));
-        } catch (IOException ioe) {
-          throw new SystemException("Error loading property source [" + name + "]: " + res, ioe);
-        }
-      }
-      return Optional.empty();
-    }
-
-    @Override
-    public int getOrder() {
-      return Ordered.HIGHEST_PRECEDENCE + 10;
-    }
-
     @Override
     public Object postProcessBeforeInitialization(Object bean, String beanName)
         throws BeansException {
@@ -143,7 +108,7 @@ public class ArchaiusConfiguration {
   }
 
   @Bean
-  static AbstractPollingScheduler pollingScheduler(
+  public static AbstractPollingScheduler pollingScheduler(
       ConfigurableApplicationContext applicationContext) {
     int initialDelayMillis =
         applicationContext
@@ -160,21 +125,16 @@ public class ArchaiusConfiguration {
   }
 
   @Bean
-  static SpringEnvironmentPolledConfigurationSource polledConfigurationSource(
+  public static SpringEnvironmentPolledConfigurationSource polledConfigurationSource(
       ConfigurableApplicationContext applicationContext) {
     return new SpringEnvironmentPolledConfigurationSource(applicationContext.getEnvironment());
   }
 
   @Bean
-  static ArchaiusInitializingBeanPostProcessor archaiusInitializingBeanPostProcessor(
+  public static ArchaiusInitializer archaiusInitializer(
       ConfigurableApplicationContext applicationContext,
-      Optional<List<ClasspathPropertySource>> propertyBindings,
       AbstractPollingScheduler pollingScheduler,
       SpringEnvironmentPolledConfigurationSource polledConfigurationSource) {
-    return new ArchaiusInitializingBeanPostProcessor(
-        applicationContext,
-        pollingScheduler,
-        polledConfigurationSource,
-        propertyBindings.orElse(Collections.emptyList()));
+    return new ArchaiusInitializer(applicationContext, pollingScheduler, polledConfigurationSource);
   }
 }
