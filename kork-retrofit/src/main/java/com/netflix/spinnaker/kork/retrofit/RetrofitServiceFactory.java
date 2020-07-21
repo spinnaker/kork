@@ -25,6 +25,7 @@ import com.netflix.spinnaker.config.DefaultServiceEndpoint;
 import com.netflix.spinnaker.config.ServiceEndpoint;
 import com.netflix.spinnaker.config.okhttp3.OkHttpClientProvider;
 import com.netflix.spinnaker.kork.annotations.NonnullByDefault;
+import com.netflix.spinnaker.kork.client.ServiceClientFactory;
 import com.netflix.spinnaker.retrofit.Slf4jRetrofitLogger;
 import retrofit.Endpoint;
 import retrofit.RequestInterceptor;

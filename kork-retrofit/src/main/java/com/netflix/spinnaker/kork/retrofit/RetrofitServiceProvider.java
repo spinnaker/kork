@@ -22,6 +22,7 @@ import static java.lang.String.format;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.netflix.spinnaker.config.ServiceEndpoint;
 import com.netflix.spinnaker.kork.annotations.NonnullByDefault;
+import com.netflix.spinnaker.kork.client.ServiceClientFactory;
 import com.netflix.spinnaker.kork.exceptions.SystemException;
 import java.util.List;
 

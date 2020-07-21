@@ -19,6 +19,7 @@ package com.netflix.spinnaker.kork.retrofit;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.netflix.spinnaker.config.okhttp3.OkHttpClientProvider;
+import com.netflix.spinnaker.kork.client.ServiceClientFactory;
 import java.util.List;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;

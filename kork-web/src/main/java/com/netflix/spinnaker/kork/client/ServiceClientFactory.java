@@ -15,7 +15,7 @@
  *
  */
 
-package com.netflix.spinnaker.kork.retrofit;
+package com.netflix.spinnaker.kork.client;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.netflix.spinnaker.config.ServiceEndpoint;
@@ -28,6 +28,7 @@ public interface ServiceClientFactory {
    *
    * @param type client type
    * @param serviceEndpoint endpoint configuration
+   * @param objectMapper mapper
    * @param <T> type of client , usually a interface with all the remote method definitions.
    * @return a implementation of the type of client given.
    */
