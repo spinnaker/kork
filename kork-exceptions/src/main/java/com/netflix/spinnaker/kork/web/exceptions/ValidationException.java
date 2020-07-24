@@ -17,12 +17,12 @@
 package com.netflix.spinnaker.kork.web.exceptions;
 
 import com.netflix.spinnaker.kork.exceptions.HasAdditionalAttributes;
+import com.netflix.spinnaker.kork.exceptions.UserException;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
 
-public class ValidationException extends InvalidRequestException
-    implements HasAdditionalAttributes {
+public class ValidationException extends UserException implements HasAdditionalAttributes {
   private final Collection errors;
 
   public ValidationException(Collection errors) {
