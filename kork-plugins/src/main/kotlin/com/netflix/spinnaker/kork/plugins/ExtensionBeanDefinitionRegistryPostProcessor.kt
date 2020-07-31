@@ -22,12 +22,14 @@ import com.netflix.spinnaker.kork.plugins.events.ExtensionLoaded
 import com.netflix.spinnaker.kork.plugins.proxy.ExtensionInvocationProxy
 import com.netflix.spinnaker.kork.plugins.proxy.aspects.InvocationAspect
 import com.netflix.spinnaker.kork.plugins.proxy.aspects.InvocationState
+import com.netflix.spinnaker.kork.plugins.refactor.PluginRefactorService
 import com.netflix.spinnaker.kork.plugins.update.SpinnakerUpdateManager
 import com.netflix.spinnaker.kork.plugins.update.release.provider.PluginInfoReleaseProvider
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.config.ConfigurableListableBeanFactory
 import org.springframework.beans.factory.support.BeanDefinitionRegistry
 import org.springframework.beans.factory.support.BeanDefinitionRegistryPostProcessor
+import org.springframework.context.ApplicationContext
 import org.springframework.context.ApplicationEventPublisher
 
 /**
@@ -41,6 +43,7 @@ class ExtensionBeanDefinitionRegistryPostProcessor(
   private val pluginInfoReleaseProvider: PluginInfoReleaseProvider,
   private val springPluginStatusProvider: SpringPluginStatusProvider,
   private val applicationEventPublisher: ApplicationEventPublisher,
+  private val refactorService: PluginRefactorService,
   private val invocationAspects: List<InvocationAspect<*>>
 ) : BeanDefinitionRegistryPostProcessor {
 
@@ -63,7 +66,10 @@ class ExtensionBeanDefinitionRegistryPostProcessor(
       pluginManager.loadPlugin(pluginPath)
     }
 
-    // 4) Start plugins - should only be called once in kork-plugins
+    // 4) Search for missing required plugins based on the service environment.
+    refactorService.checkForRefactoredCoreFeatures()
+
+    // 5) Start plugins - should only be called once in kork-plugins
     pluginManager.startPlugins()
 
     pluginManager.startedPlugins.forEach { pluginWrapper ->

@@ -20,6 +20,7 @@ import com.netflix.spinnaker.kork.plugins.api.spring.PrivilegedSpringPlugin
 import com.netflix.spinnaker.kork.plugins.events.ExtensionLoaded
 import com.netflix.spinnaker.kork.plugins.internal.TestPlugin
 import com.netflix.spinnaker.kork.plugins.proxy.aspects.InvocationAspect
+import com.netflix.spinnaker.kork.plugins.refactor.PluginRefactorService
 import com.netflix.spinnaker.kork.plugins.update.SpinnakerUpdateManager
 import com.netflix.spinnaker.kork.plugins.update.release.provider.PluginInfoReleaseProvider
 import dev.minutest.junit.JUnit5Minutests
@@ -31,6 +32,7 @@ import org.pf4j.ExtensionFactory
 import org.pf4j.ExtensionPoint
 import org.pf4j.PluginWrapper
 import org.springframework.beans.factory.config.ConfigurableListableBeanFactory
+import org.springframework.context.ApplicationContext
 import org.springframework.context.ApplicationEventPublisher
 import org.springframework.context.support.GenericApplicationContext
 
@@ -122,10 +124,16 @@ class ExtensionBeanDefinitionRegistryPostProcessorTest : JUnit5Minutests {
     val applicationEventPublisher: ApplicationEventPublisher = mockk(relaxed = true)
     val invocationAspects: List<InvocationAspect<*>> = mockk(relaxed = true)
     val pluginDescriptor: SpinnakerPluginDescriptor = mockk(relaxed = true)
+    val pluginRefactorService: PluginRefactorService = mockk(relaxed = true)
 
     val subject = ExtensionBeanDefinitionRegistryPostProcessor(
-      pluginManager, updateManager,
-      pluginInfoReleaseProvider, springPluginStatusProvider, applicationEventPublisher, invocationAspects
+      pluginManager,
+      updateManager,
+      pluginInfoReleaseProvider,
+      springPluginStatusProvider,
+      applicationEventPublisher,
+      pluginRefactorService,
+      invocationAspects
     )
 
     init {

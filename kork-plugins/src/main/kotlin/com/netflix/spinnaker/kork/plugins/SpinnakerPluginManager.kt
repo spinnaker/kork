@@ -144,6 +144,9 @@ open class SpinnakerPluginManager(
       }
   }
 
+  fun hasPlugin(pluginId: String): Boolean =
+    plugins.containsKey(pluginId)
+
   init {
     systemVersion = getSystemVersion()
   }

@@ -35,6 +35,7 @@ import com.netflix.spinnaker.kork.plugins.proxy.aspects.InvocationAspect;
 import com.netflix.spinnaker.kork.plugins.proxy.aspects.InvocationState;
 import com.netflix.spinnaker.kork.plugins.proxy.aspects.LogInvocationAspect;
 import com.netflix.spinnaker.kork.plugins.proxy.aspects.MetricInvocationAspect;
+import com.netflix.spinnaker.kork.plugins.refactor.PluginRefactorService;
 import com.netflix.spinnaker.kork.plugins.sdk.SdkFactory;
 import com.netflix.spinnaker.kork.plugins.update.SpinnakerUpdateManager;
 import com.netflix.spinnaker.kork.plugins.update.downloader.CompositeFileDownloader;
@@ -259,12 +260,21 @@ public class PluginsAutoConfiguration {
   }
 
   @Bean
+  public static PluginRefactorService pluginRefactorService(
+    ApplicationContext applicationContext,
+    SpinnakerPluginManager pluginManager
+  ) {
+    return new PluginRefactorService(applicationContext, pluginManager);
+  }
+
+  @Bean
   public static ExtensionBeanDefinitionRegistryPostProcessor pluginBeanPostProcessor(
       SpinnakerPluginManager pluginManager,
       SpinnakerUpdateManager updateManager,
       PluginInfoReleaseProvider pluginInfoReleaseProvider,
       SpringPluginStatusProvider springPluginStatusProvider,
       ApplicationEventPublisher applicationEventPublisher,
+      PluginRefactorService pluginRefactorService,
       List<InvocationAspect<? extends InvocationState>> invocationAspects) {
     return new ExtensionBeanDefinitionRegistryPostProcessor(
         pluginManager,
@@ -272,6 +282,7 @@ public class PluginsAutoConfiguration {
         pluginInfoReleaseProvider,
         springPluginStatusProvider,
         applicationEventPublisher,
+        pluginRefactorService,
         invocationAspects);
   }
 

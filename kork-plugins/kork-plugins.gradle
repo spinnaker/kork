@@ -20,7 +20,8 @@ dependencies {
   implementation("com.squareup.retrofit2:converter-jackson")
   implementation("com.squareup.okhttp3:logging-interceptor")
 
-  implementation "org.pf4j:pf4j"
+  // Needs to be api because SpinnakerPluginManager extends DefaultPluginManager.
+  api "org.pf4j:pf4j"
   implementation "org.pf4j:pf4j-update"
 
   implementation "org.springframework.boot:spring-boot-starter-web"

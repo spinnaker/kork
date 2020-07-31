@@ -16,6 +16,8 @@
 
 package com.netflix.spinnaker.kork.pubsub.config;
 
+import com.netflix.spinnaker.kork.plugins.refactor.PluginRefactorRule;
+import com.netflix.spinnaker.kork.pubsub.AwsPubsubPluginRefactorRule;
 import com.netflix.spinnaker.kork.pubsub.PubsubPublishers;
 import com.netflix.spinnaker.kork.pubsub.PubsubSubscribers;
 import org.springframework.context.annotation.Bean;
@@ -32,5 +34,10 @@ public class PubsubConfig {
   @Bean
   PubsubPublishers pubsubPublishers() {
     return new PubsubPublishers();
+  }
+
+  @Bean
+  public static PluginRefactorRule amazonSqsPluginRefactorRule() {
+    return new AwsPubsubPluginRefactorRule();
   }
 }
