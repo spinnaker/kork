@@ -53,8 +53,11 @@ class MetricInvocationAspectTest : JUnit5Minutests {
           get { timingId }.isA<Id>().and {
             get { name() }.isEqualTo("$pluginId.helloWorld.timing")
             get { tags().iterator().asSequence().toList() }.isEqualTo(
-              listOf(BasicTag("pluginExtension", target.javaClass.simpleName.toString()),
-                BasicTag("pluginVersion", pluginVersion)))
+              listOf(
+                BasicTag("pluginExtension", target.javaClass.simpleName.toString()),
+                BasicTag("pluginVersion", pluginVersion)
+              )
+            )
           }
           get { extensionName }.isA<String>().isEqualTo(target.javaClass.simpleName.toString())
         }
@@ -69,14 +72,17 @@ class MetricInvocationAspectTest : JUnit5Minutests {
           get { timingId }.isA<Id>().and {
             get { name() }.isEqualTo("$pluginId.customId.timing")
             get { tags().iterator().asSequence().toList() }.isEqualTo(
-              listOf(BasicTag("pluginExtension", target.javaClass.simpleName.toString()),
-                BasicTag("pluginVersion", pluginVersion)))
+              listOf(
+                BasicTag("pluginExtension", target.javaClass.simpleName.toString()),
+                BasicTag("pluginVersion", pluginVersion)
+              )
+            )
           }
           get { extensionName }.isA<String>().isEqualTo(target.javaClass.simpleName.toString())
         }
     }
 
-    test("Skips public method that is not annotated") {
+    test("Skips method that is not annotated") {
       val state = subject.before(target, proxy, createNotAnnotatedPublicMethod(), args, spinnakerPluginDescriptor)
 
       expectThat(state).isA<MetricInvocationState>()
@@ -84,14 +90,6 @@ class MetricInvocationAspectTest : JUnit5Minutests {
           get { startTimeMs }.isA<Long>()
           get { timingId }.isNull()
           get { extensionName }.isA<String>().isEqualTo(target.javaClass.simpleName.toString())
-        }
-    }
-
-    test("Private method is not instrumented with meters") {
-      val state = subject.before(target, proxy, privateMethod, args, spinnakerPluginDescriptor)
-      expectThat(state).isA<MetricInvocationState>()
-        .and {
-          get { timingId }.isNull()
         }
     }
 
@@ -129,7 +127,6 @@ class MetricInvocationAspectTest : JUnit5Minutests {
     val target: SpinnakerExtensionPoint = SomeExtension()
     val proxy: Any = mockk(relaxed = true)
     val method: Method = createMethod()
-    val privateMethod: Method = createPrivateMethod()
     val args: Array<out Any> = arrayOf()
     val spinnakerPluginDescriptor: SpinnakerPluginDescriptor = createPluginDescriptor(pluginId, pluginVersion)
 
