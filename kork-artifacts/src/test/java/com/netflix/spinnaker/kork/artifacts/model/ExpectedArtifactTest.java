@@ -23,6 +23,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import java.io.IOException;
+import java.util.Collections;
 import java.util.function.Function;
 import java.util.stream.Stream;
 import org.assertj.core.api.AssertionsForClassTypes;
@@ -142,7 +143,8 @@ final class ExpectedArtifactTest {
             s -> Artifact.builder().name(s).build(),
             s -> Artifact.builder().version(s).build(),
             s -> Artifact.builder().location(s).build(),
-            s -> Artifact.builder().reference(s).build())
+            s -> Artifact.builder().reference(s).build(),
+            s -> Artifact.builder().metadata(Collections.singletonMap("subPath", s)).build())
         .map(Arguments::of);
   }
 

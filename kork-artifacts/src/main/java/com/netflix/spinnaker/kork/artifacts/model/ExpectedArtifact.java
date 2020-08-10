@@ -95,6 +95,13 @@ public final class ExpectedArtifact {
       return false;
     }
 
+    // applicable only for git artifacts that uses same URL and branch but different subpath
+    String thisSubpath = Strings.nullToEmpty((String) matchArtifact.getMetadata("subPath"));
+    String otherSubpath = Strings.nullToEmpty((String) other.getMetadata("subPath"));
+    if (!matches(thisSubpath, otherSubpath)) {
+      return false;
+    }
+
     // Explicitly avoid matching on UUID, provenance & artifactAccount
 
     return true;
