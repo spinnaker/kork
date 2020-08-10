@@ -168,4 +168,83 @@ final class ExpectedArtifactTest {
             s -> Artifact.builder().artifactAccount(s).build())
         .map(Arguments::of);
   }
+
+  @Test
+  void testExpectedArtifactMatchsWithSubpath() {
+    ExpectedArtifact expectedArtifact =
+        ExpectedArtifact.builder()
+            .id("test")
+            .usePriorArtifact(true)
+            .useDefaultArtifact(false)
+            .matchArtifact(
+                Artifact.builder()
+                    .type("git/repo")
+                    .reference("https://github.com/spinnaker/spinnaker.github.io")
+                    .version("master")
+                    .metadata(Collections.singletonMap("subPath", "spinnaker/prod"))
+                    .build())
+            .build();
+
+    Artifact otherArtifact =
+        Artifact.builder()
+            .type("git/repo")
+            .reference("https://github.com/spinnaker/spinnaker.github.io")
+            .version("master")
+            .metadata(Collections.singletonMap("subPath", "spinnaker/prod"))
+            .build();
+
+    assertThat(expectedArtifact.matches(otherArtifact)).isTrue();
+  }
+
+  @Test
+  void testExpectedArtifactNoMatchsWithSubpath() {
+    ExpectedArtifact expectedArtifact =
+        ExpectedArtifact.builder()
+            .id("test")
+            .usePriorArtifact(true)
+            .useDefaultArtifact(false)
+            .matchArtifact(
+                Artifact.builder()
+                    .type("git/repo")
+                    .reference("https://github.com/spinnaker/spinnaker.github.io")
+                    .version("master")
+                    .metadata(Collections.singletonMap("subPath", "spinnaker/prod"))
+                    .build())
+            .build();
+
+    Artifact otherArtifact =
+        Artifact.builder()
+            .type("git/repo")
+            .reference("https://github.com/spinnaker/spinnaker.github.io")
+            .version("master")
+            .metadata(Collections.singletonMap("subPath", "spinnaker/test"))
+            .build();
+
+    assertThat(expectedArtifact.matches(otherArtifact)).isFalse();
+  }
+
+  @Test
+  void testExpectedArtifactMatchsWithoutSubpath() {
+    ExpectedArtifact expectedArtifact =
+        ExpectedArtifact.builder()
+            .id("test")
+            .usePriorArtifact(true)
+            .useDefaultArtifact(false)
+            .matchArtifact(
+                Artifact.builder()
+                    .type("git/repo")
+                    .reference("https://github.com/spinnaker/spinnaker.github.io")
+                    .version("master")
+                    .build())
+            .build();
+
+    Artifact otherArtifact =
+        Artifact.builder()
+            .type("git/repo")
+            .reference("https://github.com/spinnaker/spinnaker.github.io")
+            .version("master")
+            .build();
+
+    assertThat(expectedArtifact.matches(otherArtifact)).isTrue();
+  }
 }

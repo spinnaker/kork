@@ -95,7 +95,9 @@ public final class ExpectedArtifact {
       return false;
     }
 
-    // applicable only for git artifacts that uses same URL and branch but different subpath
+    // applicable for git artifacts that uses same URL and branch but different subpath
+    // git artifact doc:
+    // https://spinnaker.io/reference/artifacts-with-artifactsrewrite/types/git-repo/
     String thisSubpath = Strings.nullToEmpty((String) matchArtifact.getMetadata("subPath"));
     String otherSubpath = Strings.nullToEmpty((String) other.getMetadata("subPath"));
     if (!matches(thisSubpath, otherSubpath)) {
