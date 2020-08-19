@@ -29,6 +29,7 @@ import com.netflix.spinnaker.kork.plugins.events.RemotePluginConfigChanged.Statu
 import com.netflix.spinnaker.kork.plugins.remote.transport.OkHttpRemoteExtensionTransport
 import org.slf4j.LoggerFactory
 import org.springframework.context.ApplicationListener
+import javax.inject.Provider
 
 /**
  * Listen for remote plugin configuration changes, instantiate [RemotePlugin] and [RemoteExtension]
@@ -36,8 +37,8 @@ import org.springframework.context.ApplicationListener
  */
 @Beta
 class RemotePluginConfigChangedListener(
-  private val objectMapper: ObjectMapper,
-  private val okHttpClientProvider: OkHttpClientProvider,
+  private val objectMapper: Provider<ObjectMapper>,
+  private val okHttpClientProvider: Provider<OkHttpClientProvider>,
   private val remotePluginsCache: RemotePluginsCache
 ) : ApplicationListener<RemotePluginConfigChanged> {
 
@@ -59,7 +60,7 @@ class RemotePluginConfigChangedListener(
       // TODO(jonsie): Support enabling/disabling transports in the config.
       // Configure HTTP if it is available since it is the only configurable transport right now.
       val remoteExtensionTransport = if (remoteExtensionConfig.transport.http.url.isNotEmpty()) {
-        val client = okHttpClientProvider.getClient(
+        val client = okHttpClientProvider.get().getClient(
           DefaultServiceEndpoint(
             remoteExtensionConfig.id,
             remoteExtensionConfig.transport.http.url,
@@ -67,7 +68,7 @@ class RemotePluginConfigChangedListener(
           )
         )
         OkHttpRemoteExtensionTransport(
-          objectMapper,
+          objectMapper.get(),
           client,
           remoteExtensionConfig.transport.http.url
         )
