@@ -6,11 +6,13 @@ import com.netflix.spinnaker.kork.api.plugins.remote.RemoteExtensionConfig
 import com.netflix.spinnaker.kork.plugins.events.RemotePluginConfigChanged
 import dev.minutest.junit.JUnit5Minutests
 import dev.minutest.rootContext
+import io.mockk.every
 import io.mockk.mockk
 import strikt.api.expectThat
 import strikt.assertions.isA
 import strikt.assertions.isEqualTo
 import strikt.assertions.isNull
+import javax.inject.Provider
 
 class RemotePluginConfigChangedListenerTest : JUnit5Minutests {
   fun tests() = rootContext<Fixture> {
@@ -45,6 +47,8 @@ class RemotePluginConfigChangedListenerTest : JUnit5Minutests {
   private class Fixture {
     val objectMapper: ObjectMapper = mockk(relaxed = true)
     val okHttpClientProvider: OkHttpClientProvider = mockk(relaxed = true)
+    val objectMapperProvider: Provider<ObjectMapper> = mockk(relaxed = true)
+    val okHttpClientProviderProvider: Provider<OkHttpClientProvider> = mockk(relaxed = true)
     val remotePluginsCache: RemotePluginsCache = RemotePluginsCache(mockk(relaxed = true))
 
     val enableEvent = RemotePluginConfigChanged(
@@ -108,9 +112,14 @@ class RemotePluginConfigChangedListenerTest : JUnit5Minutests {
     )
 
     val subject: RemotePluginConfigChangedListener = RemotePluginConfigChangedListener(
-      objectMapper,
-      okHttpClientProvider,
+      objectMapperProvider,
+      okHttpClientProviderProvider,
       remotePluginsCache
     )
+
+    init {
+      every { objectMapperProvider.get() } returns objectMapper
+      every { okHttpClientProviderProvider.get() } returns okHttpClientProvider
+    }
   }
 }
