@@ -18,21 +18,16 @@ package com.netflix.spinnaker.config;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.netflix.spectator.api.Registry;
 import com.netflix.spinnaker.config.PluginsConfigurationProperties.PluginRepositoryProperties;
+import com.netflix.spinnaker.kork.annotations.Beta;
 import com.netflix.spinnaker.kork.dynamicconfig.DynamicConfigService;
 import com.netflix.spinnaker.kork.dynamicconfig.SpringDynamicConfigService;
-import com.netflix.spinnaker.kork.plugins.ExtensionBeanDefinitionRegistryPostProcessor;
-import com.netflix.spinnaker.kork.plugins.SpinnakerPluginManager;
-import com.netflix.spinnaker.kork.plugins.SpinnakerServiceVersionManager;
-import com.netflix.spinnaker.kork.plugins.SpringPluginStatusProvider;
-import com.netflix.spinnaker.kork.plugins.SpringStrictPluginLoaderStatusProvider;
+import com.netflix.spinnaker.kork.plugins.*;
 import com.netflix.spinnaker.kork.plugins.actuator.InstalledPluginsEndpoint;
 import com.netflix.spinnaker.kork.plugins.bundle.PluginBundleExtractor;
 import com.netflix.spinnaker.kork.plugins.config.ConfigFactory;
 import com.netflix.spinnaker.kork.plugins.config.ConfigResolver;
 import com.netflix.spinnaker.kork.plugins.config.RepositoryConfigCoordinates;
 import com.netflix.spinnaker.kork.plugins.config.SpringEnvironmentConfigResolver;
-import com.netflix.spinnaker.kork.plugins.proxy.aspects.InvocationAspect;
-import com.netflix.spinnaker.kork.plugins.proxy.aspects.InvocationState;
 import com.netflix.spinnaker.kork.plugins.proxy.aspects.LogInvocationAspect;
 import com.netflix.spinnaker.kork.plugins.proxy.aspects.MetricInvocationAspect;
 import com.netflix.spinnaker.kork.plugins.sdk.SdkFactory;
@@ -56,6 +51,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
 import java.util.stream.Collectors;
+import org.pf4j.PluginFactory;
 import org.pf4j.PluginStatusProvider;
 import org.pf4j.VersionManager;
 import org.pf4j.update.UpdateRepository;
@@ -68,14 +64,17 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.core.env.Environment;
 
-@Configuration
 @EnableConfigurationProperties(PluginsConfigurationProperties.class)
-@Import({Front50PluginsConfiguration.class})
+@Import({
+  V1PluginConfiguration.class,
+  V2PluginConfiguration.class,
+  Front50PluginsConfiguration.class,
+  RemotePluginsConfiguration.class
+})
 public class PluginsAutoConfiguration {
 
   private static final Logger log = LoggerFactory.getLogger(PluginsAutoConfiguration.class);
@@ -143,7 +142,8 @@ public class PluginsAutoConfiguration {
       ApplicationContext applicationContext,
       ConfigFactory configFactory,
       List<SdkFactory> sdkFactories,
-      PluginBundleExtractor pluginBundleExtractor) {
+      PluginBundleExtractor pluginBundleExtractor,
+      PluginFactory pluginFactory) {
     return new SpinnakerPluginManager(
         serviceVersion,
         versionManager,
@@ -153,7 +153,8 @@ public class PluginsAutoConfiguration {
         Objects.requireNonNull(
             applicationContext.getEnvironment().getProperty("spring.application.name")),
         determineRootPluginPath(applicationContext),
-        pluginBundleExtractor);
+        pluginBundleExtractor,
+        pluginFactory);
   }
 
   /**
@@ -201,8 +202,10 @@ public class PluginsAutoConfiguration {
         pluginInfoReleaseSources, springStrictPluginLoaderStatusProvider);
   }
 
+  /** Not a static bean - see {@link RemotePluginsConfiguration}. */
   @Bean
-  public static RemotePluginInfoReleaseCache remotePluginInfoReleaseCache(
+  @Beta
+  public RemotePluginInfoReleaseCache remotePluginInfoReleaseCache(
       Collection<PluginInfoReleaseSource> pluginInfoReleaseSources,
       SpringStrictPluginLoaderStatusProvider springStrictPluginLoaderStatusProvider,
       ApplicationEventPublisher applicationEventPublisher,
@@ -278,23 +281,6 @@ public class PluginsAutoConfiguration {
   @Bean
   public static LogInvocationAspect logInvocationAspect() {
     return new LogInvocationAspect();
-  }
-
-  @Bean
-  public static ExtensionBeanDefinitionRegistryPostProcessor pluginBeanPostProcessor(
-      SpinnakerPluginManager pluginManager,
-      SpinnakerUpdateManager updateManager,
-      PluginInfoReleaseProvider pluginInfoReleaseProvider,
-      SpringPluginStatusProvider springPluginStatusProvider,
-      ApplicationEventPublisher applicationEventPublisher,
-      List<InvocationAspect<? extends InvocationState>> invocationAspects) {
-    return new ExtensionBeanDefinitionRegistryPostProcessor(
-        pluginManager,
-        updateManager,
-        pluginInfoReleaseProvider,
-        springPluginStatusProvider,
-        applicationEventPublisher,
-        invocationAspects);
   }
 
   @Bean
