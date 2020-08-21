@@ -51,7 +51,7 @@ class ServiceDependenciesScenarioTest : JUnit5Minutests {
             .isNotNull()
             .get {
               getBean("myExtension").let {
-                val field = it.javaClass.declaredFields.first()
+                val field = it.javaClass.declaredField("parentServiceBean")
                 field.get(it)
               }
             }.isEqualTo(serviceBean)
