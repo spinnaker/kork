@@ -8,5 +8,6 @@ dependencies {
   runtimeOnly(project(":kork-secrets-azure"))
   runtimeOnly(project(":kork-stackdriver"))
   runtimeOnly(project(":kork-swagger"))
+  runtimeOnly(project(":kork-tomcat"))
   runtimeOnly(project(":kork-web"))
 }
