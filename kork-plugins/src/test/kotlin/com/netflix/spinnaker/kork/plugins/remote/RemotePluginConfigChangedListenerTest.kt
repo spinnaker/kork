@@ -4,6 +4,8 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.netflix.spinnaker.config.okhttp3.OkHttpClientProvider
 import com.netflix.spinnaker.kork.api.plugins.remote.RemoteExtensionConfig
 import com.netflix.spinnaker.kork.plugins.events.RemotePluginConfigChanged
+import com.netflix.spinnaker.kork.plugins.remote.extension.RemoteExtensionConfigType
+import com.netflix.spinnaker.kork.plugins.remote.extension.RemoteExtensionDefinition
 import dev.minutest.junit.JUnit5Minutests
 import dev.minutest.rootContext
 import io.mockk.every
@@ -111,15 +113,24 @@ class RemotePluginConfigChangedListenerTest : JUnit5Minutests {
       )
     )
 
+    val remoteExtensionDefinition: RemoteExtensionDefinition = object : RemoteExtensionDefinition {
+      override fun type() = "type"
+      override fun configType(): Class<out ConfigType> = ConfigType::class.java
+    }
+
     val subject: RemotePluginConfigChangedListener = RemotePluginConfigChangedListener(
       objectMapperProvider,
       okHttpClientProviderProvider,
-      remotePluginsCache
+      remotePluginsCache,
+      listOf(remoteExtensionDefinition)
     )
 
     init {
       every { objectMapperProvider.get() } returns objectMapper
       every { okHttpClientProviderProvider.get() } returns okHttpClientProvider
+      every { objectMapper.convertValue(any(), ConfigType::class.java) } returns ConfigType()
     }
   }
+
+  private class ConfigType: RemoteExtensionConfigType
 }

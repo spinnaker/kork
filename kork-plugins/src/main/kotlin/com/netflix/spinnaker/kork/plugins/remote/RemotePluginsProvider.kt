@@ -19,6 +19,7 @@ package com.netflix.spinnaker.kork.plugins.remote
 
 import com.netflix.spinnaker.kork.annotations.Beta
 import com.netflix.spinnaker.kork.exceptions.IntegrationException
+import com.netflix.spinnaker.kork.plugins.remote.extension.RemoteExtension
 
 /**
  * Provides remote plugins based on selected criteria - currently by plugin ID or remote extension
@@ -49,6 +50,16 @@ class RemotePluginsProvider(
     }
 
     return plugins
+  }
+
+  fun getExtensionsByType(type: String): List<RemoteExtension> {
+    val extensions: MutableList<RemoteExtension> = mutableListOf()
+
+    remotePluginsCache.getAll().forEach { pluginEntry ->
+      extensions.addAll(pluginEntry.value.remoteExtensions.filter { it.type == type })
+    }
+
+    return extensions
   }
 }
 
