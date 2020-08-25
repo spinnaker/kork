@@ -21,7 +21,7 @@ import com.netflix.spinnaker.kork.plugins.SpinnakerPluginManager
 import com.netflix.spinnaker.kork.plugins.SpinnakerServiceVersionManager
 import com.netflix.spinnaker.kork.plugins.bundle.PluginBundleExtractor
 import com.netflix.spinnaker.kork.plugins.internal.PluginZip
-import com.netflix.spinnaker.kork.plugins.testplugin.TestPluginBuilder
+import com.netflix.spinnaker.kork.plugins.testplugin.TestPluginBuilderSupport
 import com.netflix.spinnaker.kork.plugins.update.internal.SpinnakerPluginInfo
 import com.netflix.spinnaker.kork.plugins.update.release.PluginInfoRelease
 import dev.minutest.junit.JUnit5Minutests
@@ -137,7 +137,8 @@ class SpinnakerUpdateManagerTest : JUnit5Minutests {
       listOf(),
       "orca",
       paths.plugins,
-      PluginBundleExtractor(mockk(relaxed = true))
+      PluginBundleExtractor(mockk(relaxed = true)),
+      mockk(relaxed = true)
     )
 
     val repositories = listOf(
@@ -171,7 +172,7 @@ class SpinnakerUpdateManagerTest : JUnit5Minutests {
       className: String = "Generated"
     ): SpinnakerPluginInfo {
       val generatedPluginPath = Files.createTempDirectory("generated-plugin")
-      val pluginBuilder = TestPluginBuilder(
+      val pluginBuilder = TestPluginBuilderSupport(
         pluginPath = generatedPluginPath,
         name = className,
         version = pluginVersion

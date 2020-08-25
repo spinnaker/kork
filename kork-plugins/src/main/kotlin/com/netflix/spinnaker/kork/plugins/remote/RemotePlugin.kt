@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Netflix, Inc.
+ * Copyright 2020 Netflix, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -12,13 +12,22 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
+ *
  */
 
-package com.netflix.spinnaker.kork.plugins.testplugin.api;
+package com.netflix.spinnaker.kork.plugins.remote
 
-import org.pf4j.ExtensionPoint;
+import com.netflix.spinnaker.kork.annotations.Beta
 
-/** A simple ExtensionPoint for unit/integration testing. */
-public interface TestExtension extends ExtensionPoint {
-  String getTestValue();
-}
+@Beta
+data class RemotePlugin(
+
+  /** The canonical plugin ID.  See [CanonicalPluginId]. */
+  val id: String,
+
+  /** The version of the plugin. */
+  val version: String,
+
+  /** The list of remote extensions associated with this plugin. */
+  val remoteExtensions: Set<RemoteExtension>
+)
