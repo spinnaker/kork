@@ -4,8 +4,8 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.netflix.spinnaker.config.okhttp3.OkHttpClientProvider
 import com.netflix.spinnaker.kork.api.plugins.remote.RemoteExtensionConfig
 import com.netflix.spinnaker.kork.plugins.events.RemotePluginConfigChanged
-import com.netflix.spinnaker.kork.plugins.remote.extension.RemoteExtensionConfigType
-import com.netflix.spinnaker.kork.plugins.remote.extension.RemoteExtensionDefinition
+import com.netflix.spinnaker.kork.plugins.remote.extension.RemoteExtensionPointConfig
+import com.netflix.spinnaker.kork.plugins.remote.extension.RemoteExtensionPointDefinition
 import dev.minutest.junit.JUnit5Minutests
 import dev.minutest.rootContext
 import io.mockk.every
@@ -113,7 +113,7 @@ class RemotePluginConfigChangedListenerTest : JUnit5Minutests {
       )
     )
 
-    val remoteExtensionDefinition: RemoteExtensionDefinition = object : RemoteExtensionDefinition {
+    val remoteExtensionPointDefinition: RemoteExtensionPointDefinition = object : RemoteExtensionPointDefinition {
       override fun type() = "type"
       override fun configType(): Class<out ConfigType> = ConfigType::class.java
     }
@@ -122,7 +122,7 @@ class RemotePluginConfigChangedListenerTest : JUnit5Minutests {
       objectMapperProvider,
       okHttpClientProviderProvider,
       remotePluginsCache,
-      listOf(remoteExtensionDefinition)
+      listOf(remoteExtensionPointDefinition)
     )
 
     init {
@@ -132,5 +132,5 @@ class RemotePluginConfigChangedListenerTest : JUnit5Minutests {
     }
   }
 
-  private class ConfigType: RemoteExtensionConfigType
+  private class ConfigType: RemoteExtensionPointConfig
 }

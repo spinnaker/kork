@@ -27,7 +27,7 @@ import com.netflix.spinnaker.kork.plugins.events.RemotePluginConfigChanged.Statu
 import com.netflix.spinnaker.kork.plugins.events.RemotePluginConfigChanged.Status.ENABLED
 import com.netflix.spinnaker.kork.plugins.events.RemotePluginConfigChanged.Status.UPDATED
 import com.netflix.spinnaker.kork.plugins.remote.extension.RemoteExtension
-import com.netflix.spinnaker.kork.plugins.remote.extension.RemoteExtensionDefinition
+import com.netflix.spinnaker.kork.plugins.remote.extension.RemoteExtensionPointDefinition
 import com.netflix.spinnaker.kork.plugins.remote.extension.transport.OkHttpRemoteExtensionTransport
 import org.slf4j.LoggerFactory
 import org.springframework.context.ApplicationListener
@@ -42,7 +42,7 @@ class RemotePluginConfigChangedListener(
   private val objectMapper: Provider<ObjectMapper>,
   private val okHttpClientProvider: Provider<OkHttpClientProvider>,
   private val remotePluginsCache: RemotePluginsCache,
-  private val remoteExtensionDefinitions: List<RemoteExtensionDefinition>
+  private val remoteExtensionPointDefinitions: List<RemoteExtensionPointDefinition>
 ) : ApplicationListener<RemotePluginConfigChanged> {
 
   private val log by lazy { LoggerFactory.getLogger(javaClass) }
@@ -79,7 +79,7 @@ class RemotePluginConfigChangedListener(
         throw RemoteExtensionTransportConfigurationException(event.pluginId)
       }
 
-      val remoteExtensionDefinition = remoteExtensionDefinitions
+      val remoteExtensionDefinition = remoteExtensionPointDefinitions
         .find { it.type() == remoteExtensionConfig.type }
         ?: throw RemoteExtensionDefinitionNotFound(remoteExtensionConfig.type)
 

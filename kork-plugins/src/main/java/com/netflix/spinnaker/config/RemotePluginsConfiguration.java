@@ -23,7 +23,7 @@ import com.netflix.spinnaker.kork.annotations.Beta;
 import com.netflix.spinnaker.kork.plugins.remote.RemotePluginConfigChangedListener;
 import com.netflix.spinnaker.kork.plugins.remote.RemotePluginsCache;
 import com.netflix.spinnaker.kork.plugins.remote.RemotePluginsProvider;
-import com.netflix.spinnaker.kork.plugins.remote.extension.RemoteExtensionDefinition;
+import com.netflix.spinnaker.kork.plugins.remote.extension.RemoteExtensionPointDefinition;
 import java.util.List;
 import javax.inject.Provider;
 import org.springframework.context.ApplicationEventPublisher;
@@ -51,9 +51,9 @@ public class RemotePluginsConfiguration {
       Provider<ObjectMapper> objectMapper,
       Provider<OkHttpClientProvider> okHttpClientProvider,
       RemotePluginsCache remotePluginsCache,
-      List<RemoteExtensionDefinition> remoteExtensionDefinitions) {
+      List<RemoteExtensionPointDefinition> remoteExtensionPointDefinitions) {
     return new RemotePluginConfigChangedListener(
-        objectMapper, okHttpClientProvider, remotePluginsCache, remoteExtensionDefinitions);
+        objectMapper, okHttpClientProvider, remotePluginsCache, remoteExtensionPointDefinitions);
   }
 
   @Bean

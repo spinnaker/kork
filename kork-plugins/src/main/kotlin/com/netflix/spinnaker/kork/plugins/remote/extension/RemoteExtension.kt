@@ -45,13 +45,13 @@ class RemoteExtension(
    * Configuration necessary for the extension point - typically specifying something to configure
    * prior to the remote extension invocation.
    */
-  val config: RemoteExtensionConfigType,
+  val config: RemoteExtensionPointConfig,
 
   private val transport: RemoteExtensionTransport
 ) {
 
   @Suppress("UNCHECKED_CAST")
-  fun <T: RemoteExtensionConfigType> getTypedConfig(): T {
+  fun <T: RemoteExtensionPointConfig> getTypedConfig(): T {
     return config as T
   }
 
