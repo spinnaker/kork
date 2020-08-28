@@ -30,6 +30,7 @@ class RemotePluginsProvider(
   private val remotePluginsCache: RemotePluginsCache
 ) {
 
+  /** Return remote plugin by ID. */
   fun getById(pluginId: String): RemotePlugin {
     val plugin = remotePluginsCache.get(pluginId)
 
@@ -40,6 +41,7 @@ class RemotePluginsProvider(
     }
   }
 
+  /** Return remote plugins by extension type. */
   fun getByExtensionType(type: String): List<RemotePlugin> {
     val plugins: MutableList<RemotePlugin> = mutableListOf()
 
@@ -52,6 +54,7 @@ class RemotePluginsProvider(
     return plugins
   }
 
+  /** Return remote extensions by type. */
   fun getExtensionsByType(type: String): List<RemoteExtension> {
     val extensions: MutableList<RemoteExtension> = mutableListOf()
 
@@ -63,6 +66,7 @@ class RemotePluginsProvider(
   }
 }
 
+/** Thrown if the requested remote plugin ID can not be found. */
 class RemotePluginNotFoundException(
   pluginId: String
 ) : IntegrationException("Remote plugin '{}' not found.", pluginId)

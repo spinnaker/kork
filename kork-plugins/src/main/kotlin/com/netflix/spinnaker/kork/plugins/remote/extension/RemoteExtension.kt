@@ -50,6 +50,9 @@ class RemoteExtension(
   private val transport: RemoteExtensionTransport
 ) {
 
+  /**
+   * Return the configuration as the requested type.
+   */
   @Suppress("UNCHECKED_CAST")
   fun <T: RemoteExtensionPointConfig> getTypedConfig(): T {
     return config as T
