@@ -109,6 +109,9 @@ class RemoteExtensionTransportConfigurationException(
   pluginId: String
 ) : IntegrationException("No transport configuration for remote plugin '{}'", pluginId)
 
+/**
+ * Thrown when a remote extension definition is not found.
+ */
 class RemoteExtensionDefinitionNotFound(
   type: String
 ) : IntegrationException("No remote extension definition found for type '{}'", type)

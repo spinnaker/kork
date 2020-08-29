@@ -73,7 +73,7 @@ class Ok3Response(
     try {
       response?.body()?.close()
       responseBody?.close()
-    } catch (e: Exception) {
+    } catch (@Suppress("TooGenericExceptionCaught") e: Exception) {
       log.warn("Failed to cleanup resource", e)
     }
   }

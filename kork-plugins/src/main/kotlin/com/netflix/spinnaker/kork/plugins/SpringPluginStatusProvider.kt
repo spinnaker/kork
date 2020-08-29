@@ -45,7 +45,7 @@ class SpringPluginStatusProvider(
     !isEnabled(pluginId)
 
   /**
-   * Returns whether or not a plugin is enabled or not.git
+   * Returns whether or not a plugin is enabled or not.
    */
   fun isPluginEnabled(pluginId: String): Boolean =
     isEnabled(pluginId)

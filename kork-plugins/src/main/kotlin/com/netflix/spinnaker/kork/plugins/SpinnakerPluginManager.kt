@@ -49,6 +49,7 @@ import org.slf4j.LoggerFactory
  * @param pluginsRoot The root path to search for in-process plugin artifacts.
  */
 @Beta
+@Suppress("LongParameterList")
 open class SpinnakerPluginManager(
   private val serviceVersion: ServiceVersion,
   val spinnakerVersionManager: VersionManager,
