@@ -29,7 +29,7 @@ import org.springframework.context.ApplicationEventPublisher
  * for use in services.
  */
 class RemotePluginsCache(
-  val applicationEventPublisher: ApplicationEventPublisher
+  private val applicationEventPublisher: ApplicationEventPublisher
 ) {
   private val log by lazy { LoggerFactory.getLogger(javaClass) }
 

@@ -102,6 +102,9 @@ class RemotePluginConfigChangedListener(
   }
 }
 
+/**
+ * Thrown when there is no configuration for the remote transport.
+ */
 class RemoteExtensionTransportConfigurationException(
   pluginId: String
 ) : IntegrationException("No transport configuration for remote plugin '{}'", pluginId)
