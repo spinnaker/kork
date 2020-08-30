@@ -31,12 +31,24 @@ public class DefaultServiceEndpoint implements ServiceEndpoint {
   /** Base API url */
   @Nonnull private final String baseUrl;
 
+  /** Indicates whether the certificate/host verification is desired or not */
+  @Nonnull private final Boolean isSecure;
+
   /** Misc. config necessary for the service client. */
   @Nonnull private final Map<String, Object> config;
 
   public DefaultServiceEndpoint(@Nonnull String name, @Nonnull String baseUrl) {
     this.name = Objects.requireNonNull(name);
     this.baseUrl = Objects.requireNonNull(baseUrl);
+    this.isSecure = true;
+    this.config = new HashMap<>();
+  }
+
+  public DefaultServiceEndpoint(
+      @Nonnull String name, @Nonnull String baseUrl, @Nonnull Boolean isSecure) {
+    this.name = Objects.requireNonNull(name);
+    this.baseUrl = Objects.requireNonNull(baseUrl);
+    this.isSecure = Objects.requireNonNull(isSecure);
     this.config = new HashMap<>();
   }
 
@@ -45,6 +57,18 @@ public class DefaultServiceEndpoint implements ServiceEndpoint {
     this.name = Objects.requireNonNull(name);
     this.baseUrl = Objects.requireNonNull(baseUrl);
     this.config = Objects.requireNonNull(config);
+    this.isSecure = true;
+  }
+
+  public DefaultServiceEndpoint(
+      @Nonnull String name,
+      @Nonnull String baseUrl,
+      @Nonnull Map<String, Object> config,
+      @Nonnull Boolean isSecure) {
+    this.name = Objects.requireNonNull(name);
+    this.baseUrl = Objects.requireNonNull(baseUrl);
+    this.config = Objects.requireNonNull(config);
+    this.isSecure = isSecure;
   }
 
   @Override
@@ -63,5 +87,10 @@ public class DefaultServiceEndpoint implements ServiceEndpoint {
   @Override
   public Map<String, Object> getConfig() {
     return config;
+  }
+
+  @Override
+  public boolean isSecure() {
+    return isSecure;
   }
 }
