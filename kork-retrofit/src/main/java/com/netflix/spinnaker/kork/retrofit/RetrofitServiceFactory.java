@@ -31,6 +31,7 @@ import retrofit.Endpoint;
 import retrofit.RequestInterceptor;
 import retrofit.RestAdapter;
 import retrofit.converter.JacksonConverter;
+import retrofit2.Call;
 
 @NonnullByDefault
 class RetrofitServiceFactory implements ServiceClientFactory {
@@ -64,5 +65,10 @@ class RetrofitServiceFactory implements ServiceClientFactory {
         .setLog(new Slf4jRetrofitLogger(type))
         .build()
         .create(type);
+  }
+
+  @Override
+  public boolean supports(Class<?> type, ServiceEndpoint serviceEndpoint) {
+    return !type.getMethods()[0].getReturnType().getName().equalsIgnoreCase(Call.class.getName());
   }
 }

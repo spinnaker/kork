@@ -18,10 +18,12 @@
 package com.netflix.spinnaker.kork.retrofit
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.netflix.spinnaker.config.DefaultServiceEndpoint
 import com.netflix.spinnaker.config.RetrofitConfiguration
 import com.netflix.spinnaker.config.okhttp3.DefaultOkHttpClientBuilderProvider
 import com.netflix.spinnaker.config.okhttp3.OkHttpClientProvider
 import com.netflix.spinnaker.config.okhttp3.RawOkHttpClientFactory
+import com.netflix.spinnaker.kork.client.ServiceClientFactory
 import com.netflix.spinnaker.okhttp.OkHttpClientConfigurationProperties
 import com.netflix.spinnaker.okhttp.SpinnakerRequestInterceptor
 import dev.minutest.junit.JUnit5Minutests
@@ -32,8 +34,15 @@ import org.springframework.boot.test.context.assertj.AssertableApplicationContex
 import org.springframework.boot.test.context.runner.ApplicationContextRunner
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
+import retrofit.Callback
+import retrofit.http.GET
+import retrofit.http.Path
+import retrofit2.Call
+import retrofit2.http.Headers
 import strikt.api.expect
+import strikt.assertions.isA
 import strikt.assertions.isEqualTo
+import strikt.assertions.isNotNull
 
 class RetrofitServiceProviderTest  : JUnit5Minutests {
 
@@ -52,9 +61,20 @@ class RetrofitServiceProviderTest  : JUnit5Minutests {
         run { ctx: AssertableApplicationContext ->
           expect {
             that(ctx.getBeansOfType(RetrofitServiceProvider::class.java)).get { size }.isEqualTo(1)
+            that(ctx.getBean(RetrofitServiceProvider::class.java).getService(Retrofit1Service::class.java, DefaultServiceEndpoint("retrofit1", "https://www.test.com"))).isA<Retrofit1Service>()
+            that(ctx.getBean(RetrofitServiceProvider::class.java).getService(Retrofit2Service::class.java, DefaultServiceEndpoint("retrofit2", "https://www.test.com"))).isA<Retrofit2Service>()
           }
         }
       }
+
+      test("initializes 2 service client factories") {
+        run { ctx: AssertableApplicationContext ->
+          expect {
+            that(ctx.getBeansOfType(ServiceClientFactory::class.java)).get { size }.isEqualTo(2)
+          }
+        }
+      }
+
     }
   }
 
@@ -82,5 +102,20 @@ private open class TestConfiguration {
   open fun objectMapper(): ObjectMapper {
     return  ObjectMapper()
   }
+
+}
+
+interface Retrofit1Service {
+
+  @GET("/users/{user}/something")
+  fun getSomething(@Path("user") user: String?, callback: Callback<List<*>?>?)
+
+}
+
+interface Retrofit2Service {
+
+  @Headers("Accept: application/json")
+  @retrofit2.http.GET("something/{paramId}")
+  fun getSomething(@retrofit2.http.Path("paramId") paramId: String?): Call<*>?
 
 }

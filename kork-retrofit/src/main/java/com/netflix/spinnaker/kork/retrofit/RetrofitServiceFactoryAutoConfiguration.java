@@ -21,7 +21,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.netflix.spinnaker.config.okhttp3.OkHttpClientProvider;
 import com.netflix.spinnaker.kork.client.ServiceClientFactory;
 import java.util.List;
+import okhttp3.logging.HttpLoggingInterceptor;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.Ordered;
@@ -31,10 +34,11 @@ import retrofit.RestAdapter;
 
 @Configuration
 @ConditionalOnProperty(value = "retrofit.enabled", matchIfMissing = true)
+@EnableConfigurationProperties(Retrofit2ConfigurationProperties.class)
 public class RetrofitServiceFactoryAutoConfiguration {
 
   @Bean
-  @Order(Ordered.LOWEST_PRECEDENCE)
+  @Order(Ordered.LOWEST_PRECEDENCE - 1)
   ServiceClientFactory serviceClientFactory(
       RestAdapter.LogLevel retrofitLogLevel,
       OkHttpClientProvider clientProvider,
@@ -47,5 +51,20 @@ public class RetrofitServiceFactoryAutoConfiguration {
   RetrofitServiceProvider serviceClientProvider(
       List<ServiceClientFactory> serviceClientFactories, ObjectMapper objectMapper) {
     return new RetrofitServiceProvider(serviceClientFactories, objectMapper);
+  }
+
+  @Bean
+  @ConditionalOnMissingBean
+  HttpLoggingInterceptor httpLoggingInterceptor(
+      Retrofit2ConfigurationProperties retrofit2ConfigurationProperties) {
+    HttpLoggingInterceptor httpLoggingInterceptor = new HttpLoggingInterceptor();
+    httpLoggingInterceptor.level(retrofit2ConfigurationProperties.getLogLevel());
+    return httpLoggingInterceptor;
+  }
+
+  @Bean
+  @Order(Ordered.LOWEST_PRECEDENCE)
+  ServiceClientFactory serviceClientFactory2(OkHttpClientProvider clientProvider) {
+    return new Retrofit2ServiceFactory(clientProvider);
   }
 }
