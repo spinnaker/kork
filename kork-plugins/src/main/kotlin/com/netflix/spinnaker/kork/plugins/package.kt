@@ -15,5 +15,6 @@
  */
 package com.netflix.spinnaker.kork.plugins
 
+const val FRAMEWORK_VERSION_CONFIG = "spinnaker.extensibility.framework.version"
 const val FRAMEWORK_V1 = "v1"
 const val FRAMEWORK_V2 = "v2"

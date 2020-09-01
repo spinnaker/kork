@@ -15,8 +15,7 @@
  */
 package com.netflix.spinnaker.config;
 
-import static com.netflix.spinnaker.kork.plugins.PackageKt.FRAMEWORK_V1;
-import static com.netflix.spinnaker.kork.plugins.PackageKt.FRAMEWORK_V2;
+import static com.netflix.spinnaker.kork.plugins.PackageKt.*;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.netflix.spectator.api.Registry;
@@ -141,7 +140,7 @@ public class PluginsAutoConfiguration {
 
   @Bean
   @ConditionalOnProperty(
-      value = "spinnaker.extensibility.framework.version",
+      value = FRAMEWORK_VERSION_CONFIG,
       havingValue = FRAMEWORK_V1,
       matchIfMissing = true)
   public static PluginFactory pluginFactoryV1(
@@ -150,9 +149,7 @@ public class PluginsAutoConfiguration {
   }
 
   @Bean
-  @ConditionalOnProperty(
-      value = "spinnaker.extensibility.framework.version",
-      havingValue = FRAMEWORK_V2)
+  @ConditionalOnProperty(value = FRAMEWORK_VERSION_CONFIG, havingValue = FRAMEWORK_V2)
   public static PluginFactory pluginFactoryV2(
       List<SdkFactory> sdkFactories,
       ConfigFactory configFactory,
@@ -319,7 +316,7 @@ public class PluginsAutoConfiguration {
 
   @Bean
   @ConditionalOnProperty(
-      value = "spinnaker.extensibility.framework.version",
+      value = FRAMEWORK_VERSION_CONFIG,
       havingValue = FRAMEWORK_V1,
       matchIfMissing = true)
   public static ExtensionBeanDefinitionRegistryPostProcessor pluginBeanPostProcessor(
@@ -339,9 +336,7 @@ public class PluginsAutoConfiguration {
   }
 
   @Bean
-  @ConditionalOnProperty(
-      value = "spinnaker.extensibility.framework.version",
-      havingValue = FRAMEWORK_V2)
+  @ConditionalOnProperty(value = FRAMEWORK_VERSION_CONFIG, havingValue = FRAMEWORK_V2)
   public SpinnakerPluginService spinnakerPluginService(
       SpinnakerPluginManager pluginManager,
       SpinnakerUpdateManager updateManager,
@@ -353,9 +348,7 @@ public class PluginsAutoConfiguration {
   }
 
   @Bean
-  @ConditionalOnProperty(
-      value = "spinnaker.extensibility.framework.version",
-      havingValue = FRAMEWORK_V2)
+  @ConditionalOnProperty(value = FRAMEWORK_VERSION_CONFIG, havingValue = FRAMEWORK_V2)
   PluginFrameworkInitializer pluginFrameworkInitializer(SpinnakerPluginService pluginService) {
     return new PluginFrameworkInitializer(pluginService);
   }

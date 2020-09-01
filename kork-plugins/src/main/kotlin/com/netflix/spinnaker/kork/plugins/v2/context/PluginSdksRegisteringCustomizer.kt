@@ -36,6 +36,6 @@ class PluginSdksRegisteringCustomizer(
       serviceApplicationContext.getBeansOfType(SdkFactory::class.java).values
         .map { it.create(plugin.javaClass, plugin.wrapper) }
     )
-    context.beanFactory.registerSingleton("pluginSdks", sdk)
+    serviceApplicationContext.beanFactory.registerSingleton("${plugin.wrapper.pluginId}-pluginSdks", sdk)
   }
 }
