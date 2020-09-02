@@ -32,39 +32,29 @@ public class DefaultServiceEndpoint implements ServiceEndpoint {
   @Nonnull private final String baseUrl;
 
   /** Indicates whether the certificate/host verification is desired or not */
-  @Nonnull private final Boolean isSecure;
+  private final boolean isSecure;
 
   /** Misc. config necessary for the service client. */
   @Nonnull private final Map<String, Object> config;
 
   public DefaultServiceEndpoint(@Nonnull String name, @Nonnull String baseUrl) {
-    this.name = Objects.requireNonNull(name);
-    this.baseUrl = Objects.requireNonNull(baseUrl);
-    this.isSecure = true;
-    this.config = new HashMap<>();
+    this(name, baseUrl, new HashMap<>(), true);
   }
 
-  public DefaultServiceEndpoint(
-      @Nonnull String name, @Nonnull String baseUrl, @Nonnull Boolean isSecure) {
-    this.name = Objects.requireNonNull(name);
-    this.baseUrl = Objects.requireNonNull(baseUrl);
-    this.isSecure = Objects.requireNonNull(isSecure);
-    this.config = new HashMap<>();
+  public DefaultServiceEndpoint(@Nonnull String name, @Nonnull String baseUrl, boolean isSecure) {
+    this(name, baseUrl, new HashMap<>(), isSecure);
   }
 
   public DefaultServiceEndpoint(
       @Nonnull String name, @Nonnull String baseUrl, @Nonnull Map<String, Object> config) {
-    this.name = Objects.requireNonNull(name);
-    this.baseUrl = Objects.requireNonNull(baseUrl);
-    this.config = Objects.requireNonNull(config);
-    this.isSecure = true;
+    this(name, baseUrl, config, true);
   }
 
   public DefaultServiceEndpoint(
       @Nonnull String name,
       @Nonnull String baseUrl,
       @Nonnull Map<String, Object> config,
-      @Nonnull Boolean isSecure) {
+      boolean isSecure) {
     this.name = Objects.requireNonNull(name);
     this.baseUrl = Objects.requireNonNull(baseUrl);
     this.config = Objects.requireNonNull(config);

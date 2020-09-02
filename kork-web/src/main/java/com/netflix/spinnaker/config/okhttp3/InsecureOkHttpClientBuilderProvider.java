@@ -48,8 +48,9 @@ public class InsecureOkHttpClientBuilderProvider implements OkHttpClientBuilderP
 
   @Override
   public Boolean supports(ServiceEndpoint service) {
-    return (service.getBaseUrl().startsWith("http://")
-        || service.getBaseUrl().startsWith("https://") && !service.isSecure());
+    return ((service.getBaseUrl().startsWith("http://")
+            || service.getBaseUrl().startsWith("https://"))
+        && !service.isSecure());
   }
 
   @Override
