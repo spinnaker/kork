@@ -21,7 +21,6 @@ import static retrofit.Endpoints.newFixedEndpoint;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.jakewharton.retrofit.Ok3Client;
-import com.netflix.spinnaker.config.DefaultServiceEndpoint;
 import com.netflix.spinnaker.config.ServiceEndpoint;
 import com.netflix.spinnaker.config.okhttp3.OkHttpClientProvider;
 import com.netflix.spinnaker.kork.annotations.NonnullByDefault;
@@ -31,7 +30,6 @@ import retrofit.Endpoint;
 import retrofit.RequestInterceptor;
 import retrofit.RestAdapter;
 import retrofit.converter.JacksonConverter;
-import retrofit2.Call;
 
 @NonnullByDefault
 class RetrofitServiceFactory implements ServiceClientFactory {
@@ -56,19 +54,10 @@ class RetrofitServiceFactory implements ServiceClientFactory {
         .setRequestInterceptor(spinnakerRequestInterceptor)
         .setConverter(new JacksonConverter(objectMapper))
         .setEndpoint(endpoint)
-        .setClient(
-            new Ok3Client(
-                clientProvider.getClient(
-                    new DefaultServiceEndpoint(
-                        serviceEndpoint.getName(), serviceEndpoint.getBaseUrl()))))
+        .setClient(new Ok3Client(clientProvider.getClient(serviceEndpoint)))
         .setLogLevel(retrofitLogLevel)
         .setLog(new Slf4jRetrofitLogger(type))
         .build()
         .create(type);
-  }
-
-  @Override
-  public boolean supports(Class<?> type, ServiceEndpoint serviceEndpoint) {
-    return !type.getMethods()[0].getReturnType().getName().equalsIgnoreCase(Call.class.getName());
   }
 }
