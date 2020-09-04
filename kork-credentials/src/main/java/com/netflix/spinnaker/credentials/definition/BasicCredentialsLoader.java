@@ -19,6 +19,8 @@ package com.netflix.spinnaker.credentials.definition;
 import com.netflix.spinnaker.credentials.Credentials;
 import com.netflix.spinnaker.credentials.CredentialsRepository;
 import com.netflix.spinnaker.kork.annotations.NonnullByDefault;
+import lombok.Setter;
+
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -27,7 +29,16 @@ public class BasicCredentialsLoader<T extends CredentialsDefinition, U extends C
     extends AbstractCredentialsLoader<U> {
   protected final CredentialsParser<T, U> parser;
   protected final CredentialsDefinitionSource<T> definitionSource;
-  protected final Set<String> credentialNames = new HashSet<>();
+  /**
+   * When parallel is true, the loader may apply changes in parallel.
+   * See {@link java.util.concurrent.ForkJoinPool} for limitations.
+   * This can be useful when adding or updating credentials is expected to take some time,
+   * as for instance when making a network call.
+   */
+  @Setter protected boolean parallel;
+  // Definition is kept so we can quickly check for changes before parsing
+  protected final Map<String, T> loadedDefinitions = new HashMap<>();
+
 
   public BasicCredentialsLoader(
       CredentialsDefinitionSource<T> definitionSource,
@@ -44,28 +55,57 @@ public class BasicCredentialsLoader<T extends CredentialsDefinition, U extends C
   }
 
   protected void parse(Collection<T> definitions) {
-    Set<String> latestAccountNames =
-        definitions.stream().map(T::getName).collect(Collectors.toSet());
+    Set<String> definitionNames = definitions.stream().map(T::getName).collect(Collectors.toSet());
 
-    // deleted accounts
-    credentialNames.stream()
-        .filter(name -> !latestAccountNames.contains(name))
-        .peek(credentialsRepository::delete)
-        .forEach(credentialNames::remove);
+    credentialsRepository.getAll().stream()
+      .map(Credentials::getName)
+      .filter(name -> !definitionNames.contains(name))
+      .peek(loadedDefinitions::remove)
+      .forEach(credentialsRepository::delete);
 
-    // modified accounts
-    definitions.stream()
-        .filter(p -> credentialNames.contains(p.getName()))
-        .map(parser::parse)
-        .filter(Objects::nonNull)
-        .forEach(a -> credentialsRepository.update(a.getName(), a));
+    List<U> toApply = new ArrayList<>();
 
-    // new accounts
-    definitions.stream()
-        .filter(p -> !credentialNames.contains(p.getName()))
-        .map(parser::parse)
-        .filter(Objects::nonNull)
-        .peek(a -> credentialsRepository.save(a.getName(), a))
-        .forEach(a -> credentialNames.add(a.getName()));
+    for (T definition : definitions) {
+      if (!loadedDefinitions.containsKey(definition.getName())) {
+        U cred = parser.parse(definition);
+        if (cred != null) {
+          toApply.add(cred);
+          // Add to loaded definition now in case we trigger another parse before this one finishes
+          loadedDefinitions.put(definition.getName(), definition);
+        }
+      } else if (!loadedDefinitions.get(definition.getName()).equals(definition)) {
+        U cred = parser.parse(definition);
+        if (cred != null) {
+          toApply.add(cred);
+          loadedDefinitions.put(definition.getName(), definition);
+        }
+      }
+    }
+
+    if (parallel) {
+      applyChangeParallel(toApply);
+    } else {
+      applyChange(toApply);
+    }
+  }
+
+  protected void applyChange(List<U> toApply) {
+    toApply.forEach(c -> {
+      if (credentialsRepository.has(c.getName())) {
+        credentialsRepository.update(c.getName(), c);
+      } else {
+        credentialsRepository.save(c.getName(), c);
+      }
+    });
+  }
+
+  protected void applyChangeParallel(List<U> toApply) {
+    toApply.parallelStream().forEach(c -> {
+      if (credentialsRepository.has(c.getName())) {
+        credentialsRepository.update(c.getName(), c);
+      } else {
+        credentialsRepository.save(c.getName(), c);
+      }
+    });
   }
 }

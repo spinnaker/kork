@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.netflix.spinnaker.credentials.dynamic;
+package com.netflix.spinnaker.credentials.poller;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -22,9 +22,18 @@ import lombok.Data;
 import lombok.Getter;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
-@ConfigurationProperties("credentials.reload")
-public class ReloaderConfigurationProperties {
-  @Getter private Map<String, Settings> repositories = new HashMap<>();
+@ConfigurationProperties("credentials.poller")
+public class PollerConfigurationProperties {
+  private static final String DEFAULT_TYPE_KEY = "default";
+  @Getter private Map<String, Settings> types = new HashMap<>();
+
+  public Settings getSettings(String type) {
+    Settings settings = types.get(type);
+    if (settings != null) {
+      return settings;
+    }
+    return types.get(DEFAULT_TYPE_KEY);
+  }
 
   @Data
   public static class Settings {

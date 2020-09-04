@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.netflix.spinnaker.credentials.dynamic;
+package com.netflix.spinnaker.credentials.poller;
 
 import com.netflix.spinnaker.credentials.Credentials;
 import com.netflix.spinnaker.credentials.definition.AbstractCredentialsLoader;
@@ -23,7 +23,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @RequiredArgsConstructor
-public class Reloader<T extends Credentials> implements Runnable {
+public class Poller<T extends Credentials> implements Runnable {
   private final AbstractCredentialsLoader<T> credentialsLoader;
 
   public void run() {

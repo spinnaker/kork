@@ -19,6 +19,7 @@ package com.netflix.spinnaker.credentials.definition;
 import com.netflix.spinnaker.credentials.Credentials;
 import com.netflix.spinnaker.credentials.CredentialsRepository;
 import com.netflix.spinnaker.kork.annotations.NonnullByDefault;
+import javax.annotation.PostConstruct;
 import lombok.Getter;
 
 @NonnullByDefault
@@ -29,5 +30,6 @@ public abstract class AbstractCredentialsLoader<T extends Credentials> {
     this.credentialsRepository = credentialsRepository;
   }
 
+  @PostConstruct
   public abstract void load();
 }

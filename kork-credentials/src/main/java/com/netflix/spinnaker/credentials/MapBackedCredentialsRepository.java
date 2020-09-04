@@ -38,6 +38,11 @@ public class MapBackedCredentialsRepository<T extends Credentials>
   }
 
   @Override
+  public boolean has(String name) {
+    return credentials.containsKey(name);
+  }
+
+  @Override
   public Set<T> getAll() {
     return new HashSet<>(credentials.values());
   }

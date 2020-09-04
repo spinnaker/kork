@@ -52,8 +52,25 @@ public class CompositeCredentialsRepository<T extends Credentials> {
       throw new IllegalArgumentException(
           "Credentials '" + accountName + "' of type '" + type + "' cannot be found");
     }
-
     return account;
+  }
+
+  /**
+   * Helper method for the migration from single to multiple credential repositories
+   *
+   * @param accountName
+   * @return Account with the given name across all repositories
+   */
+  public T getFirstCredentialsWithName(String accountName) {
+    if (accountName == null || accountName.equals("")) {
+      throw new IllegalArgumentException("An account name must be supplied");
+    }
+
+    return allRepositories.values().stream()
+        .map(r -> r.getOne(accountName))
+        .filter(Objects::nonNull)
+        .findFirst()
+        .orElse(null);
   }
 
   public List<T> getAllCredentials() {

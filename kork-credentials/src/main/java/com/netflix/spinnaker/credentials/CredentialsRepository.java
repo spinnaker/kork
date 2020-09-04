@@ -26,6 +26,8 @@ import java.util.Set;
 public interface CredentialsRepository<T extends Credentials> {
   T getOne(String name);
 
+  boolean has(String name);
+
   Set<T> getAll();
 
   T save(String name, T credentials);
