@@ -15,10 +15,11 @@
  *
  */
 
-package com.netflix.spinnaker.kork.plugins.remote.transport
+package com.netflix.spinnaker.kork.plugins.remote.extension.transport
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.netflix.spinnaker.kork.exceptions.IntegrationException
+import com.netflix.spinnaker.kork.plugins.remote.extension.RemoteExtensionPayload
 import com.netflix.spinnaker.security.AuthenticatedRequest
 import okhttp3.Headers
 import okhttp3.MediaType
@@ -26,6 +27,9 @@ import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody
 
+/**
+ * An HTTP [RemoteExtensionTransport], using OkHttp for the client.
+ */
 class OkHttpRemoteExtensionTransport(
   private val objectMapper: ObjectMapper,
   private val client: OkHttpClient,
@@ -62,6 +66,9 @@ class OkHttpRemoteExtensionTransport(
   }
 }
 
+/**
+ * Thrown when there is an issue performing a call to the remote extension.
+ */
 class OkHttpRemoteExtensionTransportException(
   reason: String
 ) : IntegrationException("Unable to invoke remote extension due to unexpected error: $reason")

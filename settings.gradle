@@ -52,7 +52,6 @@ include(
   "kork-runtime",
   "kork-secrets",
   "kork-secrets-aws",
-  "kork-secrets-azure",
   "kork-secrets-gcp",
   "kork-security",
   "kork-retrofit",

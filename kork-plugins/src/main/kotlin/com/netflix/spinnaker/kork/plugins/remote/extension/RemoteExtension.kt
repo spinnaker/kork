@@ -15,41 +15,38 @@
  *
  */
 
-package com.netflix.spinnaker.kork.plugins.remote
+package com.netflix.spinnaker.kork.plugins.remote.extension
 
 import com.netflix.spinnaker.kork.annotations.Beta
 import com.netflix.spinnaker.kork.common.Header
-import com.netflix.spinnaker.kork.plugins.remote.transport.RemoteExtensionPayload
-import com.netflix.spinnaker.kork.plugins.remote.transport.RemoteExtensionTransport
+import com.netflix.spinnaker.kork.plugins.remote.extension.transport.RemoteExtensionTransport
 import org.slf4j.MDC
 
 /**
  * The remote extension with the implemented [RemoteExtensionTransport] which is based on the
  * remote extension configuration.
+ *
+ * @param id Identifier of the remote extension.  Used for tracing.
+ * @param pluginId Identifier of the plugin.  Used for tracing.
+ * @param type The remote extension type. Services will have a corresponding remote extension point implementation depending on the type.
+ * @param config Configuration necessary for the extension point - typically specifying something to configure prior to the remote extension invocation.
  */
 @Beta
 class RemoteExtension(
-
-  /** Identifier of the remote extension.  Used for tracing. */
   val id: String,
-
-  /** Identifier of the plugin.  Used for tracing. */
   val pluginId: String,
-
-  /**
-   * The remote extension type. Services will have a corresponding remote extension point
-   * implementation depending on the type.
-   */
   val type: String,
-
-  /**
-   * Configuration necessary for the extension point - typically specifying something to configure
-   * prior to the remote extension invocation.
-   */
-  val config: Map<String, Any>,
-
+  val config: RemoteExtensionPointConfig,
   private val transport: RemoteExtensionTransport
 ) {
+
+  /**
+   * Return the configuration as the requested type.
+   */
+  @Suppress("UNCHECKED_CAST")
+  fun <T: RemoteExtensionPointConfig> getTypedConfig(): T {
+    return config as T
+  }
 
   /** Invoke the remote extension via the [RemoteExtensionTransport] implementation. */
   fun invoke(payload: RemoteExtensionPayload) {
