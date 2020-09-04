@@ -40,7 +40,8 @@ public class PollerConfiguration implements SchedulingConfigurer {
           PollerConfigurationProperties.Settings settings =
               config.getSettings(poller.getCredentialsRepository().getType());
           if (settings != null && settings.getReloadFrequencyMs() > 0) {
-            PeriodicTrigger trigger = new PeriodicTrigger(settings.getReloadFrequencyMs(), TimeUnit.MILLISECONDS);
+            PeriodicTrigger trigger =
+                new PeriodicTrigger(settings.getReloadFrequencyMs(), TimeUnit.MILLISECONDS);
             trigger.setInitialDelay(settings.getReloadFrequencyMs());
             taskRegistrar.addTriggerTask(new Poller<>(poller), trigger);
           }

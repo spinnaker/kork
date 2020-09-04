@@ -19,10 +19,9 @@ package com.netflix.spinnaker.credentials.definition;
 import com.netflix.spinnaker.credentials.Credentials;
 import com.netflix.spinnaker.credentials.CredentialsRepository;
 import com.netflix.spinnaker.kork.annotations.NonnullByDefault;
-import lombok.Setter;
-
 import java.util.*;
 import java.util.stream.Collectors;
+import lombok.Setter;
 
 @NonnullByDefault
 public class BasicCredentialsLoader<T extends CredentialsDefinition, U extends Credentials>
@@ -30,15 +29,13 @@ public class BasicCredentialsLoader<T extends CredentialsDefinition, U extends C
   protected final CredentialsParser<T, U> parser;
   protected final CredentialsDefinitionSource<T> definitionSource;
   /**
-   * When parallel is true, the loader may apply changes in parallel.
-   * See {@link java.util.concurrent.ForkJoinPool} for limitations.
-   * This can be useful when adding or updating credentials is expected to take some time,
-   * as for instance when making a network call.
+   * When parallel is true, the loader may apply changes in parallel. See {@link
+   * java.util.concurrent.ForkJoinPool} for limitations. This can be useful when adding or updating
+   * credentials is expected to take some time, as for instance when making a network call.
    */
   @Setter protected boolean parallel;
   // Definition is kept so we can quickly check for changes before parsing
   protected final Map<String, T> loadedDefinitions = new HashMap<>();
-
 
   public BasicCredentialsLoader(
       CredentialsDefinitionSource<T> definitionSource,
@@ -58,10 +55,10 @@ public class BasicCredentialsLoader<T extends CredentialsDefinition, U extends C
     Set<String> definitionNames = definitions.stream().map(T::getName).collect(Collectors.toSet());
 
     credentialsRepository.getAll().stream()
-      .map(Credentials::getName)
-      .filter(name -> !definitionNames.contains(name))
-      .peek(loadedDefinitions::remove)
-      .forEach(credentialsRepository::delete);
+        .map(Credentials::getName)
+        .filter(name -> !definitionNames.contains(name))
+        .peek(loadedDefinitions::remove)
+        .forEach(credentialsRepository::delete);
 
     List<U> toApply = new ArrayList<>();
 
@@ -90,22 +87,25 @@ public class BasicCredentialsLoader<T extends CredentialsDefinition, U extends C
   }
 
   protected void applyChange(List<U> toApply) {
-    toApply.forEach(c -> {
-      if (credentialsRepository.has(c.getName())) {
-        credentialsRepository.update(c.getName(), c);
-      } else {
-        credentialsRepository.save(c.getName(), c);
-      }
-    });
+    toApply.forEach(
+        c -> {
+          if (credentialsRepository.has(c.getName())) {
+            credentialsRepository.update(c.getName(), c);
+          } else {
+            credentialsRepository.save(c.getName(), c);
+          }
+        });
   }
 
   protected void applyChangeParallel(List<U> toApply) {
-    toApply.parallelStream().forEach(c -> {
-      if (credentialsRepository.has(c.getName())) {
-        credentialsRepository.update(c.getName(), c);
-      } else {
-        credentialsRepository.save(c.getName(), c);
-      }
-    });
+    toApply.parallelStream()
+        .forEach(
+            c -> {
+              if (credentialsRepository.has(c.getName())) {
+                credentialsRepository.update(c.getName(), c);
+              } else {
+                credentialsRepository.save(c.getName(), c);
+              }
+            });
   }
 }
