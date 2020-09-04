@@ -30,9 +30,7 @@ public interface CredentialsRepository<T extends Credentials> {
 
   Set<T> getAll();
 
-  T save(String name, T credentials);
-
-  T update(String name, T credentials);
+  T save(T credentials);
 
   void delete(String name);
 

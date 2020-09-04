@@ -21,8 +21,17 @@ import com.netflix.spinnaker.credentials.CredentialsRepository;
 import com.netflix.spinnaker.kork.annotations.NonnullByDefault;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
+import lombok.Getter;
 import lombok.Setter;
 
+/**
+ * CredentialsLoader that expects the full list of credentials on each load, and updates the
+ * credential repository on each run. It can be run once or multiple times.
+ *
+ * @param <T>
+ * @param <U>
+ */
 @NonnullByDefault
 public class BasicCredentialsLoader<T extends CredentialsDefinition, U extends Credentials>
     extends AbstractCredentialsLoader<U> {
@@ -33,7 +42,7 @@ public class BasicCredentialsLoader<T extends CredentialsDefinition, U extends C
    * java.util.concurrent.ForkJoinPool} for limitations. This can be useful when adding or updating
    * credentials is expected to take some time, as for instance when making a network call.
    */
-  @Setter protected boolean parallel;
+  @Setter @Getter protected boolean parallel;
   // Definition is kept so we can quickly check for changes before parsing
   protected final Map<String, T> loadedDefinitions = new HashMap<>();
 
@@ -79,33 +88,7 @@ public class BasicCredentialsLoader<T extends CredentialsDefinition, U extends C
       }
     }
 
-    if (parallel) {
-      applyChangeParallel(toApply);
-    } else {
-      applyChange(toApply);
-    }
-  }
-
-  protected void applyChange(List<U> toApply) {
-    toApply.forEach(
-        c -> {
-          if (credentialsRepository.has(c.getName())) {
-            credentialsRepository.update(c.getName(), c);
-          } else {
-            credentialsRepository.save(c.getName(), c);
-          }
-        });
-  }
-
-  protected void applyChangeParallel(List<U> toApply) {
-    toApply.parallelStream()
-        .forEach(
-            c -> {
-              if (credentialsRepository.has(c.getName())) {
-                credentialsRepository.update(c.getName(), c);
-              } else {
-                credentialsRepository.save(c.getName(), c);
-              }
-            });
+    Stream<U> stream = parallel ? toApply.parallelStream() : toApply.stream();
+    stream.forEach(credentialsRepository::save);
   }
 }

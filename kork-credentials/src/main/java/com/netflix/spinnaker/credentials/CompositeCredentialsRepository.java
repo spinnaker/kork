@@ -20,8 +20,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 /**
- * Provides access to all credentials (or extension of Credentials) when access across credentials
- * type is needed.
+ * Provides access to credentials (or extension of Credentials) across credentials types.
  *
  * @param <T>
  */
@@ -29,12 +28,12 @@ public class CompositeCredentialsRepository<T extends Credentials> {
   private Map<String, CredentialsRepository<? extends T>> allRepositories;
 
   public CompositeCredentialsRepository(List<CredentialsRepository<? extends T>> repositories) {
-    this.allRepositories = new HashMap<>();
+    allRepositories = new HashMap<>();
     repositories.forEach(this::registerRepository);
   }
 
   public void registerRepository(CredentialsRepository<? extends T> repository) {
-    this.allRepositories.put(repository.getType(), repository);
+    allRepositories.put(repository.getType(), repository);
   }
 
   public T getCredentials(String accountName, String type) {
@@ -56,7 +55,7 @@ public class CompositeCredentialsRepository<T extends Credentials> {
   }
 
   /**
-   * Helper method for the migration from single to multiple credential repositories
+   * Helper method during migration from single to multiple credential repositories
    *
    * @param accountName
    * @return Account with the given name across all repositories
@@ -73,6 +72,7 @@ public class CompositeCredentialsRepository<T extends Credentials> {
         .orElse(null);
   }
 
+  /** @return All credentials across all repositories */
   public List<T> getAllCredentials() {
     return Collections.unmodifiableList(
         allRepositories.values().stream()

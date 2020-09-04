@@ -48,19 +48,15 @@ public class MapBackedCredentialsRepository<T extends Credentials>
   }
 
   @Override
-  public T save(String key, T credentials) {
+  public T save(T creds) {
     if (eventHandler != null) {
-      eventHandler.credentialsAdded(credentials);
+      if (credentials.containsKey(creds.getName())) {
+        eventHandler.credentialsUpdated(creds);
+      } else {
+        eventHandler.credentialsAdded(creds);
+      }
     }
-    return this.credentials.put(key, credentials);
-  }
-
-  @Override
-  public T update(String key, T credentials) {
-    if (eventHandler != null) {
-      eventHandler.credentialsUpdated(credentials);
-    }
-    return this.credentials.put(key, credentials);
+    return credentials.put(creds.getName(), creds);
   }
 
   @Override

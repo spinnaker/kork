@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.netflix.spinnaker.credentials.test;
+package com.netflix.spinnaker.credentials.definition;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
@@ -24,9 +24,6 @@ import com.netflix.spinnaker.credentials.Credentials;
 import com.netflix.spinnaker.credentials.CredentialsLifecycleHandler;
 import com.netflix.spinnaker.credentials.CredentialsRepository;
 import com.netflix.spinnaker.credentials.MapBackedCredentialsRepository;
-import com.netflix.spinnaker.credentials.definition.BasicCredentialsLoader;
-import com.netflix.spinnaker.credentials.definition.CredentialsDefinition;
-import com.netflix.spinnaker.credentials.definition.CredentialsDefinitionSource;
 import java.util.Arrays;
 import java.util.Collections;
 import lombok.Getter;

@@ -21,6 +21,11 @@ import com.netflix.spinnaker.credentials.definition.AbstractCredentialsLoader;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+/**
+ * A poller attempts to reload credentials from its source at a regular interval.
+ *
+ * @param <T>
+ */
 @Slf4j
 @RequiredArgsConstructor
 public class Poller<T extends Credentials> implements Runnable {
