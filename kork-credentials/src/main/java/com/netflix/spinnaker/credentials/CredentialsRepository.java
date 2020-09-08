@@ -24,15 +24,37 @@ import java.util.Set;
  * @param <T>
  */
 public interface CredentialsRepository<T extends Credentials> {
+  /**
+   * @param name
+   * @return Credentials with the given name or null
+   */
   T getOne(String name);
 
+  /**
+   * @param name
+   * @return true if the repository holds credentials of the given name
+   */
   boolean has(String name);
 
+  /** @return A new set containing all known credentials */
   Set<T> getAll();
 
+  /**
+   * Add or update credentials
+   *
+   * @param credentials
+   * @return credentials
+   * @throws com.netflix.spinnaker.kork.exceptions.InvalidCredentialsTypeException
+   */
   T save(T credentials);
 
+  /**
+   * Remove credentials with the given name
+   *
+   * @param name
+   */
   void delete(String name);
 
+  /** @return Type of credentials this repository can store */
   String getType();
 }

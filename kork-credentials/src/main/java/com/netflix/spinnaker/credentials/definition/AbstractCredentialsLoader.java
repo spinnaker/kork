@@ -30,6 +30,11 @@ public abstract class AbstractCredentialsLoader<T extends Credentials> {
     this.credentialsRepository = credentialsRepository;
   }
 
+  /**
+   * Loads credentials into the given repository. Each implementation should be idempotent. It will
+   * typically be called once before the application is ready and might be called on a regular basis
+   * thereafter.
+   */
   @PostConstruct
   public abstract void load();
 }

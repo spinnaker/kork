@@ -20,6 +20,7 @@ import com.netflix.spinnaker.credentials.Credentials;
 import com.netflix.spinnaker.credentials.CredentialsRepository;
 import com.netflix.spinnaker.kork.annotations.NonnullByDefault;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import lombok.Getter;
@@ -44,7 +45,7 @@ public class BasicCredentialsLoader<T extends CredentialsDefinition, U extends C
    */
   @Setter @Getter protected boolean parallel;
   // Definition is kept so we can quickly check for changes before parsing
-  protected final Map<String, T> loadedDefinitions = new HashMap<>();
+  protected final Map<String, T> loadedDefinitions = new ConcurrentHashMap<>();
 
   public BasicCredentialsLoader(
       CredentialsDefinitionSource<T> definitionSource,

@@ -26,7 +26,7 @@ package com.netflix.spinnaker.credentials;
 public interface CredentialsLifecycleHandler<T extends Credentials> {
 
   /**
-   * Credentials have been added. This is called before credentials are available in @{@link
+   * Credentials have been added. This is called before credentials are available in {@link
    * CredentialsRepository}
    *
    * @param credentials
@@ -34,7 +34,7 @@ public interface CredentialsLifecycleHandler<T extends Credentials> {
   void credentialsAdded(T credentials);
 
   /**
-   * Credentials have been updated. This is called before credentials are updated in @{@link
+   * Credentials have been updated. This is called before credentials are updated in {@link
    * CredentialsRepository}
    *
    * @param credentials

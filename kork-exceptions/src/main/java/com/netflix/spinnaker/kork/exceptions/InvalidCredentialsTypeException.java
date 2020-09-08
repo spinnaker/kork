@@ -12,20 +12,24 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
+ *
  */
 
-package com.netflix.spinnaker.credentials;
+package com.netflix.spinnaker.kork.exceptions;
 
-/** Credentials to an external system. Each credentials has a unique name for its type. */
-public interface Credentials {
+public class InvalidCredentialsTypeException extends CredentialsException {
 
-  /**
-   * Each credentials is uniquely identified by its name for a given type.
-   *
-   * @return Credentials name
-   */
-  String getName();
+  public InvalidCredentialsTypeException() {}
 
-  /** @return Credentials type */
-  String getType();
+  public InvalidCredentialsTypeException(String message) {
+    super(message);
+  }
+
+  public InvalidCredentialsTypeException(String message, Throwable cause) {
+    super(message, cause);
+  }
+
+  public InvalidCredentialsTypeException(Throwable cause) {
+    super(cause);
+  }
 }

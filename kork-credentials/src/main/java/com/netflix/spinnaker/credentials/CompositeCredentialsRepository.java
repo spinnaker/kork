@@ -16,6 +16,7 @@
 
 package com.netflix.spinnaker.credentials;
 
+import com.netflix.spinnaker.kork.exceptions.UnknownCredentialsTypeException;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -36,37 +37,37 @@ public class CompositeCredentialsRepository<T extends Credentials> {
     allRepositories.put(repository.getType(), repository);
   }
 
-  public T getCredentials(String accountName, String type) {
-    if (accountName == null || accountName.equals("")) {
-      throw new IllegalArgumentException("An account name must be supplied");
+  public T getCredentials(String credentialsName, String type) {
+    if (credentialsName == null || "".equals(credentialsName)) {
+      throw new IllegalArgumentException("Credentials name must be supplied");
     }
 
     CredentialsRepository<? extends T> repository = allRepositories.get(type);
     if (repository == null) {
-      throw new IllegalArgumentException("No credentials of type '" + type + "' found");
+      throw new UnknownCredentialsTypeException("No credentials of type '" + type + "' found");
     }
 
-    T account = repository.getOne(accountName);
-    if (account == null) {
+    T creds = repository.getOne(credentialsName);
+    if (creds == null) {
       throw new IllegalArgumentException(
-          "Credentials '" + accountName + "' of type '" + type + "' cannot be found");
+          "Credentials '" + credentialsName + "' of type '" + type + "' cannot be found");
     }
-    return account;
+    return creds;
   }
 
   /**
    * Helper method during migration from single to multiple credential repositories
    *
-   * @param accountName
+   * @param name
    * @return Account with the given name across all repositories
    */
-  public T getFirstCredentialsWithName(String accountName) {
-    if (accountName == null || accountName.equals("")) {
+  public T getFirstCredentialsWithName(String name) {
+    if (name == null || "".equals(name)) {
       throw new IllegalArgumentException("An account name must be supplied");
     }
 
     return allRepositories.values().stream()
-        .map(r -> r.getOne(accountName))
+        .map(r -> r.getOne(name))
         .filter(Objects::nonNull)
         .findFirst()
         .orElse(null);

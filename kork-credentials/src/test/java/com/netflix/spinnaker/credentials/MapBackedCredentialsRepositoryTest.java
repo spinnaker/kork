@@ -32,6 +32,7 @@ public class MapBackedCredentialsRepositoryTest {
 
     Credentials c1 = mock(Credentials.class);
     when(c1.getName()).thenReturn(CRED_NAME);
+    when(c1.getType()).thenReturn(TYPE);
 
     repository.save(c1);
     // A second time to update

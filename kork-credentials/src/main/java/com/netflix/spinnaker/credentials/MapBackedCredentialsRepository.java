@@ -16,13 +16,15 @@
 
 package com.netflix.spinnaker.credentials;
 
+import com.netflix.spinnaker.kork.exceptions.InvalidCredentialsTypeException;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import javax.annotation.Nonnull;
 import lombok.Getter;
 
 public class MapBackedCredentialsRepository<T extends Credentials>
     implements CredentialsRepository<T> {
-  protected Map<String, T> credentials = new HashMap<>();
+  protected Map<String, T> credentials = new ConcurrentHashMap<>();
   protected CredentialsLifecycleHandler<T> eventHandler;
   @Nonnull @Getter protected String type;
 
@@ -49,6 +51,16 @@ public class MapBackedCredentialsRepository<T extends Credentials>
 
   @Override
   public T save(T creds) {
+    if (creds.getType() == null || !creds.getType().equals(getType())) {
+      throw new InvalidCredentialsTypeException(
+          "Credentials '"
+              + creds.getName()
+              + "' of type '"
+              + creds.getType()
+              + "' cannot be added to repository of type '"
+              + getType()
+              + "'");
+    }
     if (eventHandler != null) {
       if (credentials.containsKey(creds.getName())) {
         eventHandler.credentialsUpdated(creds);
