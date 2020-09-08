@@ -18,6 +18,8 @@ package com.netflix.spinnaker.credentials;
 
 import static org.mockito.Mockito.*;
 
+import com.netflix.spinnaker.kork.exceptions.InvalidCredentialsTypeException;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 public class MapBackedCredentialsRepositoryTest {
@@ -42,5 +44,20 @@ public class MapBackedCredentialsRepositoryTest {
     verify(handler, times(1)).credentialsAdded(c1);
     verify(handler, times(1)).credentialsUpdated(c1);
     verify(handler, times(1)).credentialsDeleted(c1);
+  }
+
+  @Test
+  public void testTypeCheck() {
+    final String TYPE1 = "type1";
+    final String TYPE2 = "type2";
+    final String CRED_NAME = "cred";
+    MapBackedCredentialsRepository<Credentials> repository =
+        new MapBackedCredentialsRepository<>(TYPE1, null);
+
+    Credentials c1 = mock(Credentials.class);
+    when(c1.getName()).thenReturn(CRED_NAME);
+    when(c1.getType()).thenReturn(TYPE2);
+
+    Assertions.assertThrows(InvalidCredentialsTypeException.class, () -> repository.save(c1));
   }
 }
