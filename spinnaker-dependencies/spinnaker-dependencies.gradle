@@ -8,6 +8,7 @@ ext {
   versions = [
     aws              : "1.11.820",
     bouncycastle     : "1.61",
+    brave            : "5.12.3",
     groovy           : "2.5.11", //this needs to keep in sync with the version from boot... if we could get rid of groovy-all we'd no longer need this
     jsch             : "0.1.54",
     jschAgentProxy   : "0.0.9",
@@ -20,6 +21,7 @@ ext {
     retrofit2        : "2.8.1",
     spectator        : "0.103.0",
     spek             : "1.2.1",
+    spek2            : "2.0.9",
     springBoot       : "2.2.5.RELEASE",
     springCloud      : "Greenwich.SR2",
     springfoxSwagger : "2.9.2",
@@ -134,6 +136,8 @@ dependencies {
     api("org.codehaus.groovy:groovy-all:${versions.groovy}")
     api("org.funktionale:funktionale-partials:1.2")
     api("org.jetbrains:annotations:19.0.0")
+    api("org.spekframework.spek2:spek-dsl-jvm:${versions.spek2}")
+    api("org.spekframework.spek2:spek-runner-junit5:${versions.spek2}")
     api("org.jetbrains.spek:spek-api:${versions.spek}")
     api("org.jetbrains.spek:spek-junit-platform-engine:${versions.spek}")
     api("org.jetbrains.spek:spek-junit-platform-runner:${versions.spek}")
@@ -149,5 +153,6 @@ dependencies {
     api("org.springframework.security.extensions:spring-security-saml-dsl-core:1.0.5.RELEASE")
     api("org.springframework.security.extensions:spring-security-saml2-core:1.0.9.RELEASE")
     api("org.threeten:threeten-extra:1.0")
+    api("io.zipkin.brave:brave-instrumentation-okhttp3:${versions.brave}")
   }
 }
