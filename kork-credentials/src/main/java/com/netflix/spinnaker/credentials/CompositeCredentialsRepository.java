@@ -19,6 +19,7 @@ package com.netflix.spinnaker.credentials;
 import com.netflix.spinnaker.kork.exceptions.UnknownCredentialsTypeException;
 import java.util.*;
 import java.util.stream.Collectors;
+import org.springframework.util.StringUtils;
 
 /**
  * Provides access to credentials (or extension of Credentials) across credentials types.
@@ -38,7 +39,7 @@ public class CompositeCredentialsRepository<T extends Credentials> {
   }
 
   public T getCredentials(String credentialsName, String type) {
-    if (credentialsName == null || "".equals(credentialsName)) {
+    if (StringUtils.isEmpty(credentialsName)) {
       throw new IllegalArgumentException("Credentials name must be supplied");
     }
 
@@ -62,7 +63,7 @@ public class CompositeCredentialsRepository<T extends Credentials> {
    * @return Account with the given name across all repositories
    */
   public T getFirstCredentialsWithName(String name) {
-    if (name == null || "".equals(name)) {
+    if (StringUtils.isEmpty(name)) {
       throw new IllegalArgumentException("An account name must be supplied");
     }
 
