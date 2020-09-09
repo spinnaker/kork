@@ -65,10 +65,10 @@ public class JedisPoolFactory {
   }
 
   private static int parseDatabase(String path) {
-    if (path == null) {
-      return 0;
+    if (path == null || path.equals("") || path.equals("/")) {
+      return Protocol.DEFAULT_DATABASE;
     }
-    return Integer.parseInt(("/" + Protocol.DEFAULT_DATABASE).split("/", 2)[1]);
+    return Integer.parseInt(path.substring(1));
   }
 
   private static String parsePassword(String userInfo) {
