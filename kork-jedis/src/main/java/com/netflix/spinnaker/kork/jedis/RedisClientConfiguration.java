@@ -223,7 +223,7 @@ public class RedisClientConfiguration {
     int port = cx.getPort() == -1 ? Protocol.DEFAULT_PORT : cx.getPort();
     String password =
         (cx.getUserInfo() != null && cx.getUserInfo().contains(":"))
-            ? cx.getUserInfo().substring(cx.getUserInfo().indexOf(":"))
+            ? cx.getUserInfo().substring(cx.getUserInfo().indexOf(":") + 1)
             : null;
 
     boolean isSSL = cx.getScheme().equals("rediss");
