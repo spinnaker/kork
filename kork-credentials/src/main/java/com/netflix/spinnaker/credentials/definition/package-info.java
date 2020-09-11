@@ -12,21 +12,9 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
+ *
  */
-
+@NonnullByDefault
 package com.netflix.spinnaker.credentials.definition;
 
-import com.netflix.spinnaker.credentials.Credentials;
-import javax.annotation.Nullable;
-
-/**
- * Instantiate {@link Credentials} from a {@link CredentialsDefinition}.
- *
- * @param <T>
- * @param <U>
- */
-public interface CredentialsParser<T extends CredentialsDefinition, U extends Credentials> {
-  /** Parses a definition into credentials. Can return null if the definition is to be ignored. */
-  @Nullable
-  U parse(T credentials);
-}
+import com.netflix.spinnaker.kork.annotations.NonnullByDefault;

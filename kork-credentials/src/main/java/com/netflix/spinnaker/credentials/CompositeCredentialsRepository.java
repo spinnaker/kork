@@ -19,6 +19,7 @@ package com.netflix.spinnaker.credentials;
 import com.netflix.spinnaker.kork.exceptions.UnknownCredentialsTypeException;
 import java.util.*;
 import java.util.stream.Collectors;
+import javax.annotation.Nullable;
 import org.springframework.util.StringUtils;
 
 /**
@@ -62,6 +63,7 @@ public class CompositeCredentialsRepository<T extends Credentials> {
    * @param name
    * @return Account with the given name across all repositories
    */
+  @Nullable
   public T getFirstCredentialsWithName(String name) {
     if (StringUtils.isEmpty(name)) {
       throw new IllegalArgumentException("An account name must be supplied");

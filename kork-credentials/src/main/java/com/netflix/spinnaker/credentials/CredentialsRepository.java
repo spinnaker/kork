@@ -17,6 +17,7 @@
 package com.netflix.spinnaker.credentials;
 
 import java.util.Set;
+import javax.annotation.Nullable;
 
 /**
  * Repository of credentials of a given type
@@ -28,6 +29,7 @@ public interface CredentialsRepository<T extends Credentials> {
    * @param name
    * @return Credentials with the given name or null
    */
+  @Nullable
   T getOne(String name);
 
   /**
@@ -46,7 +48,7 @@ public interface CredentialsRepository<T extends Credentials> {
    * @return credentials
    * @throws com.netflix.spinnaker.kork.exceptions.InvalidCredentialsTypeException
    */
-  T save(T credentials);
+  void save(T credentials);
 
   /**
    * Remove credentials with the given name

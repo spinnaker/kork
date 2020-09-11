@@ -18,7 +18,6 @@ package com.netflix.spinnaker.credentials.definition;
 
 import com.netflix.spinnaker.credentials.Credentials;
 import com.netflix.spinnaker.credentials.CredentialsRepository;
-import com.netflix.spinnaker.kork.annotations.NonnullByDefault;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
@@ -33,7 +32,6 @@ import lombok.Setter;
  * @param <T>
  * @param <U>
  */
-@NonnullByDefault
 public class BasicCredentialsLoader<T extends CredentialsDefinition, U extends Credentials>
     extends AbstractCredentialsLoader<U> {
   protected final CredentialsParser<T, U> parser;
