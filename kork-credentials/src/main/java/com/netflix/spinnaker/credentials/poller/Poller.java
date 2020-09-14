@@ -24,9 +24,10 @@ import lombok.extern.slf4j.Slf4j;
 /**
  * A poller attempts to reload credentials from its source at a regular interval.
  *
- * <p>Frequency is given by the property `credentials.poller.[credentials type].reloadFrequencyMs`
- * and defaults to `credentials.poller.default.reloadFrequencyMs`. If not provided, the default is
- * zero which disables the polling.
+ * <p>Pollers are enabled by `credentials.poller.enabled`. Frequency is given by the property
+ * `credentials.poller.[credentials type].reloadFrequencyMs` and defaults to
+ * `credentials.poller.default.reloadFrequencyMs`. If not provided, the default is zero which
+ * disables the polling.
  *
  * @param <T>
  */

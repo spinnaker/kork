@@ -35,16 +35,18 @@ public class PollerConfiguration implements SchedulingConfigurer {
 
   @Override
   public void configureTasks(ScheduledTaskRegistrar taskRegistrar) {
-    pollers.forEach(
-        poller -> {
-          PollerConfigurationProperties.Settings settings =
-              config.getSettings(poller.getCredentialsRepository().getType());
-          if (settings != null && settings.getReloadFrequencyMs() > 0) {
-            PeriodicTrigger trigger =
-                new PeriodicTrigger(settings.getReloadFrequencyMs(), TimeUnit.MILLISECONDS);
-            trigger.setInitialDelay(settings.getReloadFrequencyMs());
-            taskRegistrar.addTriggerTask(new Poller<>(poller), trigger);
-          }
-        });
+    if (config.isEnabled()) {
+      pollers.forEach(
+          poller -> {
+            PollerConfigurationProperties.Settings settings =
+                config.getSettings(poller.getCredentialsRepository().getType());
+            if (settings != null && settings.getReloadFrequencyMs() > 0) {
+              PeriodicTrigger trigger =
+                  new PeriodicTrigger(settings.getReloadFrequencyMs(), TimeUnit.MILLISECONDS);
+              trigger.setInitialDelay(settings.getReloadFrequencyMs());
+              taskRegistrar.addTriggerTask(new Poller<>(poller), trigger);
+            }
+          });
+    }
   }
 }

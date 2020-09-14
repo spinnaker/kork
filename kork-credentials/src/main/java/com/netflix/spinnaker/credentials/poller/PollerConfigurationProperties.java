@@ -20,12 +20,14 @@ import java.util.HashMap;
 import java.util.Map;
 import lombok.Data;
 import lombok.Getter;
+import lombok.Setter;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 @ConfigurationProperties("credentials.poller")
 public class PollerConfigurationProperties {
   private static final String DEFAULT_TYPE_KEY = "default";
   @Getter private Map<String, Settings> types = new HashMap<>();
+  @Getter @Setter private boolean enabled;
 
   public Settings getSettings(String type) {
     Settings settings = types.get(type);
