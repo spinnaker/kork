@@ -16,11 +16,11 @@
 
 package com.netflix.spinnaker.credentials;
 
+import com.netflix.spinnaker.kork.exceptions.MissingCredentialsException;
 import com.netflix.spinnaker.kork.exceptions.UnknownCredentialsTypeException;
 import java.util.*;
 import java.util.stream.Collectors;
 import javax.annotation.Nullable;
-import org.springframework.util.StringUtils;
 
 /**
  * Provides access to credentials (or extension of Credentials) across credentials types.
@@ -40,10 +40,6 @@ public class CompositeCredentialsRepository<T extends Credentials> {
   }
 
   public T getCredentials(String credentialsName, String type) {
-    if (StringUtils.isEmpty(credentialsName)) {
-      throw new IllegalArgumentException("Credentials name must be supplied");
-    }
-
     CredentialsRepository<? extends T> repository = allRepositories.get(type);
     if (repository == null) {
       throw new UnknownCredentialsTypeException("No credentials of type '" + type + "' found");
@@ -51,7 +47,7 @@ public class CompositeCredentialsRepository<T extends Credentials> {
 
     T creds = repository.getOne(credentialsName);
     if (creds == null) {
-      throw new IllegalArgumentException(
+      throw new MissingCredentialsException(
           "Credentials '" + credentialsName + "' of type '" + type + "' cannot be found");
     }
     return creds;
@@ -65,10 +61,6 @@ public class CompositeCredentialsRepository<T extends Credentials> {
    */
   @Nullable
   public T getFirstCredentialsWithName(String name) {
-    if (StringUtils.isEmpty(name)) {
-      throw new IllegalArgumentException("An account name must be supplied");
-    }
-
     return allRepositories.values().stream()
         .map(r -> r.getOne(name))
         .filter(Objects::nonNull)
