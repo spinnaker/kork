@@ -6,8 +6,7 @@ dependencies {
 
   implementation "commons-io:commons-io"
   implementation "org.apache.commons:commons-lang3"
-
-  api project(':kork-secrets')
+  implementation project(':kork-secrets')
   api project(':kork-config')
   api "org.springframework.cloud:spring-cloud-context"
   api "org.springframework.cloud:spring-cloud-config-server"
