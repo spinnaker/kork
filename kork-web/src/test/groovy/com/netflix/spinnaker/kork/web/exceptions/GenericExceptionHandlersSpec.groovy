@@ -16,18 +16,31 @@
 
 package com.netflix.spinnaker.kork.web.exceptions
 
+import com.netflix.spinnaker.kork.api.exceptions.ExceptionDetails
+import com.netflix.spinnaker.kork.api.exceptions.UserMessage
+import org.springframework.beans.BeansException
+import org.springframework.beans.factory.ObjectProvider
 import org.springframework.http.HttpStatus
 import org.springframework.web.bind.annotation.ResponseStatus
+import spock.lang.Shared
 import spock.lang.Specification
 import spock.lang.Subject
 import spock.lang.Unroll
 
+import javax.annotation.Nullable
 import javax.servlet.http.HttpServletRequest
 import javax.servlet.http.HttpServletResponse;
 
 class GenericExceptionHandlersSpec extends Specification {
+  @Shared
+  String messageToBeAppended = "Message to be appended."
+
+  UserMessageService userMessageService = new UserMessageService(
+    new UserMessageAppenderProvider([new AccessDeniedUserMessage(messageToBeAppended)])
+  )
+
   @Subject
-  def genericExceptionHandlers = new GenericExceptionHandlers()
+  def genericExceptionHandlers = new GenericExceptionHandlers(userMessageService)
 
   def request = Mock(HttpServletRequest)
   def response = Mock(HttpServletResponse)
@@ -52,6 +65,7 @@ class GenericExceptionHandlersSpec extends Specification {
     new E4()                                 || 400                || "My Other Reason!" // favor @ResponseStatus on interface over super class
     new E5("E5 Reason")                      || 400                || "E5 Reason"
     new NullPointerException("It's an NPE!") || 500                || "It's an NPE!"
+    new AccessDenied()                       || 403                || "Access is denied" + "\n" + messageToBeAppended
   }
 
   @ResponseStatus(value = HttpStatus.NOT_FOUND, reason = "Default Reason!")
@@ -108,5 +122,65 @@ class GenericExceptionHandlersSpec extends Specification {
     E5(String message) {
       super(message)
     }
+  }
+
+  @ResponseStatus(value = HttpStatus.FORBIDDEN, reason = "Access is denied")
+  class AccessDenied extends E1 {
+    AccessDenied() {
+      super()
+    }
+
+    AccessDenied(String message) {
+      super(message)
+    }
+  }
+
+}
+
+class UserMessageAppenderProvider implements ObjectProvider<List<UserMessage>> {
+
+  List<UserMessage> userMessageAppenders
+
+  UserMessageAppenderProvider(List<UserMessage> userMessageAppenders) {
+    this.userMessageAppenders = userMessageAppenders
+  }
+
+  @Override
+  List<UserMessage> getObject(Object... args) throws BeansException {
+    return userMessageAppenders
+  }
+
+  @Override
+  List<UserMessage> getIfAvailable() throws BeansException {
+    return userMessageAppenders
+  }
+
+  @Override
+  List<UserMessage> getIfUnique() throws BeansException {
+    return userMessageAppenders
+  }
+
+  @Override
+  List<UserMessage> getObject() throws BeansException {
+    return userMessageAppenders
+  }
+}
+
+class AccessDeniedUserMessage implements UserMessage {
+
+  private String messageToBeAppended
+
+  AccessDeniedUserMessage(String messageToBeAppended) {
+    this.messageToBeAppended = messageToBeAppended
+  }
+
+  @Override
+  boolean supports(Class<? extends Throwable> throwable) {
+    return throwable == GenericExceptionHandlersSpec.AccessDenied.class
+  }
+
+  @Override
+  String message(Throwable throwable, @Nullable ExceptionDetails exceptionDetails) {
+    return messageToBeAppended
   }
 }
