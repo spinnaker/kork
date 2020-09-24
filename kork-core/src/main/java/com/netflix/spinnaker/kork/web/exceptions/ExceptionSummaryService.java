@@ -12,7 +12,7 @@ import java.util.List;
 import javax.annotation.Nullable;
 
 /**
- * Builds a {@link ExceptionSummary} object from a given Exception. This object is meant to help
+ * Builds an {@link ExceptionSummary} object from a given Exception. This object is meant to help
  * provide context to end-users to help resolve issues, while still offering enough detail for
  * operators and developers to trace internal bugs.
  */

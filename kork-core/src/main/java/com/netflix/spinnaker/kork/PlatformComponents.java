@@ -61,7 +61,7 @@ public class PlatformComponents {
   }
 
   @Bean
-  ExceptionMessageDecorator userMessageService(
+  ExceptionMessageDecorator exceptionMessageDecorator(
       ObjectProvider<List<UserMessage>> userMessagesProvider) {
     return new ExceptionMessageDecorator(userMessagesProvider);
   }
