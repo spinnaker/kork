@@ -22,8 +22,8 @@ import com.netflix.spinnaker.kork.metrics.SpectatorConfiguration;
 import com.netflix.spinnaker.kork.version.ServiceVersion;
 import com.netflix.spinnaker.kork.version.SpringPackageVersionResolver;
 import com.netflix.spinnaker.kork.version.VersionResolver;
+import com.netflix.spinnaker.kork.web.exceptions.ExceptionMessageDecorator;
 import com.netflix.spinnaker.kork.web.exceptions.ExceptionSummaryService;
-import com.netflix.spinnaker.kork.web.exceptions.UserMessageService;
 import io.github.resilience4j.circuitbreaker.autoconfigure.CircuitBreakersHealthIndicatorAutoConfiguration;
 import io.github.resilience4j.ratelimiter.autoconfigure.RateLimitersHealthIndicatorAutoConfiguration;
 import java.util.List;
@@ -61,12 +61,14 @@ public class PlatformComponents {
   }
 
   @Bean
-  UserMessageService userMessageService(ObjectProvider<List<UserMessage>> userMessagesProvider) {
-    return new UserMessageService(userMessagesProvider);
+  ExceptionMessageDecorator userMessageService(
+      ObjectProvider<List<UserMessage>> userMessagesProvider) {
+    return new ExceptionMessageDecorator(userMessagesProvider);
   }
 
   @Bean
-  ExceptionSummaryService exceptionSummaryService(UserMessageService userMessageService) {
-    return new ExceptionSummaryService(userMessageService);
+  ExceptionSummaryService exceptionSummaryService(
+      ExceptionMessageDecorator exceptionMessageDecorator) {
+    return new ExceptionSummaryService(exceptionMessageDecorator);
   }
 }

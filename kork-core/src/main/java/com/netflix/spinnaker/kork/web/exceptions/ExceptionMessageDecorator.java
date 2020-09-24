@@ -8,14 +8,14 @@ import org.springframework.beans.factory.ObjectProvider;
 
 /**
  * Used to add additional information to an exception message. Messages on exceptions are immutable,
- * so this is mostly used when a message is pulled from an exception prior to being sent to an end
- * user.
+ * so this is mostly used when a message is pulled from an exception prior to being sent to an
+ * end-user.
  */
-public class UserMessageService {
+public class ExceptionMessageDecorator {
 
   private final ObjectProvider<List<UserMessage>> userMessagesProvider;
 
-  public UserMessageService(ObjectProvider<List<UserMessage>> userMessagesProvider) {
+  public ExceptionMessageDecorator(ObjectProvider<List<UserMessage>> userMessagesProvider) {
     this.userMessagesProvider = userMessagesProvider;
   }
 
@@ -24,11 +24,12 @@ public class UserMessageService {
    * for the end-user.
    *
    * @param throwable {@link Throwable}
-   * @param message The user exception message
+   * @param message The exception message (which can be different from the message on the thrown
+   *     exception).
    * @param exceptionDetails Additional {@link ExceptionDetails} about the exception.
    * @return The final exception message for the end-user.
    */
-  public String userMessage(
+  public String decorate(
       Throwable throwable, String message, @Nullable ExceptionDetails exceptionDetails) {
     List<UserMessage> userMessages = userMessagesProvider.getIfAvailable();
 
@@ -49,7 +50,7 @@ public class UserMessageService {
     return sb.toString();
   }
 
-  public String userMessage(Throwable throwable, String message) {
-    return userMessage(throwable, message, null);
+  public String decorate(Throwable throwable, String message) {
+    return decorate(throwable, message, null);
   }
 }

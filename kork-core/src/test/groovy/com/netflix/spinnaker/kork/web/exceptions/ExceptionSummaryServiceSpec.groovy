@@ -22,7 +22,7 @@ import spock.lang.Specification
 
 class ExceptionSummaryServiceSpec extends Specification {
 
-  UserMessageService userMessageService = Mock()
+  ExceptionMessageDecorator userMessageService = Mock()
   ExceptionSummaryService exceptionSummaryService = new ExceptionSummaryService(userMessageService)
 
   def "converts a chain of exceptions to a summary"() {

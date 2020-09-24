@@ -26,19 +26,19 @@ import spock.lang.Specification
 
 import javax.annotation.Nullable
 
-class UserMessageServiceSpec extends Specification {
+class ExceptionMessageDecoratorSpec extends Specification {
 
   String messageToBeAppended = "Message to be appended."
   AccessDeniedUserMessage accessDeniedUserMessageAppender = new AccessDeniedUserMessage(messageToBeAppended)
   UserMessageAppenderProvider userMessageAppenderProvider = new UserMessageAppenderProvider([accessDeniedUserMessageAppender])
-  UserMessageService userMessageService = new UserMessageService(userMessageAppenderProvider)
+  ExceptionMessageDecorator userMessageService = new ExceptionMessageDecorator(userMessageAppenderProvider)
 
   def "Returns a message that is the original exception message and the message provided from the appender"() {
     given:
     LocalAccessDeniedException accessDeniedException = new LocalAccessDeniedException("Access is denied.")
 
     when:
-    String userMessage = userMessageService.userMessage(accessDeniedException, accessDeniedException.getMessage())
+    String userMessage = userMessageService.decorate(accessDeniedException, accessDeniedException.getMessage())
 
     then:
     userMessage == accessDeniedException.getMessage() + "\n" + messageToBeAppended
@@ -49,7 +49,7 @@ class UserMessageServiceSpec extends Specification {
     RuntimeException runtimeException = new RuntimeException("Runtime exception.")
 
     when:
-    String userMessage = userMessageService.userMessage(runtimeException, runtimeException.getMessage())
+    String userMessage = userMessageService.decorate(runtimeException, runtimeException.getMessage())
 
     then:
     userMessage == runtimeException.getMessage()

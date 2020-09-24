@@ -1,6 +1,5 @@
 package com.netflix.spinnaker.kork.api.exceptions;
 
-import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 /**
@@ -12,22 +11,21 @@ import javax.annotation.Nullable;
  * authorization, but eventually should support types provided from fiat-api.
  */
 public class AccessDeniedDetails implements ExceptionDetails {
-  @Nonnull private final String resourceType;
-  @Nonnull private final String resourceName;
+  private final String resourceType;
+  private final String resourceName;
   @Nullable private final String authorization;
 
-  public AccessDeniedDetails(String resourceType, String resourceName, String authorization) {
+  public AccessDeniedDetails(
+      String resourceType, String resourceName, @Nullable String authorization) {
     this.resourceType = resourceType;
     this.resourceName = resourceName;
     this.authorization = authorization;
   }
 
-  @Nonnull
   public String getResourceType() {
     return resourceType;
   }
 
-  @Nonnull
   public String getResourceName() {
     return resourceName;
   }

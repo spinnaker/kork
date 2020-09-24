@@ -35,7 +35,7 @@ class GenericExceptionHandlersSpec extends Specification {
   @Shared
   String messageToBeAppended = "Message to be appended."
 
-  UserMessageService userMessageService = new UserMessageService(
+  ExceptionMessageDecorator userMessageService = new ExceptionMessageDecorator(
     new UserMessageAppenderProvider([new AccessDeniedUserMessage(messageToBeAppended)])
   )
 

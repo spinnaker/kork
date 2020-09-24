@@ -1,5 +1,6 @@
 package com.netflix.spinnaker.kork.web.exceptions;
 
+import com.netflix.spinnaker.kork.api.exceptions.ExceptionDetails;
 import com.netflix.spinnaker.kork.api.exceptions.ExceptionSummary;
 import com.netflix.spinnaker.kork.api.exceptions.ExceptionSummary.TraceDetail;
 import com.netflix.spinnaker.kork.api.exceptions.ExceptionSummary.TraceDetail.TraceDetailBuilder;
@@ -8,6 +9,7 @@ import com.netflix.spinnaker.kork.exceptions.SpinnakerException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import javax.annotation.Nullable;
 
 /**
  * Builds a {@link ExceptionSummary} object from a given Exception. This object is meant to help
@@ -16,10 +18,10 @@ import java.util.List;
  */
 public class ExceptionSummaryService {
 
-  private final UserMessageService userMessageService;
+  private final ExceptionMessageDecorator exceptionMessageDecorator;
 
-  public ExceptionSummaryService(UserMessageService userMessageService) {
-    this.userMessageService = userMessageService;
+  public ExceptionSummaryService(ExceptionMessageDecorator exceptionMessageDecorator) {
+    this.exceptionMessageDecorator = exceptionMessageDecorator;
   }
 
   /**
@@ -28,12 +30,13 @@ public class ExceptionSummaryService {
    * @param throwable {@link Throwable}
    * @return {@link ExceptionSummary}
    */
-  public ExceptionSummary summary(Throwable throwable) {
+  public ExceptionSummary summary(
+      Throwable throwable, @Nullable ExceptionDetails exceptionDetails) {
     List<TraceDetail> details = new ArrayList<>();
 
     Throwable cause = throwable;
     do {
-      details.add(createTraceDetail(cause));
+      details.add(createTraceDetail(cause, exceptionDetails));
       cause = cause.getCause();
     } while (cause != null);
 
@@ -55,7 +58,12 @@ public class ExceptionSummaryService {
         .build();
   }
 
-  private TraceDetail createTraceDetail(Throwable throwable) {
+  public ExceptionSummary summary(Throwable throwable) {
+    return summary(throwable, null);
+  }
+
+  private TraceDetail createTraceDetail(
+      Throwable throwable, @Nullable ExceptionDetails exceptionDetails) {
     TraceDetailBuilder detailBuilder = TraceDetail.builder().message(throwable.getMessage());
 
     if (throwable instanceof SpinnakerException) {
@@ -63,7 +71,8 @@ public class ExceptionSummaryService {
 
       detailBuilder
           .userMessage(
-              userMessageService.userMessage(throwable, spinnakerException.getUserMessage()))
+              exceptionMessageDecorator.decorate(
+                  throwable, spinnakerException.getUserMessage(), exceptionDetails))
           .retryable(spinnakerException.getRetryable());
     }
     if (throwable instanceof HasAdditionalAttributes) {
