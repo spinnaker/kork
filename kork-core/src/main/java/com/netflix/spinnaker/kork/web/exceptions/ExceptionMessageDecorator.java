@@ -13,10 +13,11 @@ import org.springframework.beans.factory.ObjectProvider;
  */
 public class ExceptionMessageDecorator {
 
-  private final ObjectProvider<List<ExceptionMessage>> userMessagesProvider;
+  private final ObjectProvider<List<ExceptionMessage>> exceptionMessagesProvider;
 
-  public ExceptionMessageDecorator(ObjectProvider<List<ExceptionMessage>> userMessagesProvider) {
-    this.userMessagesProvider = userMessagesProvider;
+  public ExceptionMessageDecorator(
+      ObjectProvider<List<ExceptionMessage>> exceptionMessagesProvider) {
+    this.exceptionMessagesProvider = exceptionMessagesProvider;
   }
 
   /**
@@ -31,7 +32,7 @@ public class ExceptionMessageDecorator {
    */
   public String decorate(
       Throwable throwable, String message, @Nullable ExceptionDetails exceptionDetails) {
-    List<ExceptionMessage> exceptionMessages = userMessagesProvider.getIfAvailable();
+    List<ExceptionMessage> exceptionMessages = exceptionMessagesProvider.getIfAvailable();
 
     StringBuilder sb = new StringBuilder();
     sb.append(message);

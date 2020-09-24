@@ -35,12 +35,12 @@ class GenericExceptionHandlersSpec extends Specification {
   @Shared
   String messageToBeAppended = "Message to be appended."
 
-  ExceptionMessageDecorator userMessageService = new ExceptionMessageDecorator(
-    new UserMessageAppenderProvider([new AccessDeniedExceptionMessage(messageToBeAppended)])
+  ExceptionMessageDecorator exceptionMessageDecorator = new ExceptionMessageDecorator(
+    new ExceptionMessageProvider([new AccessDeniedExceptionMessage(messageToBeAppended)])
   )
 
   @Subject
-  def genericExceptionHandlers = new GenericExceptionHandlers(userMessageService)
+  def genericExceptionHandlers = new GenericExceptionHandlers(exceptionMessageDecorator)
 
   def request = Mock(HttpServletRequest)
   def response = Mock(HttpServletResponse)
@@ -137,32 +137,32 @@ class GenericExceptionHandlersSpec extends Specification {
 
 }
 
-class UserMessageAppenderProvider implements ObjectProvider<List<ExceptionMessage>> {
+class ExceptionMessageProvider implements ObjectProvider<List<ExceptionMessage>> {
 
-  List<ExceptionMessage> userMessageAppenders
+  List<ExceptionMessage> exceptionMessages
 
-  UserMessageAppenderProvider(List<ExceptionMessage> userMessageAppenders) {
-    this.userMessageAppenders = userMessageAppenders
+  ExceptionMessageProvider(List<ExceptionMessage> exceptionMessages) {
+    this.exceptionMessages = exceptionMessages
   }
 
   @Override
   List<ExceptionMessage> getObject(Object... args) throws BeansException {
-    return userMessageAppenders
+    return exceptionMessages
   }
 
   @Override
   List<ExceptionMessage> getIfAvailable() throws BeansException {
-    return userMessageAppenders
+    return exceptionMessages
   }
 
   @Override
   List<ExceptionMessage> getIfUnique() throws BeansException {
-    return userMessageAppenders
+    return exceptionMessages
   }
 
   @Override
   List<ExceptionMessage> getObject() throws BeansException {
-    return userMessageAppenders
+    return exceptionMessages
   }
 }
 

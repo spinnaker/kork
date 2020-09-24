@@ -29,16 +29,16 @@ import javax.annotation.Nullable
 class ExceptionMessageDecoratorSpec extends Specification {
 
   String messageToBeAppended = "Message to be appended."
-  AccessDeniedExceptionMessage accessDeniedUserMessageAppender = new AccessDeniedExceptionMessage(messageToBeAppended)
-  UserMessageAppenderProvider userMessageAppenderProvider = new UserMessageAppenderProvider([accessDeniedUserMessageAppender])
-  ExceptionMessageDecorator userMessageService = new ExceptionMessageDecorator(userMessageAppenderProvider)
+  AccessDeniedExceptionMessage accessDeniedExceptionMessage = new AccessDeniedExceptionMessage(messageToBeAppended)
+  ExceptionMessageProvider exceptionMessageProvider = new ExceptionMessageProvider([accessDeniedExceptionMessage])
+  ExceptionMessageDecorator exceptionMessageDecorator = new ExceptionMessageDecorator(exceptionMessageProvider)
 
   def "Returns a message that is the original exception message and the message provided from the appender"() {
     given:
     LocalAccessDeniedException accessDeniedException = new LocalAccessDeniedException("Access is denied.")
 
     when:
-    String userMessage = userMessageService.decorate(accessDeniedException, accessDeniedException.getMessage())
+    String userMessage = exceptionMessageDecorator.decorate(accessDeniedException, accessDeniedException.getMessage())
 
     then:
     userMessage == accessDeniedException.getMessage() + "\n" + messageToBeAppended
@@ -49,39 +49,39 @@ class ExceptionMessageDecoratorSpec extends Specification {
     RuntimeException runtimeException = new RuntimeException("Runtime exception.")
 
     when:
-    String userMessage = userMessageService.decorate(runtimeException, runtimeException.getMessage())
+    String userMessage = exceptionMessageDecorator.decorate(runtimeException, runtimeException.getMessage())
 
     then:
     userMessage == runtimeException.getMessage()
   }
 }
 
-class UserMessageAppenderProvider implements ObjectProvider<List<ExceptionMessage>> {
+class ExceptionMessageProvider implements ObjectProvider<List<ExceptionMessage>> {
 
-  List<ExceptionMessage> userMessageAppenders
+  List<ExceptionMessage> exceptionMessages
 
-  UserMessageAppenderProvider(List<ExceptionMessage> userMessageAppenders) {
-    this.userMessageAppenders = userMessageAppenders
+  ExceptionMessageProvider(List<ExceptionMessage> exceptionMessages) {
+    this.exceptionMessages = exceptionMessages
   }
 
   @Override
   List<ExceptionMessage> getObject(Object... args) throws BeansException {
-    return userMessageAppenders
+    return exceptionMessages
   }
 
   @Override
   List<ExceptionMessage> getIfAvailable() throws BeansException {
-    return userMessageAppenders
+    return exceptionMessages
   }
 
   @Override
   List<ExceptionMessage> getIfUnique() throws BeansException {
-    return userMessageAppenders
+    return exceptionMessages
   }
 
   @Override
   List<ExceptionMessage> getObject() throws BeansException {
-    return userMessageAppenders
+    return exceptionMessages
   }
 }
 
