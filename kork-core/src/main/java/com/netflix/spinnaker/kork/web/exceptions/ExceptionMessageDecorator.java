@@ -1,7 +1,7 @@
 package com.netflix.spinnaker.kork.web.exceptions;
 
 import com.netflix.spinnaker.kork.api.exceptions.ExceptionDetails;
-import com.netflix.spinnaker.kork.api.exceptions.UserMessage;
+import com.netflix.spinnaker.kork.api.exceptions.ExceptionMessage;
 import java.util.List;
 import javax.annotation.Nullable;
 import org.springframework.beans.factory.ObjectProvider;
@@ -13,9 +13,9 @@ import org.springframework.beans.factory.ObjectProvider;
  */
 public class ExceptionMessageDecorator {
 
-  private final ObjectProvider<List<UserMessage>> userMessagesProvider;
+  private final ObjectProvider<List<ExceptionMessage>> userMessagesProvider;
 
-  public ExceptionMessageDecorator(ObjectProvider<List<UserMessage>> userMessagesProvider) {
+  public ExceptionMessageDecorator(ObjectProvider<List<ExceptionMessage>> userMessagesProvider) {
     this.userMessagesProvider = userMessagesProvider;
   }
 
@@ -31,15 +31,15 @@ public class ExceptionMessageDecorator {
    */
   public String decorate(
       Throwable throwable, String message, @Nullable ExceptionDetails exceptionDetails) {
-    List<UserMessage> userMessages = userMessagesProvider.getIfAvailable();
+    List<ExceptionMessage> exceptionMessages = userMessagesProvider.getIfAvailable();
 
     StringBuilder sb = new StringBuilder();
     sb.append(message);
 
-    if (userMessages != null && !userMessages.isEmpty()) {
-      for (UserMessage userMessage : userMessages) {
-        if (userMessage.supports(throwable.getClass())) {
-          String messageToAppend = userMessage.message(throwable, exceptionDetails);
+    if (exceptionMessages != null && !exceptionMessages.isEmpty()) {
+      for (ExceptionMessage exceptionMessage : exceptionMessages) {
+        if (exceptionMessage.supports(throwable.getClass())) {
+          String messageToAppend = exceptionMessage.message(throwable, exceptionDetails);
           if (messageToAppend != null && !messageToAppend.isEmpty()) {
             sb.append("\n").append(messageToAppend);
           }

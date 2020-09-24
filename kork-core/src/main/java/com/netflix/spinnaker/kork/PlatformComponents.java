@@ -16,7 +16,7 @@
 
 package com.netflix.spinnaker.kork;
 
-import com.netflix.spinnaker.kork.api.exceptions.UserMessage;
+import com.netflix.spinnaker.kork.api.exceptions.ExceptionMessage;
 import com.netflix.spinnaker.kork.dynamicconfig.TransientConfigConfiguration;
 import com.netflix.spinnaker.kork.metrics.SpectatorConfiguration;
 import com.netflix.spinnaker.kork.version.ServiceVersion;
@@ -62,7 +62,7 @@ public class PlatformComponents {
 
   @Bean
   ExceptionMessageDecorator exceptionMessageDecorator(
-      ObjectProvider<List<UserMessage>> userMessagesProvider) {
+      ObjectProvider<List<ExceptionMessage>> userMessagesProvider) {
     return new ExceptionMessageDecorator(userMessagesProvider);
   }
 

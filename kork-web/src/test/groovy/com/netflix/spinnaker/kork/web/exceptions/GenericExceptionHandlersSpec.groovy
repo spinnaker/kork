@@ -17,7 +17,7 @@
 package com.netflix.spinnaker.kork.web.exceptions
 
 import com.netflix.spinnaker.kork.api.exceptions.ExceptionDetails
-import com.netflix.spinnaker.kork.api.exceptions.UserMessage
+import com.netflix.spinnaker.kork.api.exceptions.ExceptionMessage
 import org.springframework.beans.BeansException
 import org.springframework.beans.factory.ObjectProvider
 import org.springframework.http.HttpStatus
@@ -36,7 +36,7 @@ class GenericExceptionHandlersSpec extends Specification {
   String messageToBeAppended = "Message to be appended."
 
   ExceptionMessageDecorator userMessageService = new ExceptionMessageDecorator(
-    new UserMessageAppenderProvider([new AccessDeniedUserMessage(messageToBeAppended)])
+    new UserMessageAppenderProvider([new AccessDeniedExceptionMessage(messageToBeAppended)])
   )
 
   @Subject
@@ -137,40 +137,40 @@ class GenericExceptionHandlersSpec extends Specification {
 
 }
 
-class UserMessageAppenderProvider implements ObjectProvider<List<UserMessage>> {
+class UserMessageAppenderProvider implements ObjectProvider<List<ExceptionMessage>> {
 
-  List<UserMessage> userMessageAppenders
+  List<ExceptionMessage> userMessageAppenders
 
-  UserMessageAppenderProvider(List<UserMessage> userMessageAppenders) {
+  UserMessageAppenderProvider(List<ExceptionMessage> userMessageAppenders) {
     this.userMessageAppenders = userMessageAppenders
   }
 
   @Override
-  List<UserMessage> getObject(Object... args) throws BeansException {
+  List<ExceptionMessage> getObject(Object... args) throws BeansException {
     return userMessageAppenders
   }
 
   @Override
-  List<UserMessage> getIfAvailable() throws BeansException {
+  List<ExceptionMessage> getIfAvailable() throws BeansException {
     return userMessageAppenders
   }
 
   @Override
-  List<UserMessage> getIfUnique() throws BeansException {
+  List<ExceptionMessage> getIfUnique() throws BeansException {
     return userMessageAppenders
   }
 
   @Override
-  List<UserMessage> getObject() throws BeansException {
+  List<ExceptionMessage> getObject() throws BeansException {
     return userMessageAppenders
   }
 }
 
-class AccessDeniedUserMessage implements UserMessage {
+class AccessDeniedExceptionMessage implements ExceptionMessage {
 
   private String messageToBeAppended
 
-  AccessDeniedUserMessage(String messageToBeAppended) {
+  AccessDeniedExceptionMessage(String messageToBeAppended) {
     this.messageToBeAppended = messageToBeAppended
   }
 
