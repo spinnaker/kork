@@ -7,10 +7,7 @@ dependencies {
   implementation "commons-io:commons-io"
   implementation "org.apache.commons:commons-lang3"
 
-  api project(':kork-secrets')
-
-  api "org.springframework.cloud:spring-cloud-context"
-  api "org.springframework.cloud:spring-cloud-config-server"
+  implementation project(':kork-secrets')
 
   testImplementation "org.springframework.boot:spring-boot-starter-test"
   testImplementation "org.assertj:assertj-core"
