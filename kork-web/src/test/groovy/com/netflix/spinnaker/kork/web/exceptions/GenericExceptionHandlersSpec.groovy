@@ -18,6 +18,7 @@ package com.netflix.spinnaker.kork.web.exceptions
 
 import org.springframework.http.HttpStatus
 import org.springframework.web.bind.annotation.ResponseStatus
+import spock.lang.Shared
 import spock.lang.Specification
 import spock.lang.Subject
 import spock.lang.Unroll
@@ -26,8 +27,15 @@ import javax.servlet.http.HttpServletRequest
 import javax.servlet.http.HttpServletResponse;
 
 class GenericExceptionHandlersSpec extends Specification {
+  @Shared
+  String messageToBeAppended = "Message to be appended."
+
+  ExceptionMessageDecorator exceptionMessageDecorator = new ExceptionMessageDecorator(
+    new ExceptionMessageProvider([new AccessDeniedExceptionMessage(messageToBeAppended)])
+  )
+
   @Subject
-  def genericExceptionHandlers = new GenericExceptionHandlers()
+  def genericExceptionHandlers = new GenericExceptionHandlers(exceptionMessageDecorator)
 
   def request = Mock(HttpServletRequest)
   def response = Mock(HttpServletResponse)
@@ -52,6 +60,7 @@ class GenericExceptionHandlersSpec extends Specification {
     new E4()                                 || 400                || "My Other Reason!" // favor @ResponseStatus on interface over super class
     new E5("E5 Reason")                      || 400                || "E5 Reason"
     new NullPointerException("It's an NPE!") || 500                || "It's an NPE!"
+    new LocalAccessDeniedException()         || 403                || "Access is denied" + "\n" + messageToBeAppended
   }
 
   @ResponseStatus(value = HttpStatus.NOT_FOUND, reason = "Default Reason!")
@@ -110,3 +119,5 @@ class GenericExceptionHandlersSpec extends Specification {
     }
   }
 }
+
+
