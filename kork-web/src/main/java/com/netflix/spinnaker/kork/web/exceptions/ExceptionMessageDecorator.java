@@ -69,12 +69,12 @@ public class ExceptionMessageDecorator {
         if (throwable != null) {
           exceptionMessage
               .message(throwable, exceptionDetails)
-              .ifPresent(s -> sb.append("\n").append(s));
+              .ifPresent(s -> sb.append("\n\n").append(s));
         }
         if (errorCode != null) {
           exceptionMessage
               .message(errorCode, exceptionDetails)
-              .ifPresent(s -> sb.append("\n").append(s));
+              .ifPresent(s -> sb.append("\n\n").append(s));
         }
       }
     }
