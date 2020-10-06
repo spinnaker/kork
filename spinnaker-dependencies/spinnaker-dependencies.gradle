@@ -7,13 +7,13 @@ javaPlatform {
 ext {
   versions = [
     aws              : "1.11.820",
-    bouncycastle     : "1.61",
+    bouncycastle     : "1.64", // 1.64 removes CVE-2019-17359
     brave            : "5.12.3",
     groovy           : "2.5.11", //this needs to keep in sync with the version from boot... if we could get rid of groovy-all we'd no longer need this
     jsch             : "0.1.54",
     jschAgentProxy   : "0.0.9",
     protobuf         : "3.9.1",
-    okhttp           : "2.7.0",
+    okhttp           : "2.7.5", // CVE-2016-2402
     okhttp3          : "3.14.9",
     openapi          : "1.3.9", // this needs to be kept in sync with spring boot as it pulls in the spring-boot-dependencies BOM
     resilience4j     : "1.0.0",
@@ -22,6 +22,7 @@ ext {
     spectator        : "0.103.0",
     spek             : "1.2.1",
     spek2            : "2.0.9",
+    spring           : "5.2.9.RELEASE", // this should be kept in sync with spring-boot / removed once the need for a version override is gone
     springBoot       : "2.2.5.RELEASE",
     springCloud      : "Hoxton.SR4",
     springfoxSwagger : "2.9.2",
@@ -44,6 +45,7 @@ dependencies {
   api(platform("org.jetbrains.kotlin:kotlin-bom:$kotlinVersion"))
   api(platform("org.junit:junit-bom:5.6.2"))
   api(platform("com.fasterxml.jackson:jackson-bom:2.11.1"))
+  api(platform("org.springframework:spring-framework-bom:${versions.spring}"))
   api(platform("org.springframework.boot:spring-boot-dependencies:${versions.springBoot}"))
   api(platform("com.amazonaws:aws-java-sdk-bom:${versions.aws}"))
   api(platform("org.springframework.cloud:spring-cloud-dependencies:${versions.springCloud}"))
