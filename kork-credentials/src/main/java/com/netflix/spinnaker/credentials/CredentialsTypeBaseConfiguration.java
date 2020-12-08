@@ -108,9 +108,6 @@ public class CredentialsTypeBaseConfiguration<
                         credentialsDefinitionSource,
                         credentialsParser,
                         credentialsRepository));
-
-    // Get or build poller
-    credentialsLoader.load();
   }
 
   /**

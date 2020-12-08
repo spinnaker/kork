@@ -52,6 +52,8 @@ public class CredentialsTypeBaseConfigurationTest {
   @Test
   public void testCreateCredentials() {
     config.afterPropertiesSet();
+    // This test runner ignores PostConstruct annotations
+    config.getCredentialsLoader().load();
     CredentialsRepository<TestCredentials> repository =
         context.getBean(CredentialsRepository.class);
     assertThat(repository).isNotNull();
@@ -62,6 +64,8 @@ public class CredentialsTypeBaseConfigurationTest {
   public void testOverrideParser() {
     context.registerBean("customParser", TestCustomParser.class);
     config.afterPropertiesSet();
+    // This test runner ignores PostConstruct annotations
+    config.getCredentialsLoader().load();
     context.getBean(AbstractCredentialsLoader.class);
 
     CredentialsRepository<TestCredentials> repository =
@@ -77,6 +81,8 @@ public class CredentialsTypeBaseConfigurationTest {
     TestLifecycleHandler handler = Mockito.mock(TestLifecycleHandler.class);
     context.getBeanFactory().registerSingleton("customLifecycleHandler", handler);
     config.afterPropertiesSet();
+    // This test runner ignores PostConstruct annotations
+    config.getCredentialsLoader().load();
 
     CredentialsRepository<TestCredentials> repository =
         context.getBean(CredentialsRepository.class);
@@ -91,6 +97,8 @@ public class CredentialsTypeBaseConfigurationTest {
         new TestSource(List.of(new TestAccount("account3"), new TestAccount("account4")));
     context.getBeanFactory().registerSingleton("customSource", source);
     config.afterPropertiesSet();
+    // This test runner ignores PostConstruct annotations
+    config.getCredentialsLoader().load();
 
     CredentialsRepository<TestCredentials> repository =
         context.getBean(CredentialsRepository.class);
@@ -105,6 +113,8 @@ public class CredentialsTypeBaseConfigurationTest {
         new TestCredentialsRepository(CREDENTIALS_TYPE, new NoopCredentialsLifecycleHandler<>());
     context.getBeanFactory().registerSingleton("customRepository", repository);
     config.afterPropertiesSet();
+    // This test runner ignores PostConstruct annotations
+    config.getCredentialsLoader().load();
 
     String[] beanNames = context.getBeanNamesForType(CredentialsRepository.class);
     assertThat(beanNames).hasSize(1);
@@ -129,6 +139,8 @@ public class CredentialsTypeBaseConfigurationTest {
         new TestCredentialsRepository(CREDENTIALS_TYPE, new NoopCredentialsLifecycleHandler<>());
     context.getBeanFactory().registerSingleton("customRepository", repository);
     config.afterPropertiesSet();
+    // This test runner ignores PostConstruct annotations
+    config.getCredentialsLoader().load();
 
     BasicCredentialsLoader<?, TestCredentials> loader =
         context.getBean(BasicCredentialsLoader.class);
