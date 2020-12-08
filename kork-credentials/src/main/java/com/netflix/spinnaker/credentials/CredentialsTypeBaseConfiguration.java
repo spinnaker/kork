@@ -120,7 +120,7 @@ public class CredentialsTypeBaseConfiguration<
    * @return Credentials repository registered in Spring
    */
   @SuppressWarnings("unchecked")
-  protected <T extends Credentials> CredentialsRepository<T> registerCredentialsRepository(
+  protected CredentialsRepository<T> registerCredentialsRepository(
       ApplicationContext context,
       CredentialsTypeProperties<T, ?> properties,
       CredentialsLifecycleHandler<?> lifecycleHandler) {
@@ -142,13 +142,12 @@ public class CredentialsTypeBaseConfiguration<
   }
 
   @SuppressWarnings("unchecked")
-  protected <T extends Credentials, U extends CredentialsDefinition>
-      AbstractCredentialsLoader<T> registerCredentialsLoader(
-          ApplicationContext context,
-          CredentialsTypeProperties<T, U> properties,
-          CredentialsDefinitionSource<U> credentialsDefinitionSource,
-          CredentialsParser<U, T> credentialsParser,
-          CredentialsRepository<T> credentialsRepository) {
+  protected AbstractCredentialsLoader<T> registerCredentialsLoader(
+      ApplicationContext context,
+      CredentialsTypeProperties<T, U> properties,
+      CredentialsDefinitionSource<U> credentialsDefinitionSource,
+      CredentialsParser<U, T> credentialsParser,
+      CredentialsRepository<T> credentialsRepository) {
 
     RootBeanDefinition bd = new RootBeanDefinition();
     bd.setTargetType(
