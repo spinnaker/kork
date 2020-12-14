@@ -72,7 +72,11 @@ public class GenericExceptionHandlers extends ResponseEntityExceptionHandler {
         HttpStatus.NOT_FOUND.value(), exceptionMessageDecorator.decorate(e, e.getMessage()));
   }
 
-  @ExceptionHandler({InvalidRequestException.class, UserException.class})
+  @ExceptionHandler({
+    InvalidRequestException.class,
+    UserException.class,
+    IllegalArgumentException.class
+  })
   public void handleInvalidRequestException(
       Exception e, HttpServletResponse response, HttpServletRequest request) throws IOException {
     storeException(request, response, e);
@@ -119,6 +123,7 @@ public class GenericExceptionHandlers extends ResponseEntityExceptionHandler {
   @ExceptionHandler(Exception.class)
   public void handleException(Exception e, HttpServletResponse response, HttpServletRequest request)
       throws IOException {
+    logger.warn("Handled error in generic exception handler", e);
     storeException(request, response, e);
 
     ResponseStatus responseStatus =
@@ -149,7 +154,6 @@ public class GenericExceptionHandlers extends ResponseEntityExceptionHandler {
       HttpServletRequest request, HttpServletResponse response, Exception ex) {
     // store exception as an attribute of HttpServletRequest such that it can be referenced by
     // GenericErrorController
-    logger.warn("Handled error in generic exception handler", ex);
     defaultErrorAttributes.resolveException(request, response, null, ex);
   }
 
