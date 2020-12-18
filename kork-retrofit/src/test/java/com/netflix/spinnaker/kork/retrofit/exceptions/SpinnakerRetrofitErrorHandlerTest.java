@@ -16,7 +16,8 @@
 
 package com.netflix.spinnaker.kork.retrofit.exceptions;
 
-import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import com.netflix.spinnaker.kork.web.exceptions.NotFoundException;
@@ -53,20 +54,22 @@ public class SpinnakerRetrofitErrorHandlerTest {
   }
 
   @Test
-  public void testNotFoundHasNullRetryable() throws Exception {
+  public void testNotFoundIsNotRetryable() throws Exception {
     mockWebServer.enqueue(new MockResponse().setResponseCode(HttpStatus.NOT_FOUND.value()));
     NotFoundException notFoundException =
         assertThrows(NotFoundException.class, () -> retrofitService.getFoo());
-    assertNull(notFoundException.getRetryable());
+    assertNotNull(notFoundException.getRetryable());
+    assertFalse(notFoundException.getRetryable());
   }
 
   @Test
-  public void testClientErrorHasNullRetryable() throws Exception {
+  public void testClientErrorIsNotRetryable() throws Exception {
     // Arbitrarily choose BAD_REQUEST as an example of a client (e.g. 4xx) error
     mockWebServer.enqueue(new MockResponse().setResponseCode(HttpStatus.BAD_REQUEST.value()));
     SpinnakerHttpException spinnakerHttpException =
         assertThrows(SpinnakerHttpException.class, () -> retrofitService.getFoo());
-    assertNull(spinnakerHttpException.getRetryable());
+    assertNotNull(spinnakerHttpException.getRetryable());
+    assertFalse(spinnakerHttpException.getRetryable());
   }
 
   interface RetrofitService {

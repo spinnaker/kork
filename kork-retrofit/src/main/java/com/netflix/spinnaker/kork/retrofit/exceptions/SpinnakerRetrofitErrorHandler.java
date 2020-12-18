@@ -52,9 +52,14 @@ public final class SpinnakerRetrofitErrorHandler implements ErrorHandler {
     switch (e.getKind()) {
       case HTTP:
         if (e.getResponse().getStatus() == HttpStatus.NOT_FOUND.value()) {
-          return new NotFoundException(e);
+          return new NotFoundException(e).setRetryable(false);
         }
-        return new SpinnakerHttpException(e);
+        SpinnakerHttpException retval = new SpinnakerHttpException(e);
+        if (HttpStatus.Series.resolve(e.getResponse().getStatus())
+            == HttpStatus.Series.CLIENT_ERROR) {
+          retval.setRetryable(false);
+        }
+        return retval;
       case NETWORK:
         return new SpinnakerNetworkException(e);
       default:
