@@ -55,8 +55,7 @@ public final class SpinnakerRetrofitErrorHandler implements ErrorHandler {
           return new NotFoundException(e).setRetryable(false);
         }
         SpinnakerHttpException retval = new SpinnakerHttpException(e);
-        if (HttpStatus.Series.resolve(e.getResponse().getStatus())
-            == HttpStatus.Series.CLIENT_ERROR) {
+        if (e.getResponse().getStatus() == HttpStatus.BAD_REQUEST.value()) {
           retval.setRetryable(false);
         }
         return retval;
