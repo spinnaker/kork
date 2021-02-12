@@ -22,26 +22,25 @@ import com.netflix.appinfo.HealthCheckHandler;
 import com.netflix.appinfo.InstanceInfo;
 import java.util.Map;
 import java.util.Objects;
-import org.springframework.boot.actuate.health.CompositeHealthIndicator;
-import org.springframework.boot.actuate.health.HealthAggregator;
+import java.util.stream.Collectors;
 import org.springframework.boot.actuate.health.HealthIndicator;
 import org.springframework.boot.actuate.health.Status;
+import org.springframework.boot.actuate.health.StatusAggregator;
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.event.ContextRefreshedEvent;
 
 public class BootHealthCheckHandler
     implements HealthCheckHandler, ApplicationListener<ContextRefreshedEvent> {
 
-  private final HealthIndicator aggregateHealth;
+  private final Map<String, HealthIndicator> healthIndicators;
   private final ApplicationInfoManager applicationInfoManager;
 
   public BootHealthCheckHandler(
       ApplicationInfoManager applicationInfoManager,
-      HealthAggregator aggregator,
       Map<String, HealthIndicator> healthIndicators) {
     this.applicationInfoManager =
         Objects.requireNonNull(applicationInfoManager, "applicationInfoManager");
-    this.aggregateHealth = new CompositeHealthIndicator(aggregator, healthIndicators);
+    this.healthIndicators = healthIndicators;
   }
 
   @Override
@@ -51,7 +50,13 @@ public class BootHealthCheckHandler
 
   @Override
   public InstanceInfo.InstanceStatus getStatus(InstanceInfo.InstanceStatus currentStatus) {
-    final String statusCode = aggregateHealth.health().getStatus().getCode();
+    final String statusCode =
+        StatusAggregator.getDefault()
+            .getAggregateStatus(
+                healthIndicators.values().stream()
+                    .map(t -> t.getHealth(false).getStatus())
+                    .collect(Collectors.toSet()))
+            .getCode();
     if (Status.UP.getCode().equals(statusCode)) {
       return InstanceInfo.InstanceStatus.UP;
     } else if (Status.OUT_OF_SERVICE.getCode().equals(statusCode)) {

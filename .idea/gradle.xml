@@ -1,11 +1,57 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
+  <component name="GradleMigrationSettings" migrationVersion="1" />
   <component name="GradleSettings">
     <option name="linkedExternalProjectsSettings">
       <GradleProjectSettings>
         <option name="distributionType" value="DEFAULT_WRAPPED" />
         <option name="externalProjectPath" value="$PROJECT_DIR$" />
-        <option name="useAutoImport" value="true" />
+        <option name="modules">
+          <set>
+            <option value="$PROJECT_DIR$" />
+            <option value="$PROJECT_DIR$/kork-actuator" />
+            <option value="$PROJECT_DIR$/kork-annotations" />
+            <option value="$PROJECT_DIR$/kork-api" />
+            <option value="$PROJECT_DIR$/kork-artifacts" />
+            <option value="$PROJECT_DIR$/kork-aws" />
+            <option value="$PROJECT_DIR$/kork-bom" />
+            <option value="$PROJECT_DIR$/kork-cloud-config-server" />
+            <option value="$PROJECT_DIR$/kork-config" />
+            <option value="$PROJECT_DIR$/kork-core" />
+            <option value="$PROJECT_DIR$/kork-core-tck" />
+            <option value="$PROJECT_DIR$/kork-credentials" />
+            <option value="$PROJECT_DIR$/kork-credentials-api" />
+            <option value="$PROJECT_DIR$/kork-eureka" />
+            <option value="$PROJECT_DIR$/kork-exceptions" />
+            <option value="$PROJECT_DIR$/kork-expressions" />
+            <option value="$PROJECT_DIR$/kork-jedis" />
+            <option value="$PROJECT_DIR$/kork-jedis-test" />
+            <option value="$PROJECT_DIR$/kork-moniker" />
+            <option value="$PROJECT_DIR$/kork-plugins" />
+            <option value="$PROJECT_DIR$/kork-plugins-api" />
+            <option value="$PROJECT_DIR$/kork-plugins-spring-api" />
+            <option value="$PROJECT_DIR$/kork-plugins-tck" />
+            <option value="$PROJECT_DIR$/kork-proto" />
+            <option value="$PROJECT_DIR$/kork-pubsub" />
+            <option value="$PROJECT_DIR$/kork-pubsub-aws" />
+            <option value="$PROJECT_DIR$/kork-retrofit" />
+            <option value="$PROJECT_DIR$/kork-retrofit2" />
+            <option value="$PROJECT_DIR$/kork-runtime" />
+            <option value="$PROJECT_DIR$/kork-secrets" />
+            <option value="$PROJECT_DIR$/kork-secrets-aws" />
+            <option value="$PROJECT_DIR$/kork-secrets-gcp" />
+            <option value="$PROJECT_DIR$/kork-security" />
+            <option value="$PROJECT_DIR$/kork-sql" />
+            <option value="$PROJECT_DIR$/kork-sql-test" />
+            <option value="$PROJECT_DIR$/kork-stackdriver" />
+            <option value="$PROJECT_DIR$/kork-swagger" />
+            <option value="$PROJECT_DIR$/kork-telemetry" />
+            <option value="$PROJECT_DIR$/kork-test" />
+            <option value="$PROJECT_DIR$/kork-tomcat" />
+            <option value="$PROJECT_DIR$/kork-web" />
+            <option value="$PROJECT_DIR$/spinnaker-dependencies" />
+          </set>
+        </option>
       </GradleProjectSettings>
     </option>
   </component>

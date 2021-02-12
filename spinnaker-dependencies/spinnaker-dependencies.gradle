@@ -10,22 +10,23 @@ ext {
     bouncycastle     : "1.64", // 1.64 removes CVE-2019-17359
     brave            : "5.12.3",
     groovy           : "2.5.11", //this needs to keep in sync with the version from boot... if we could get rid of groovy-all we'd no longer need this
-    jooq             : "3.13.2",
+    jooq             : "3.14.4",
     jsch             : "0.1.54",
     jschAgentProxy   : "0.0.9",
     protobuf         : "3.9.1",
     okhttp           : "2.7.5", // CVE-2016-2402
     okhttp3          : "3.14.9",
-    openapi          : "1.3.9", // this needs to be kept in sync with spring boot as it pulls in the spring-boot-dependencies BOM
-    resilience4j     : "1.0.0",
+    openapi          : "1.5.2", // this needs to be kept in sync with spring boot as it pulls in the spring-boot-dependencies BOM
+    resilience4j     : "1.7.0",
     retrofit         : "1.9.0",
     retrofit2        : "2.8.1",
     spectator        : "0.103.0",
     spek             : "1.2.1",
     spek2            : "2.0.9",
-    spring           : "5.2.9.RELEASE", // this should be kept in sync with spring-boot / removed once the need for a version override is gone
-    springBoot       : "2.2.5.RELEASE",
-    springCloud      : "Hoxton.SR4",
+    spring           : "5.3.2", // this should be kept in sync with spring-boot / removed once the need for a version override is gone
+    springBoot       : "2.4.1",
+    springCloud      : "Hoxton.SR6",
+    springSecurity   : "5.4.2",
     springfoxSwagger : "2.9.2",
     swagger          : "1.5.20" //this should stay in sync with what springfoxSwagger expects
   ]
@@ -45,14 +46,14 @@ dependencies {
   // this project and need to configure gradle plugins etc.
   api(platform("org.jetbrains.kotlin:kotlin-bom:$kotlinVersion"))
   api(platform("org.junit:junit-bom:5.6.2"))
-  api(platform("com.fasterxml.jackson:jackson-bom:2.11.1"))
+  api(platform("com.fasterxml.jackson:jackson-bom:2.11.3"))
   api(platform("org.springframework:spring-framework-bom:${versions.spring}"))
   api(platform("org.springframework.boot:spring-boot-dependencies:${versions.springBoot}"))
   api(platform("com.amazonaws:aws-java-sdk-bom:${versions.aws}"))
   api(platform("org.springframework.cloud:spring-cloud-dependencies:${versions.springCloud}"))
   api(platform("io.strikt:strikt-bom:0.29.0"))
   api(platform("org.spockframework:spock-bom:1.3-groovy-2.5"))
-  api(platform("com.oracle.oci.sdk:oci-java-sdk-bom:1.5.17"))
+  api(platform("com.oracle.oci.sdk:oci-java-sdk-bom:1.27.1"))
   api(platform("org.testcontainers:testcontainers-bom:1.15.1"))
   api(platform("com.google.protobuf:protobuf-bom:${versions.protobuf}"))
 
@@ -156,8 +157,9 @@ dependencies {
     api("org.springdoc:springdoc-openapi-kotlin:${versions.openapi}")
     api("org.springframework.boot:spring-boot-configuration-processor:${versions.springBoot}")
     api("org.springframework.security.oauth.boot:spring-security-oauth2-autoconfigure:2.1.5.RELEASE")
-    api("org.springframework.security.extensions:spring-security-saml-dsl-core:1.0.5.RELEASE")
-    api("org.springframework.security.extensions:spring-security-saml2-core:1.0.9.RELEASE")
+    api("org.springframework.security:spring-security-core:${versions.springSecurity}")
+    api("org.springframework.security:spring-security-config:${versions.springSecurity}")
+    api("org.springframework.security:spring-security-saml2-service-provider:${versions.springSecurity}")
     api("org.threeten:threeten-extra:1.0")
     api("io.zipkin.brave:brave-instrumentation-okhttp3:${versions.brave}")
   }
