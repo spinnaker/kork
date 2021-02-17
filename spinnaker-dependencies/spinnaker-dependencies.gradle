@@ -23,10 +23,9 @@ ext {
     spectator        : "0.103.0",
     spek             : "1.2.1",
     spek2            : "2.0.9",
-    spring           : "5.3.2", // this should be kept in sync with spring-boot / removed once the need for a version override is gone
-    springBoot       : "2.4.1",
+    spring           : "5.3.3", // this should be kept in sync with spring-boot / removed once the need for a version override is gone
+    springBoot       : "2.4.2",
     springCloud      : "Hoxton.SR6",
-    springSecurity   : "5.4.2",
     springfoxSwagger : "2.9.2",
     swagger          : "1.5.20" //this should stay in sync with what springfoxSwagger expects
   ]
@@ -45,8 +44,8 @@ dependencies {
   //kotlinVersion comes from gradle.properties since we have kotlin code in
   // this project and need to configure gradle plugins etc.
   api(platform("org.jetbrains.kotlin:kotlin-bom:$kotlinVersion"))
-  api(platform("org.junit:junit-bom:5.6.2"))
-  api(platform("com.fasterxml.jackson:jackson-bom:2.11.3"))
+  api(platform("org.junit:junit-bom:5.7.0"))
+  api(platform("com.fasterxml.jackson:jackson-bom:2.11.4"))
   api(platform("org.springframework:spring-framework-bom:${versions.spring}"))
   api(platform("org.springframework.boot:spring-boot-dependencies:${versions.springBoot}"))
   api(platform("com.amazonaws:aws-java-sdk-bom:${versions.aws}"))
@@ -157,9 +156,6 @@ dependencies {
     api("org.springdoc:springdoc-openapi-kotlin:${versions.openapi}")
     api("org.springframework.boot:spring-boot-configuration-processor:${versions.springBoot}")
     api("org.springframework.security.oauth.boot:spring-security-oauth2-autoconfigure:2.1.5.RELEASE")
-    api("org.springframework.security:spring-security-core:${versions.springSecurity}")
-    api("org.springframework.security:spring-security-config:${versions.springSecurity}")
-    api("org.springframework.security:spring-security-saml2-service-provider:${versions.springSecurity}")
     api("org.threeten:threeten-extra:1.0")
     api("io.zipkin.brave:brave-instrumentation-okhttp3:${versions.brave}")
   }
