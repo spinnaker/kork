@@ -131,6 +131,7 @@ class SpinnakerPluginService(
         pluginContext
       )
 
+      // Provide an implementation of the extension that can be injected immediately by service-level classes.
       val extension = if (shouldProxyExtensions) {
         LazyExtensionInvocationProxy.proxy(
           lazy {
