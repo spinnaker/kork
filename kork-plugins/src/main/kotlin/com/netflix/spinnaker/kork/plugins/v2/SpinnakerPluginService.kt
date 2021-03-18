@@ -46,6 +46,7 @@ import java.util.function.Supplier
  * [SpinnakerUpdateManager] as the primary touch points for the plugin framework, decoupling
  * Spinnaker-specific plugin framework logic from PF4J wherever possible.
  */
+@Suppress("LongParameterList")
 class SpinnakerPluginService(
   private val pluginManager: SpinnakerPluginManager,
   private val updateManager: SpinnakerUpdateManager,
