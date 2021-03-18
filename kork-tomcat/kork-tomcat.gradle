@@ -5,5 +5,8 @@ dependencies {
 
   api(platform(project(":spinnaker-dependencies")))
   implementation("org.springframework.boot:spring-boot-starter-web")
+  implementation("com.netflix.spectator:spectator-api")
+  implementation("com.google.guava:guava")
+  implementation(project(":kork-core"))
 
 }
