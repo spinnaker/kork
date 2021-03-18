@@ -288,7 +288,7 @@ public class PluginsAutoConfiguration {
                         new CompoundVerifier()))
             .collect(Collectors.toList());
 
-    if (properties.enableDefaultRepositories) {
+    if (properties.isEnableDefaultRepositories()) {
       log.info("Enabling spinnaker-official and spinnaker-community plugin repositories");
 
       repositories.add(
@@ -366,6 +366,7 @@ public class PluginsAutoConfiguration {
       havingValue = FRAMEWORK_V2,
       matchIfMissing = true)
   public SpinnakerPluginService spinnakerPluginService(
+      PluginsConfigurationProperties properties,
       SpinnakerPluginManager pluginManager,
       SpinnakerUpdateManager updateManager,
       PluginInfoReleaseProvider pluginInfoReleaseProvider,
@@ -378,7 +379,8 @@ public class PluginsAutoConfiguration {
         pluginInfoReleaseProvider,
         springPluginStatusProvider,
         invocationAspects,
-        applicationEventPublisher);
+        applicationEventPublisher,
+        properties.shouldProxyExtensions());
   }
 
   @Bean

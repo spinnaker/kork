@@ -14,20 +14,24 @@
  * limitations under the License.
  *
  */
+package com.netflix.spinnaker.kork.plugins.api.events;
 
-package com.netflix.spinnaker.kork.plugins.api.internal;
+import com.netflix.spinnaker.kork.plugins.api.internal.SpinnakerExtensionPoint;
+import javax.annotation.Nonnull;
 
-import java.lang.reflect.Proxy;
+/**
+ * An application event listener for Spinnaker events that can be utilized by plugins.
+ *
+ * @param <E> the type of event the listener is for
+ */
+@FunctionalInterface
+public interface SpinnakerEventListener<E extends SpinnakerApplicationEvent>
+    extends SpinnakerExtensionPoint {
 
-class ExtensionClassProvider {
-
-  public static Class<? extends SpinnakerExtensionPoint> getExtensionClass(
-      SpinnakerExtensionPoint extensionPoint) {
-    if (Proxy.isProxyClass(extensionPoint.getClass())) {
-      ExtensionInvocationHandler extensionInvocationHandler =
-          (ExtensionInvocationHandler) Proxy.getInvocationHandler(extensionPoint);
-      return extensionInvocationHandler.getTargetClass();
-    }
-    return extensionPoint.getClass();
-  }
+  /**
+   * Handles an event of type {@link E}.
+   *
+   * @param event the inbound event
+   */
+  void onApplicationEvent(@Nonnull E event);
 }
