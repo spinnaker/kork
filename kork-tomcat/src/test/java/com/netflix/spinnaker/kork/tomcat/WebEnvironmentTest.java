@@ -24,8 +24,17 @@ import org.springframework.web.util.UriComponentsBuilder;
 @SpringBootTest(
     webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
     classes = {WebEnvironmentTest.TestControllerConfiguration.class})
+// It would be lovely to have a per-method TestPropertySource annotation, or
+// some other simple way to parametrize tests to verify what happens when
+// default.rejectIllegalHeader isn't set at all, and set to true, in addition to
+// setting it to false.  At the moment this doesn't seem worth the code
+// duplication / complexity.  See
+// https://github.com/spring-projects/spring-framework/issues/18951.
 @TestPropertySource(
-    properties = {"logging.level.org.apache.coyote.http11.Http11InputBuffer = DEBUG"})
+    properties = {
+      "logging.level.org.apache.coyote.http11.Http11InputBuffer = DEBUG",
+      "default.rejectIllegalHeader = false"
+    })
 class WebEnvironmentTest {
 
   @LocalServerPort int port;
@@ -47,7 +56,7 @@ class WebEnvironmentTest {
 
     ResponseEntity<String> entity =
         restTemplate.exchange(uri, HttpMethod.GET, new HttpEntity<>(headers), String.class);
-    assertEquals(HttpStatus.BAD_REQUEST, entity.getStatusCode());
+    assertEquals(HttpStatus.OK, entity.getStatusCode());
   }
 
   @SpringBootApplication
