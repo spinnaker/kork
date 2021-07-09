@@ -30,8 +30,4 @@ dependencies {
   api "com.jcraft:jsch.agentproxy.connector-factory"
 
   implementation "com.netflix.spectator:spectator-ext-aws"
-
-  testImplementation "org.spockframework:spock-core"
-  testRuntimeOnly "cglib:cglib-nodep"
-  testRuntimeOnly "org.objenesis:objenesis"
 }
