@@ -28,7 +28,7 @@ import org.junit.runner.RunWith;
 public class ARNTest {
 
   @ParameterizedTest
-  @ValueSource(strings = {"aws", "aws-cn", "aws-us-gov"})
+  @ValueSource(strings = {"aws", "aws-cn", "aws-us-gov", "aws-iso", "aws-iso-b"})
   void awsPartitionARN(String partition) {
     String region = "us-east-2";
     String account = "123456789012";

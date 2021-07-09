@@ -25,7 +25,20 @@ import java.util.regex.Pattern;
  */
 public class ARN {
 
-  static final Pattern PATTERN = Pattern.compile("arn:aws(?:-cn|-us-gov)?:.*:(.*):(\\d+):(.*)");
+  // We're currently using version 1.11.1009 of the aws java sdk, so the source
+  // of truth for available partitions is
+  // https://github.com/aws/aws-sdk-java/blob/1.11.1009/aws-java-sdk-core/src/main/resources/com/amazonaws/partitions/endpoints.json,
+  // or more specifically:
+  //
+  // $ cat ./aws-java-sdk-core/src/main/resources/com/amazonaws/partitions/endpoints.json | jq -r
+  // '.partitions[] | .partition'
+  // aws
+  // aws-cn
+  // aws-us-gov
+  // aws-iso
+  // aws-iso-b
+  static final Pattern PATTERN =
+      Pattern.compile("arn:aws(?:-cn|-us-gov|-iso|-iso-b)?:.*:(.*):(\\d+):(.*)");
 
   private String arn;
   private String region;
