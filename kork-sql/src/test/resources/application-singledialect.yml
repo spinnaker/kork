@@ -1,0 +1,17 @@
+sql:
+  enabled: true
+  connectionPools:
+    default:
+      jdbcUrl: "jdbc:h2:mem:test"
+      default: true
+      user:
+      password:
+    secondary:
+      enabled: true
+      jdbcUrl: "jdbc:h2:mem:test"
+      user:
+      password:
+  migration:
+    jdbcUrl: "jdbc:h2:mem:test"
+    user:
+    password:

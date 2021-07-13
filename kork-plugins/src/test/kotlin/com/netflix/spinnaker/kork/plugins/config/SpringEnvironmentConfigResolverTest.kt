@@ -138,6 +138,10 @@ class SpringEnvironmentConfigResolverTest : JUnit5Minutests {
             .isNotNull()
             .get { url }.isEqualTo(URL("http://localhost:9000"))
         }
+        .and {
+          get { get("empty") }
+            .isNull()
+        }
     }
   }
 
@@ -178,6 +182,7 @@ class SpringEnvironmentConfigResolverTest : JUnit5Minutests {
     "spinnaker.extensibility.plugins.netflix.very-important.extensions.orca.stage.config.optional" to "some new value",
     "spinnaker.extensibility.extensions.netflix.bar.config.somelist[0].hello" to "one",
     "spinnaker.extensibility.extensions.netflix.bar.config.somelist[1].hello" to "two",
+    "spinnaker.extensibility.repositories" to mapOf<String, String>(),
     "spinnaker.extensibility.repositories.foo.url" to "http://localhost:9000",
     "spinnaker.extensibility.plugins.netflix.sweet-plugin.config.somestring" to "overridden default"
   )

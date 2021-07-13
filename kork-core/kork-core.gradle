@@ -21,6 +21,8 @@ dependencies {
   implementation "com.netflix.spectator:spectator-ext-gc"
   implementation "com.netflix.spectator:spectator-ext-jvm"
   implementation "com.netflix.spectator:spectator-reg-micrometer"
+  implementation "com.fasterxml.jackson.core:jackson-annotations"
+  implementation "com.fasterxml.jackson.core:jackson-databind"
 
   testImplementation "org.codehaus.groovy:groovy-all"
   testImplementation("org.mockito:mockito-core")
