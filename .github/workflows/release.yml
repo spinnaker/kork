@@ -16,10 +16,9 @@ jobs:
       - uses: actions/checkout@v2
       - run: git fetch --prune --unshallow
       # Given a tag, determine what branch we are on
-      # Minor tags (eg v0.1.0) should be pushed to the master branch
-      # Patch tags (eg v0.1.1+) should be pushed to their respective release branches
       # If the tag doesn't exist on a branch, bumpDeps will log and throw an error
-      # TODO: handle error case if tag exists on multiple branches
+      # TODO: Handle case if tag exists on multiple branches
+      # TODO: Don't publish artifacts if tag does not exist on a branch
       - name: Get Branch
         run: |
           raw=$(git branch -r --contains ${{ github.ref }})
