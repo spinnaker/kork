@@ -15,6 +15,11 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - run: git fetch --prune --unshallow
+      - name: Get Branch
+        run: |
+          raw=$(git branch -r --contains ${{ github.ref }})
+          branch=${raw/origin\/}
+          echo BRANCH=$branch >> $GITHUB_ENV
       - uses: actions/setup-java@v1
         with:
           java-version: 11
@@ -63,4 +68,4 @@ jobs:
         with:
           token: ${{ secrets.SPINNAKER_GITHUB_TOKEN }}
           event-type: bump-dependencies
-          client-payload: '{"ref": "${{ github.ref }}"}'
+          client-payload: '{"ref": "${{ github.ref }}", "branch": "${{ env.BRANCH}}"}'
