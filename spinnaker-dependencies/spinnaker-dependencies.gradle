@@ -118,7 +118,7 @@ dependencies {
     api("commons-collections:commons-collections:[3.2.2,3.3)")
     api("de.danielbechler:java-object-diff:0.95")
     api("de.huxhorn.sulky:de.huxhorn.sulky.ulid:8.2.0")
-    api("dev.minutest:minutest:1.11.0")
+    api("dev.minutest:minutest:1.13.0")
     api("io.github.resilience4j:resilience4j-annotations:${versions.resilience4j}")
     api("io.github.resilience4j:resilience4j-circuitbreaker:${versions.resilience4j}")
     api("io.github.resilience4j:resilience4j-kotlin:${versions.resilience4j}")
