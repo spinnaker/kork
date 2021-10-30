@@ -93,8 +93,7 @@ class GenericExceptionHandlersMvcSpec extends Specification {
 
     and: "should log an error, but no warnings"
     countLogEventsForLevel(Level.ERROR) == 1
-    // FIXME: currently it does log a warning
-    countLogEventsForLevel(Level.WARN) == 1
+    countLogEventsForLevel(Level.WARN) == 0
   }
 
   private int countLogEventsForLevel(Level level) {
