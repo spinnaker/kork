@@ -7,7 +7,7 @@ javaPlatform {
 ext {
   versions = [
     arrow            : "0.13.2",
-    aws              : "1.11.1009",
+    aws              : "1.12.84",
     bouncycastle     : "1.64", // 1.64 removes CVE-2019-17359
     brave            : "5.12.3",
     groovy           : "2.5.11", //this needs to keep in sync with the version from boot... if we could get rid of groovy-all we'd no longer need this
@@ -24,8 +24,8 @@ ext {
     spectator        : "0.103.0",
     spek             : "1.1.5",
     spek2            : "2.0.9",
-    spring           : "5.2.9.RELEASE", // this should be kept in sync with spring-boot / removed once the need for a version override is gone
-    springBoot       : "2.2.5.RELEASE",
+    spring           : "5.2.12.RELEASE", // this should be kept in sync with spring-boot / removed once the need for a version override is gone
+    springBoot       : "2.2.13.RELEASE",
     springCloud      : "Hoxton.SR4",
     springfoxSwagger : "2.9.2",
     swagger          : "1.5.20", //this should stay in sync with what springfoxSwagger expects
@@ -51,8 +51,8 @@ dependencies {
   //kotlinVersion comes from gradle.properties since we have kotlin code in
   // this project and need to configure gradle plugins etc.
   api(platform("org.jetbrains.kotlin:kotlin-bom:$kotlinVersion"))
-  api(platform("org.junit:junit-bom:5.6.2"))
-  api(platform("com.fasterxml.jackson:jackson-bom:2.11.1"))
+  api(platform("org.junit:junit-bom:5.6.3"))
+  api(platform("com.fasterxml.jackson:jackson-bom:2.12.3"))
   api(platform("org.springframework:spring-framework-bom:${versions.spring}"))
   api(platform("org.springframework.boot:spring-boot-dependencies:${versions.springBoot}"))
   api(platform("com.amazonaws:aws-java-sdk-bom:${versions.aws}"))
@@ -87,7 +87,7 @@ dependencies {
     api("com.netflix.archaius:archaius-core:0.7.7")
     api("com.netflix.awsobjectmapper:awsobjectmapper:${versions.aws}")
     api("com.netflix.dyno:dyno-jedis:1.7.2")
-    api("com.netflix.eureka:eureka-client:1.10.15")
+    api("com.netflix.eureka:eureka-client:1.10.17")
     api("com.netflix.frigga:frigga:0.24.0")
     api("com.netflix.netflix-commons:netflix-eventbus:0.3.0")
     api("com.netflix.spectator:spectator-api:${versions.spectator}")
@@ -98,6 +98,7 @@ dependencies {
     api("com.netflix.spectator:spectator-reg-atlas:${versions.spectator}")
     api("com.netflix.spectator:spectator-web-spring:${versions.spectator}")
     api("com.netflix.spectator:spectator-reg-micrometer:${versions.spectator}")
+    api("com.nimbusds:nimbus-jose-jwt:7.9")
     api("io.spinnaker.embedded-redis:embedded-redis:0.9.0")
     api("com.nhaarman.mockitokotlin2:mockito-kotlin:2.2.0")
     api("com.nhaarman:mockito-kotlin:1.6.0")
@@ -167,6 +168,7 @@ dependencies {
     api("org.springframework.security.oauth.boot:spring-security-oauth2-autoconfigure:2.1.5.RELEASE")
     api("org.springframework.security.extensions:spring-security-saml-dsl-core:1.0.5.RELEASE")
     api("org.springframework.security.extensions:spring-security-saml2-core:1.0.9.RELEASE")
+    api("org.testng:testng:7.4.0") // TODO: remove this with upgrade of spring-boot version to 2.5.0 or with upgrade of groovy-all to 3.0.8
     api("org.threeten:threeten-extra:1.0")
     api("org.apache.tomcat.embed:tomcat-embed-core:${versions.tomcat}")
     api("org.apache.tomcat.embed:tomcat-embed-el:${versions.tomcat}")
