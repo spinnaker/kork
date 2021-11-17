@@ -27,7 +27,7 @@ import retrofit.client.Response;
  */
 @Getter
 @NonnullByDefault
-public final class SpinnakerHttpException extends SpinnakerServerException {
+public class SpinnakerHttpException extends SpinnakerServerException {
   private final Response response;
 
   public SpinnakerHttpException(RetrofitError e) {
