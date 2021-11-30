@@ -29,6 +29,7 @@ import com.netflix.spinnaker.config.ErrorConfiguration;
 import com.netflix.spinnaker.config.RetrofitErrorConfiguration;
 import java.net.URI;
 import java.util.List;
+import java.util.stream.Collectors;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -65,6 +66,8 @@ import retrofit.mime.TypedString;
 @TestPropertySource(properties = {"retrofit.enabled = false"})
 class SpinnakerRetrofitExceptionHandlersTest {
 
+  private static final String CUSTOM_MESSAGE = "custom message";
+
   @LocalServerPort int port;
 
   @Autowired TestRestTemplate restTemplate;
@@ -94,6 +97,18 @@ class SpinnakerRetrofitExceptionHandlersTest {
     assertEquals(1, countLogEventsForLevel(Level.ERROR));
   }
 
+  @Test
+  void testChainedSpinnakerServerException() throws Exception {
+    URI uri = getUri("/chainedSpinnakerServerException");
+
+    ResponseEntity<String> entity = restTemplate.getForEntity(uri, String.class);
+    assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, entity.getStatusCode());
+    assertEquals(1, countLogEventsForLevel(Level.ERROR));
+
+    // Make sure the message is what we expect.
+    assertEquals(1, searchLogEvents(CUSTOM_MESSAGE, Level.ERROR).size());
+  }
+
   @ParameterizedTest(name = "testSpinnakerHttpException status = {0}")
   @ValueSource(ints = {403, 400, 500})
   void testSpinnakerHttpException(int status) throws Exception {
@@ -111,6 +126,31 @@ class SpinnakerRetrofitExceptionHandlersTest {
             HttpStatus.resolve(status).is5xxServerError() ? Level.ERROR : Level.DEBUG));
   }
 
+  @ParameterizedTest(name = "testChainedSpinnakerHttpException status = {0}")
+  @ValueSource(ints = {403, 400, 500})
+  void testChainedSpinnakerHttpException(int status) throws Exception {
+    URI uri = getUri("/chainedSpinnakerHttpException/" + String.valueOf(status));
+
+    ResponseEntity<String> entity = restTemplate.getForEntity(uri, String.class);
+    assertEquals(status, entity.getStatusCode().value());
+
+    // Only expect error logging for a server error, debug otherwise.  No need
+    // to fill up logs with client errors assuming the server is doing the best
+    // it can.
+    assertEquals(
+        1,
+        countLogEventsForLevel(
+            HttpStatus.resolve(status).is5xxServerError() ? Level.ERROR : Level.DEBUG));
+
+    // Make sure the message is what we expect.
+    assertEquals(
+        1,
+        searchLogEvents(
+                CUSTOM_MESSAGE,
+                HttpStatus.resolve(status).is5xxServerError() ? Level.ERROR : Level.DEBUG)
+            .size());
+  }
+
   private URI getUri(String path) {
     return UriComponentsBuilder.fromHttpUrl("http://localhost/test-controller")
         .port(port)
@@ -121,6 +161,19 @@ class SpinnakerRetrofitExceptionHandlersTest {
 
   private long countLogEventsForLevel(Level level) {
     return listAppender.list.stream().filter(event -> event.getLevel() == level).count();
+  }
+
+  public List<ILoggingEvent> searchLogEvents(String string, Level level) {
+    return listAppender.list.stream()
+        .filter(
+            event ->
+                event
+                        .toString()
+                        .contains(
+                            string) // can't use equals since the whole string includes a timestamp,
+                    // level, class, etc. in addition to the message
+                    && event.getLevel().equals(level))
+        .collect(Collectors.toList());
   }
 
   @Configuration
@@ -173,8 +226,24 @@ class SpinnakerRetrofitExceptionHandlersTest {
       throw spinnakerServerException;
     }
 
+    @GetMapping("/chainedSpinnakerServerException")
+    void chainedSpinnakerServerException() {
+      SpinnakerServerException spinnakerServerException = mock(SpinnakerServerException.class);
+      when(spinnakerServerException.getMessage()).thenReturn("message");
+      throw new SpinnakerServerException(CUSTOM_MESSAGE, spinnakerServerException);
+    }
+
     @GetMapping("/spinnakerHttpException/{status}")
     void spinnakerHttpException(@PathVariable int status) {
+      throw makeSpinnakerHttpException(status);
+    }
+
+    @GetMapping("/chainedSpinnakerHttpException/{status}")
+    void chainedSpinnakerHttpException(@PathVariable int status) {
+      throw new SpinnakerHttpException(CUSTOM_MESSAGE, makeSpinnakerHttpException(status));
+    }
+
+    SpinnakerHttpException makeSpinnakerHttpException(int status) {
       SpinnakerHttpException spinnakerHttpException = mock(SpinnakerHttpException.class);
       when(spinnakerHttpException.getMessage()).thenReturn("message");
 
@@ -186,10 +255,10 @@ class SpinnakerRetrofitExceptionHandlersTest {
               status,
               "arbitrary reason",
               List.of(),
-              new TypedString("{ message: \"message\" }"));
+              new TypedString("{ message: \"unused message due to above mock\" }"));
 
       when(spinnakerHttpException.getResponse()).thenReturn(response);
-      throw spinnakerHttpException;
+      return spinnakerHttpException;
     }
   }
 }
