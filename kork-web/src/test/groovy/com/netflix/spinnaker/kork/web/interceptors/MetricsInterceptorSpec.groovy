@@ -64,7 +64,7 @@ class MetricsInterceptorSpec extends Specification {
 
     and:
     def registry = new StubRegistry()
-    def handler = new HandlerMethod(new Example(), Example.getMethod("get"))
+    def handler = new HandlerMethod(new Example(), Example.getMethod(handlerMethod))
     def interceptor = Spy(MetricsInterceptor, constructorArgs: [
       registry, metric, variablesToTag, requestParamsToAdd, null
     ]) {
@@ -80,10 +80,11 @@ class MetricsInterceptorSpec extends Specification {
     registry.timer.count() == 1
 
     where:
-    exception                  | variablesToTag | requestParamsToAdd | expectedTags
-    null                       | []             | []                 | [success: "true", statusCode: "200", status: "2xx", "method": "get", controller: "Example", cause: "None"]
-    new NullPointerException() | []             | []                 | [success: "false", statusCode: "500", status: "5xx", "method": "get", controller: "Example", cause: "NullPointerException"]
-    null                       | ["account"]    | ['user']           | [success: "true", statusCode: "200", status: "2xx", "method": "get", controller: "Example", cause: 'None', "account": "test", user: 'Anastasiia']
+    exception                  | handlerMethod      | variablesToTag | requestParamsToAdd | expectedTags
+    null                       | "get"              | []             | []                 | [success: "true", statusCode: "200", status: "2xx", "method": "get", controller: "Example", cause: "None", criticality: "low"]
+    new NullPointerException() | "get"              | []             | []                 | [success: "false", statusCode: "500", status: "5xx", "method": "get", controller: "Example", cause: "NullPointerException", criticality: "low"]
+    null                       | "get"              | ["account"]    | ['user']           | [success: "true", statusCode: "200", status: "2xx", "method": "get", controller: "Example", cause: 'None', "account": "test", user: 'Anastasiia', criticality: "low"]
+    new NullPointerException() | "highCriticality"  | []             | []                 | [success: "false", statusCode: "500", status: "5xx", "method": "highCriticality", controller: "Example", cause: "NullPointerException", criticality: "high"]
 
     templateVariables = ["account": "test", "empty": "empty"]
     startTime = 0L
@@ -101,15 +102,19 @@ class MetricsInterceptorSpec extends Specification {
     interceptor.afterCompletion(null, null, handler, null)
   }
 
+  @Criticality(Criticality.Value.LOW)
   class Example {
     void get() {}
+
+    @Criticality(Criticality.Value.HIGH)
+    void highCriticality() {}
   }
 
   class StubRegistry implements Registry {
     Id id = null
     Timer timer = null
 
-    @Delegate
+    @Delegate(deprecated = true)
     DefaultRegistry defaultRegistry = new DefaultRegistry()
 
     @Override
