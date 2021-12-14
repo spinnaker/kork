@@ -17,18 +17,16 @@
 plugins {
   id 'io.spinnaker.project' version "$spinnakerGradleVersion" apply false
   id "org.jetbrains.kotlin.jvm" version "$kotlinVersion" apply false
-  id "io.gitlab.arturbosch.detekt" version "1.7.4" apply false
+  id "io.gitlab.arturbosch.detekt" version "1.17.1" apply false
   id 'org.jetbrains.kotlin.plugin.allopen' version "$kotlinVersion" apply false
 }
 
-subprojects {
+allprojects {
   apply plugin: "io.spinnaker.project"
+}
 
-  group = "com.netflix.spinnaker.kork"
-
-  repositories {
-    jcenter()
-  }
+subprojects {
+  group = "io.spinnaker.kork"
 
   if (it.name != "kork-bom" && it.name != "spinnaker-dependencies") {
     apply plugin: 'java-library'
