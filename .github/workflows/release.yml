@@ -77,7 +77,7 @@ jobs:
            draft: false
            prerelease: ${{ steps.release_info.outputs.IS_CANDIDATE }}
       - name: Pause before dependency bump
-        run: sleep 600
+        run: sleep 900
       - name: Trigger dependency bump workflow
         uses: peter-evans/repository-dispatch@v1
         with:
