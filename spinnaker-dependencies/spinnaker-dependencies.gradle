@@ -12,6 +12,7 @@ ext {
     brave            : "5.12.3",
     groovy           : "2.5.11", //this needs to keep in sync with the version from boot... if we could get rid of groovy-all we'd no longer need this
     jooq             : "3.13.2",
+    liquibase        : "4.8.0",
     jsch             : "0.1.54",
     jschAgentProxy   : "0.0.9",
     protobuf         : "3.9.1",
@@ -145,7 +146,7 @@ dependencies {
     api("io.swagger:swagger-annotations:${versions.swagger}")
     api("javax.annotation:javax.annotation-api:1.3.2")
     api("javax.xml.bind:jaxb-api:2.3.1")
-    api("mysql:mysql-connector-java:8.0.20")
+    api("mysql:mysql-connector-java:8.0.28")
     api("net.logstash.logback:logstash-logback-encoder:4.11")
     api("net.minidev:json-smart:2.4.1") // TODO: remove this with upgrade of spring-boot version to 2.5.0 or above
     api("org.apache.commons:commons-exec:1.3")
@@ -163,6 +164,7 @@ dependencies {
     api("org.jetbrains.spek:spek-subject-extension:${versions.spek}")
     api("org.jooq:jooq:${versions.jooq}")
     api("org.jooq:jooq-kotlin:${versions.jooq}")
+    api("org.liquibase:liquibase-core:${versions.liquibase}")
     api("org.objenesis:objenesis:2.5.1")
     api("org.pf4j:pf4j:3.2.0")
     api("org.pf4j:pf4j-update:2.3.0")
