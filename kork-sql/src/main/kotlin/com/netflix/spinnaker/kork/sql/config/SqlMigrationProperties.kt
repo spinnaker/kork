@@ -15,6 +15,8 @@
  */
 package com.netflix.spinnaker.kork.sql.config
 
+import org.springframework.boot.jdbc.DatabaseDriver
+
 /**
  * Defines the configuration properties for connecting to a SQL database for schema migration purposes.
  *
@@ -28,6 +30,6 @@ data class SqlMigrationProperties(
   var jdbcUrl: String? = null,
   var user: String? = null,
   var password: String? = null,
-  var driver: String? = null,
+  var driver: String? = DatabaseDriver.MYSQL.driverClassName,
   var additionalChangeLogs: List<String> = mutableListOf()
 )

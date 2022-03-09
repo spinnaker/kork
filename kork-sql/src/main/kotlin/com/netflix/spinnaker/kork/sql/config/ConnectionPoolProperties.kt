@@ -17,6 +17,7 @@ package com.netflix.spinnaker.kork.sql.config
 
 import java.util.concurrent.TimeUnit
 import org.jooq.SQLDialect
+import org.springframework.boot.jdbc.DatabaseDriver
 
 /**
  * Configuration properties for SQL connection pools.
@@ -38,7 +39,7 @@ import org.jooq.SQLDialect
 data class ConnectionPoolProperties(
   var dialect: SQLDialect = SQLDialect.MYSQL,
   var jdbcUrl: String? = null,
-  var driver: String? = null,
+  var driver: String? = DatabaseDriver.MYSQL.driverClassName,
   var user: String? = null,
   var password: String? = null,
   var connectionTimeoutMs: Long = TimeUnit.SECONDS.toMillis(5),
