@@ -14,17 +14,23 @@
  * limitations under the License.
  */
 
-package com.netflix.spinnaker.kork.secrets;
+package com.netflix.spinnaker.kork.secrets.user;
 
-import javax.annotation.Nonnull;
-import lombok.Getter;
+import com.netflix.spinnaker.kork.annotations.Beta;
+import java.lang.annotation.Documented;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
-public enum StandardSecretParameter {
-  KEY("k");
-
-  @Getter @Nonnull private final String parameterName;
-
-  StandardSecretParameter(String parameterName) {
-    this.parameterName = parameterName;
-  }
+/**
+ * Annotates an implementation of {@link UserSecretData} with its {@linkplain UserSecret#getType()
+ * type}.
+ */
+@Retention(RetentionPolicy.RUNTIME)
+@Target(ElementType.TYPE)
+@Documented
+@Beta
+public @interface UserSecretType {
+  String value();
 }

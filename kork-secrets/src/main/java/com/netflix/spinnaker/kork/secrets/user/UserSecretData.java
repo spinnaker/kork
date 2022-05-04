@@ -14,17 +14,17 @@
  * limitations under the License.
  */
 
-package com.netflix.spinnaker.kork.secrets;
+package com.netflix.spinnaker.kork.secrets.user;
 
-import javax.annotation.Nonnull;
-import lombok.Getter;
+import com.netflix.spinnaker.kork.annotations.Beta;
+import com.netflix.spinnaker.kork.annotations.NonnullByDefault;
 
-public enum StandardSecretParameter {
-  KEY("k");
-
-  @Getter @Nonnull private final String parameterName;
-
-  StandardSecretParameter(String parameterName) {
-    this.parameterName = parameterName;
-  }
+@NonnullByDefault
+@Beta
+public interface UserSecretData {
+  /**
+   * Gets the value of this secret with the provided key and returns a string encoding of it. Secret
+   * values that only have a binary encoding are not supported by this method.
+   */
+  String getSecretString(String key);
 }

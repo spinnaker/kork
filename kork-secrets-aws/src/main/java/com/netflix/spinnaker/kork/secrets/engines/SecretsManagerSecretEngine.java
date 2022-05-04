@@ -19,8 +19,11 @@ package com.netflix.spinnaker.kork.secrets.engines;
 import com.amazonaws.services.secretsmanager.AWSSecretsManager;
 import com.amazonaws.services.secretsmanager.AWSSecretsManagerClientBuilder;
 import com.amazonaws.services.secretsmanager.model.AWSSecretsManagerException;
+import com.amazonaws.services.secretsmanager.model.DescribeSecretRequest;
+import com.amazonaws.services.secretsmanager.model.DescribeSecretResult;
 import com.amazonaws.services.secretsmanager.model.GetSecretValueRequest;
 import com.amazonaws.services.secretsmanager.model.GetSecretValueResult;
+import com.amazonaws.services.secretsmanager.model.Tag;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.netflix.spinnaker.kork.secrets.EncryptedSecret;
@@ -29,14 +32,19 @@ import com.netflix.spinnaker.kork.secrets.SecretEngine;
 import com.netflix.spinnaker.kork.secrets.SecretException;
 import com.netflix.spinnaker.kork.secrets.StandardSecretParameter;
 import com.netflix.spinnaker.kork.secrets.user.UserSecret;
+import com.netflix.spinnaker.kork.secrets.user.UserSecretData;
 import com.netflix.spinnaker.kork.secrets.user.UserSecretMapper;
+import com.netflix.spinnaker.kork.secrets.user.UserSecretMetadata;
 import com.netflix.spinnaker.kork.secrets.user.UserSecretReference;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Component;
@@ -90,14 +98,29 @@ public class SecretsManagerSecretEngine implements SecretEngine {
     Map<String, String> parameters = reference.getParameters();
     String secretRegion = parameters.get(SECRET_REGION);
     String secretName = parameters.get(SECRET_NAME);
-    String encoding = parameters.get(StandardSecretParameter.ENCODING.getParameterName());
+    Map<String, String> tags =
+        getSecretDescription(secretRegion, secretName).getTags().stream()
+            .filter(tag -> tag.getKey().startsWith("spinnaker:"))
+            .collect(Collectors.toMap(Tag::getKey, Tag::getValue));
+    String type = tags.get("spinnaker:type");
+    if (type == null) {
+      throw new InvalidSecretFormatException("No spinnaker:type tag found for " + reference);
+    }
+    String encoding = tags.getOrDefault("spinnaker:encoding", "json");
+    List<String> roles =
+        Optional.ofNullable(tags.get("spinnaker:roles")).stream()
+            .flatMap(rolesValue -> Stream.of(rolesValue.split("\\s*,\\s*")))
+            .collect(Collectors.toList());
+    UserSecretMetadata metadata =
+        UserSecretMetadata.builder().type(type).encoding(encoding).roles(roles).build();
     GetSecretValueResult secretValue = getSecretValue(secretRegion, secretName);
     ByteBuffer secretBinary = secretValue.getSecretBinary();
-    if (secretBinary != null) {
-      return userSecretMapper.deserialize(secretBinary.array(), encoding);
-    }
-    return userSecretMapper.deserialize(
-        secretValue.getSecretString().getBytes(StandardCharsets.UTF_8), encoding);
+    byte[] encodedData =
+        secretBinary != null
+            ? secretBinary.array()
+            : secretValue.getSecretString().getBytes(StandardCharsets.UTF_8);
+    UserSecretData data = userSecretMapper.deserialize(encodedData, type, encoding);
+    return UserSecret.builder().metadata(metadata).data(data).build();
   }
 
   @Override
@@ -118,7 +141,6 @@ public class SecretsManagerSecretEngine implements SecretEngine {
 
   @Override
   public void validate(@NonNull UserSecretReference reference) {
-    SecretEngine.super.validate(reference);
     Set<String> paramNames = reference.getParameters().keySet();
     if (!paramNames.contains(SECRET_NAME)) {
       throw new InvalidSecretFormatException(
@@ -133,6 +155,21 @@ public class SecretsManagerSecretEngine implements SecretEngine {
   @Override
   public void clearCache() {
     cache.clear();
+  }
+
+  protected DescribeSecretResult getSecretDescription(String secretRegion, String secretName) {
+    AWSSecretsManager client =
+        AWSSecretsManagerClientBuilder.standard().withRegion(secretRegion).build();
+    var request = new DescribeSecretRequest().withSecretId(secretName);
+    try {
+      return client.describeSecret(request);
+    } catch (AWSSecretsManagerException e) {
+      throw new SecretException(
+          String.format(
+              "An error occurred when using AWS Secrets Manager to describe secret: [secretName: %s, secretRegion: %s]",
+              secretName, secretRegion),
+          e);
+    }
   }
 
   protected GetSecretValueResult getSecretValue(String secretRegion, String secretName) {
@@ -157,7 +194,7 @@ public class SecretsManagerSecretEngine implements SecretEngine {
     if (!cache.containsKey(secretName)) {
       String secretString = getSecretValue(secretRegion, secretName).getSecretString();
       try {
-        Map<String, String> map = mapper.readValue(secretString, Map.class);
+        Map<String, String> map = mapper.readerForMapOf(String.class).readValue(secretString);
         cache.put(secretName, map);
       } catch (JsonProcessingException | IllegalArgumentException e) {
         throw new SecretException(

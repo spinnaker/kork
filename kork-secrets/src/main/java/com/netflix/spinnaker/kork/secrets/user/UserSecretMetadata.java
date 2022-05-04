@@ -14,17 +14,25 @@
  * limitations under the License.
  */
 
-package com.netflix.spinnaker.kork.secrets;
+package com.netflix.spinnaker.kork.secrets.user;
 
-import javax.annotation.Nonnull;
+import com.netflix.spinnaker.kork.annotations.Beta;
+import com.netflix.spinnaker.kork.annotations.NonnullByDefault;
+import java.util.List;
+import lombok.Builder;
 import lombok.Getter;
+import lombok.extern.jackson.Jacksonized;
 
-public enum StandardSecretParameter {
-  KEY("k");
-
-  @Getter @Nonnull private final String parameterName;
-
-  StandardSecretParameter(String parameterName) {
-    this.parameterName = parameterName;
-  }
+@NonnullByDefault
+@Getter
+@Builder
+@Jacksonized
+@Beta
+public class UserSecretMetadata {
+  /** Returns the type of the user secret. */
+  private final String type;
+  /** Returns the encoding of the user secret. */
+  private final String encoding;
+  /** Returns the authorized roles that can use the user secret. */
+  private final List<String> roles;
 }

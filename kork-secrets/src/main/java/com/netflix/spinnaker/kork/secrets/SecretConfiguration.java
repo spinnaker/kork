@@ -19,9 +19,9 @@ package com.netflix.spinnaker.kork.secrets;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.cbor.databind.CBORMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
-import com.netflix.spinnaker.kork.secrets.user.UserSecret;
+import com.netflix.spinnaker.kork.secrets.user.UserSecretData;
 import com.netflix.spinnaker.kork.secrets.user.UserSecretMapper;
-import com.netflix.spinnaker.kork.secrets.user.UserSecretMixin;
+import com.netflix.spinnaker.kork.secrets.user.UserSecretType;
 import com.netflix.spinnaker.kork.secrets.user.UserSecretTypeProvider;
 import java.util.List;
 import java.util.Objects;
@@ -55,20 +55,19 @@ public class SecretConfiguration {
   public UserSecretTypeProvider defaultUserSecretTypeProvider(ResourceLoader loader) {
     var provider = new ClassPathScanningCandidateComponentProvider(false);
     provider.setResourceLoader(loader);
-    provider.addIncludeFilter(new AssignableTypeFilter(UserSecret.class));
+    provider.addIncludeFilter(new AssignableTypeFilter(UserSecretData.class));
     return () ->
-        provider.findCandidateComponents(UserSecret.class.getPackageName()).stream()
+        provider.findCandidateComponents(UserSecretData.class.getPackageName()).stream()
             .map(BeanDefinition::getBeanClassName)
             .filter(Objects::nonNull)
-            .map(className -> tryLoadUserSecretClass(className, loader.getClassLoader()))
-            .filter(Objects::nonNull);
+            .map(className -> tryLoadUserSecretClass(className, loader.getClassLoader()));
   }
 
   @Nullable
-  private static Class<? extends UserSecret> tryLoadUserSecretClass(
+  private static Class<? extends UserSecretData> tryLoadUserSecretClass(
       @Nonnull String className, @Nullable ClassLoader classLoader) {
     try {
-      return ClassUtils.forName(className, classLoader).asSubclass(UserSecret.class);
+      return ClassUtils.forName(className, classLoader).asSubclass(UserSecretData.class);
     } catch (ClassNotFoundException e) {
       log.error(
           "Unable to load discovered UserSecret class {}. User secrets with this type will not be parseable.",
@@ -82,14 +81,11 @@ public class SecretConfiguration {
   public UserSecretMapper userSecretMapper(
       final List<UserSecretTypeProvider> userSecretTypeProviders) {
     List<ObjectMapper> mappers = List.of(new ObjectMapper(), new YAMLMapper(), new CBORMapper());
-    Set<Class<?>> classes =
+    Set<Class<? extends UserSecretData>> classes =
         userSecretTypeProviders.stream()
             .flatMap(UserSecretTypeProvider::getUserSecretTypes)
-            .filter(Objects::nonNull)
+            .filter(type -> type != null && type.isAnnotationPresent(UserSecretType.class))
             .collect(Collectors.toSet());
-    mappers.forEach(
-        mapper ->
-            mapper.addMixIn(UserSecret.class, UserSecretMixin.class).registerSubtypes(classes));
-    return new UserSecretMapper(mappers);
+    return new UserSecretMapper(mappers, classes);
   }
 }
