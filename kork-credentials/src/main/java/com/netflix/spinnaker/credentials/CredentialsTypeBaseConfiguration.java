@@ -26,6 +26,7 @@ import java.util.Optional;
 import javax.annotation.Nullable;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.config.ConstructorArgumentValues;
 import org.springframework.beans.factory.support.DefaultListableBeanFactory;
@@ -45,6 +46,7 @@ import org.springframework.core.ResolvableType;
  * otherwise.
  */
 @RequiredArgsConstructor
+@Log4j2
 public class CredentialsTypeBaseConfiguration<
         T extends Credentials, U extends CredentialsDefinition>
     implements InitializingBean {
@@ -116,7 +118,6 @@ public class CredentialsTypeBaseConfiguration<
    * @param context
    * @param properties
    * @param lifecycleHandler
-   * @param <T>
    * @return Credentials repository registered in Spring
    */
   @SuppressWarnings("unchecked")
@@ -152,13 +153,23 @@ public class CredentialsTypeBaseConfiguration<
     RootBeanDefinition bd = new RootBeanDefinition();
     bd.setTargetType(
         ResolvableType.forClassWithGenerics(
-            AbstractCredentialsLoader.class, properties.getCredentialsClass()));
+            BasicCredentialsLoader.class,
+            properties.getCredentialsDefinitionClass(),
+            properties.getCredentialsClass()));
     bd.setBeanClass(BasicCredentialsLoader.class);
     ConstructorArgumentValues values = new ConstructorArgumentValues();
     values.addGenericArgumentValue(credentialsDefinitionSource);
     values.addGenericArgumentValue(credentialsParser);
     values.addGenericArgumentValue(credentialsRepository);
     values.addGenericArgumentValue(properties.isParallel());
+    // use type discriminator if present so that the credential loader can listen for changes
+    CredentialsType credentialsType =
+        properties.getCredentialsDefinitionClass().getAnnotation(CredentialsType.class);
+    if (credentialsType != null) {
+      String type = credentialsType.value();
+      values.addGenericArgumentValue(type);
+      log.info("Registering listener for credentials of type {}", type);
+    }
     bd.setConstructorArgumentValues(values);
 
     String beanName = "credentialsLoader." + properties.getType();

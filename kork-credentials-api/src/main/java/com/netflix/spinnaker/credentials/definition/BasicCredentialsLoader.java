@@ -22,6 +22,7 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import javax.annotation.Nullable;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -33,7 +34,7 @@ import lombok.Setter;
  * @param <U>
  */
 public class BasicCredentialsLoader<T extends CredentialsDefinition, U extends Credentials>
-    extends AbstractCredentialsLoader<U> {
+    extends AbstractCredentialsLoader<U> implements CredentialsDefinitionListener<T> {
   protected final CredentialsParser<T, U> parser;
   protected final CredentialsDefinitionSource<T> definitionSource;
   /**
@@ -44,12 +45,25 @@ public class BasicCredentialsLoader<T extends CredentialsDefinition, U extends C
   @Setter @Getter protected boolean parallel;
   // Definition is kept so we can quickly check for changes before parsing
   protected final Map<String, T> loadedDefinitions = new ConcurrentHashMap<>();
+  /**
+   * The {@linkplain CredentialsType credentials type discriminator} used by supported credentials
+   * definitions.
+   */
+  @Nullable protected final String type;
 
   public BasicCredentialsLoader(
       CredentialsDefinitionSource<T> definitionSource,
       CredentialsParser<T, U> parser,
       CredentialsRepository<U> credentialsRepository) {
-    this(definitionSource, parser, credentialsRepository, false);
+    this(definitionSource, parser, credentialsRepository, null);
+  }
+
+  public BasicCredentialsLoader(
+      CredentialsDefinitionSource<T> definitionSource,
+      CredentialsParser<T, U> parser,
+      CredentialsRepository<U> credentialsRepository,
+      @Nullable String type) {
+    this(definitionSource, parser, credentialsRepository, false, type);
   }
 
   public BasicCredentialsLoader(
@@ -57,10 +71,20 @@ public class BasicCredentialsLoader<T extends CredentialsDefinition, U extends C
       CredentialsParser<T, U> parser,
       CredentialsRepository<U> credentialsRepository,
       boolean parallel) {
+    this(definitionSource, parser, credentialsRepository, parallel, null);
+  }
+
+  public BasicCredentialsLoader(
+      CredentialsDefinitionSource<T> definitionSource,
+      CredentialsParser<T, U> parser,
+      CredentialsRepository<U> credentialsRepository,
+      boolean parallel,
+      @Nullable String type) {
     super(credentialsRepository);
     this.parser = parser;
     this.definitionSource = definitionSource;
     this.parallel = parallel;
+    this.type = type;
   }
 
   @Override
@@ -98,5 +122,25 @@ public class BasicCredentialsLoader<T extends CredentialsDefinition, U extends C
 
     Stream<U> stream = parallel ? toApply.parallelStream() : toApply.stream();
     stream.forEach(credentialsRepository::save);
+  }
+
+  @Override
+  public boolean supportsType(String type) {
+    return type.equals(this.type);
+  }
+
+  @Override
+  public void onDefinitionChanged(T definition) {
+    U credentials = parser.parse(definition);
+    if (credentials != null) {
+      loadedDefinitions.put(definition.getName(), definition);
+      credentialsRepository.save(credentials);
+    }
+  }
+
+  @Override
+  public void onDefinitionRemoved(String name) {
+    loadedDefinitions.remove(name);
+    credentialsRepository.delete(name);
   }
 }
