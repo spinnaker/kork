@@ -17,6 +17,7 @@
 package com.netflix.spinnaker.kork.retrofit.exceptions;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.netflix.spinnaker.kork.annotations.NonnullByDefault;
 import com.netflix.spinnaker.kork.exceptions.SpinnakerException;
@@ -24,9 +25,14 @@ import java.util.Optional;
 import lombok.Getter;
 import retrofit.RetrofitError;
 
-/** An exception that exposes the message of a {@link RetrofitError}. */
+/** An exception that exposes the message of a {@link RetrofitError}, or a custom message. */
 @NonnullByDefault
 public class SpinnakerServerException extends SpinnakerException {
+
+  /**
+   * A message derived from a RetrofitError's response body, or null if a custom message has been
+   * provided.
+   */
   private final String rawMessage;
 
   /**
@@ -42,8 +48,25 @@ public class SpinnakerServerException extends SpinnakerException {
         Optional.ofNullable(body).map(RetrofitErrorResponseBody::getMessage).orElse("");
   }
 
+  /**
+   * Construct a SpinnakerServerException with a specified message, instead of deriving one from a
+   * response body.
+   *
+   * @param message the message
+   * @param cause the cause. Note that this is required (i.e. can't be null) since in the absence of
+   *     a cause or a RetrofitError that provides the cause, SpinnakerServerException is likely not
+   *     the appropriate exception class to use.
+   */
+  public SpinnakerServerException(String message, Throwable cause) {
+    super(message, cause);
+    rawMessage = null;
+  }
+
   @Override
   public String getMessage() {
+    if (rawMessage == null) {
+      return super.getMessage();
+    }
     return rawMessage;
   }
 
@@ -52,6 +75,12 @@ public class SpinnakerServerException extends SpinnakerException {
   }
 
   @Getter
+  // Use JsonIgnoreProperties because some responses contain properties that
+  // cannot be mapped to the RetrofitErrorResponseBody class.  If the default
+  // JacksonConverter (with no extra configurations) is used to deserialize the
+  // response body and properties other than "message" exist in the JSON
+  // response, there will be an UnrecognizedPropertyException.
+  @JsonIgnoreProperties(ignoreUnknown = true)
   private static final class RetrofitErrorResponseBody {
     private final String message;
 

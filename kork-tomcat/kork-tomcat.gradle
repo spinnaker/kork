@@ -9,4 +9,5 @@ dependencies {
   implementation("com.google.guava:guava")
   implementation(project(":kork-core"))
 
+  testImplementation "org.springframework.boot:spring-boot-starter-test"
 }

@@ -55,7 +55,11 @@ import org.testcontainers.containers.PostgreSQLContainer;
 
 public class SqlTestUtil {
 
-  public static String tcJdbcUrl = "jdbc:tc:mysql:5.7.22://somehostname:someport/somedb";
+  // See
+  // https://www.testcontainers.org/modules/databases/jdbc/#database-containers-launched-via-jdbc-url-scheme
+  // for background.  Providing this as a jdbc URL makes testcontainers
+  // automatically start a mysql container.
+  public static String tcJdbcUrl = "jdbc:tc:mysql:5.7.22:///somedb";
 
   public static String tcPgJdbcUrl = "jdbc:tc:postgres:10.13:///test";
 
@@ -117,7 +121,7 @@ public class SqlTestUtil {
   }
 
   public static TestDatabase initDualTcMysqlDatabases() {
-    return initDualTcDatabases("mysql:5.7.22", SQLDialect.MYSQL);
+    return initDualTcDatabases("mysql:5.7.34", SQLDialect.MYSQL);
   }
 
   public static TestDatabase initDualTcPostgresDatabases() {
