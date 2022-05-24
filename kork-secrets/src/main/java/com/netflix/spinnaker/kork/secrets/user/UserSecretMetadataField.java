@@ -17,21 +17,19 @@
 package com.netflix.spinnaker.kork.secrets.user;
 
 import com.netflix.spinnaker.kork.annotations.Beta;
-import java.lang.annotation.Documented;
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
+import lombok.Getter;
 
-/**
- * Annotates an implementation of {@link UserSecretData} with its {@linkplain UserSecret#getType()
- * type}.
- */
-@Retention(RetentionPolicy.RUNTIME)
-@Target(ElementType.TYPE)
-@Documented
 @Beta
-public @interface UserSecretType {
-  /** Sets the type discriminator to use for the annotated type. */
-  String value();
+public enum UserSecretMetadataField {
+  TYPE("type"),
+  ENCODING("encoding"),
+  ROLES("roles");
+
+  public static final String PREFIX = "spinnaker:";
+
+  @Getter private final String tagKey;
+
+  UserSecretMetadataField(String tagKey) {
+    this.tagKey = PREFIX + tagKey;
+  }
 }

@@ -14,24 +14,20 @@
  * limitations under the License.
  */
 
-package com.netflix.spinnaker.kork.secrets.user;
+package com.netflix.spinnaker.kork.secrets;
 
 import com.netflix.spinnaker.kork.annotations.Beta;
-import java.lang.annotation.Documented;
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
+import com.netflix.spinnaker.kork.annotations.NonnullByDefault;
+import java.time.Duration;
+import lombok.Data;
+import org.springframework.boot.context.properties.ConfigurationProperties;
 
-/**
- * Annotates an implementation of {@link UserSecretData} with its {@linkplain UserSecret#getType()
- * type}.
- */
-@Retention(RetentionPolicy.RUNTIME)
-@Target(ElementType.TYPE)
-@Documented
+@ConfigurationProperties(prefix = "secrets.cache")
+@Data
+@NonnullByDefault
 @Beta
-public @interface UserSecretType {
-  /** Sets the type discriminator to use for the annotated type. */
-  String value();
+public class SecretCacheProperties {
+  private long maximumSize = 1000L;
+  private Duration expireAfterWrite = Duration.ofMinutes(45);
+  private Duration expireAfterAccess = Duration.ofMinutes(15);
 }

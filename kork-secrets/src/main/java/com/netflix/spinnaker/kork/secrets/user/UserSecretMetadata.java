@@ -17,22 +17,24 @@
 package com.netflix.spinnaker.kork.secrets.user;
 
 import com.netflix.spinnaker.kork.annotations.Beta;
-import com.netflix.spinnaker.kork.annotations.NonnullByDefault;
 import java.util.List;
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import lombok.Builder;
 import lombok.Getter;
+import lombok.ToString;
 import lombok.extern.jackson.Jacksonized;
 
-@NonnullByDefault
 @Getter
 @Builder
 @Jacksonized
+@ToString
 @Beta
 public class UserSecretMetadata {
   /** Returns the type of the user secret. */
-  private final String type;
+  @Nonnull private final String type;
   /** Returns the encoding of the user secret. */
-  private final String encoding;
+  @Nullable private final String encoding;
   /** Returns the authorized roles that can use the user secret. */
-  private final List<String> roles;
+  @Nonnull private final List<String> roles;
 }

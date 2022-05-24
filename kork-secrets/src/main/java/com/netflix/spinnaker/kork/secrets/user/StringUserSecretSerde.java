@@ -18,10 +18,26 @@ package com.netflix.spinnaker.kork.secrets.user;
 
 import com.netflix.spinnaker.kork.annotations.Beta;
 import com.netflix.spinnaker.kork.annotations.NonnullByDefault;
+import java.nio.charset.StandardCharsets;
+import org.springframework.stereotype.Component;
 
 @NonnullByDefault
+@Component
 @Beta
-public interface UserSecretData {
-  /** Gets the value of this secret with the provided key and returns a string encoding of it. */
-  String getSecretString(String key);
+public class StringUserSecretSerde implements UserSecretSerde {
+  @Override
+  public boolean supports(UserSecretMetadata metadata) {
+    return metadata.getType().equals("string");
+  }
+
+  @Override
+  public UserSecret deserialize(byte[] encoded, UserSecretMetadata metadata) {
+    String data = new String(encoded, StandardCharsets.UTF_8);
+    return UserSecret.builder().metadata(metadata).data(new StringUserSecretData(data)).build();
+  }
+
+  @Override
+  public byte[] serialize(UserSecretData secret, UserSecretMetadata metadata) {
+    return secret.getSecretString("").getBytes(StandardCharsets.UTF_8);
+  }
 }

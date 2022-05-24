@@ -25,19 +25,21 @@ import com.amazonaws.services.secretsmanager.model.DescribeSecretResult;
 import com.amazonaws.services.secretsmanager.model.GetSecretValueResult;
 import com.amazonaws.services.secretsmanager.model.Tag;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.dataformat.cbor.databind.CBORMapper;
-import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
 import com.netflix.spinnaker.kork.secrets.EncryptedSecret;
 import com.netflix.spinnaker.kork.secrets.InvalidSecretFormatException;
 import com.netflix.spinnaker.kork.secrets.SecretException;
+import com.netflix.spinnaker.kork.secrets.user.DefaultUserSecretSerde;
 import com.netflix.spinnaker.kork.secrets.user.OpaqueUserSecretData;
+import com.netflix.spinnaker.kork.secrets.user.UserSecret;
 import com.netflix.spinnaker.kork.secrets.user.UserSecretData;
-import com.netflix.spinnaker.kork.secrets.user.UserSecretMapper;
+import com.netflix.spinnaker.kork.secrets.user.UserSecretMetadata;
+import com.netflix.spinnaker.kork.secrets.user.UserSecretMetadataField;
 import com.netflix.spinnaker.kork.secrets.user.UserSecretReference;
+import com.netflix.spinnaker.kork.secrets.user.UserSecretSerde;
+import com.netflix.spinnaker.kork.secrets.user.UserSecretSerdeFactory;
 import java.nio.ByteBuffer;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -45,10 +47,10 @@ import org.junit.rules.ExpectedException;
 import org.mockito.Spy;
 
 public class SecretsManagerSecretEngineTest {
-  @Spy
-  private SecretsManagerSecretEngine secretsManagerSecretEngine = new SecretsManagerSecretEngine();
+  @Spy private SecretsManagerSecretEngine secretsManagerSecretEngine;
 
-  private UserSecretMapper userSecretMapper;
+  private UserSecretSerdeFactory userSecretSerdeFactory;
+  private UserSecretSerde userSecretSerde;
 
   private GetSecretValueResult kvSecretValue =
       new GetSecretValueResult().withSecretString("{\"password\":\"hunter2\"}");
@@ -63,9 +65,11 @@ public class SecretsManagerSecretEngineTest {
 
   @Before
   public void setup() {
-    List<ObjectMapper> mappers = List.of(new ObjectMapper(), new YAMLMapper(), new CBORMapper());
-    userSecretMapper = new UserSecretMapper(mappers, Set.of(OpaqueUserSecretData.class));
-    secretsManagerSecretEngine.setUserSecretMapper(userSecretMapper);
+    ObjectMapper mapper = new ObjectMapper();
+    List<ObjectMapper> mappers = List.of(mapper);
+    userSecretSerde = new DefaultUserSecretSerde(mappers, List.of(OpaqueUserSecretData.class));
+    userSecretSerdeFactory = new UserSecretSerdeFactory(List.of(userSecretSerde));
+    secretsManagerSecretEngine = new SecretsManagerSecretEngine(mapper, userSecretSerdeFactory);
     initMocks(this);
   }
 
@@ -126,19 +130,26 @@ public class SecretsManagerSecretEngineTest {
     DescribeSecretResult description =
         new DescribeSecretResult()
             .withTags(
-                new Tag().withKey("spinnaker:type").withValue("opaque"),
-                new Tag().withKey("spinnaker:roles").withValue("a, b, c"));
+                new Tag().withKey(UserSecretMetadataField.TYPE.getTagKey()).withValue("opaque"),
+                new Tag().withKey(UserSecretMetadataField.ROLES.getTagKey()).withValue("a, b, c"));
     doReturn(description).when(secretsManagerSecretEngine).getSecretDescription(any(), any());
 
     UserSecretData data = new OpaqueUserSecretData(Map.of("password", "hunter2"));
-    byte[] secretBytes = userSecretMapper.serialize(data, "json");
+    UserSecretMetadata metadata =
+        UserSecretMetadata.builder()
+            .type("opaque")
+            .encoding("json")
+            .roles(List.of("a", "b", "c"))
+            .build();
+    byte[] secretBytes = userSecretSerde.serialize(data, metadata);
     GetSecretValueResult stubResult =
         new GetSecretValueResult().withSecretBinary(ByteBuffer.wrap(secretBytes));
     doReturn(stubResult).when(secretsManagerSecretEngine).getSecretValue(any(), any());
 
     UserSecretReference reference =
         UserSecretReference.parse("secret://secrets-manager?r=us-west-2&s=private-key");
-    assertEquals(
-        "hunter2", secretsManagerSecretEngine.decrypt(reference).getSecretString("password"));
+    UserSecret secret = secretsManagerSecretEngine.decrypt(reference);
+    assertEquals("hunter2", secret.getSecretString("password"));
+    assertEquals(List.of("a", "b", "c"), secret.getRoles());
   }
 }

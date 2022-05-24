@@ -45,8 +45,8 @@ import lombok.ToString;
  *
  * <p>User secrets may be encoded in JSON, YAML, or CBOR, and the specific encoding format being
  * used by a user secret should be specified through the corresponding {@link UserSecretMetadata} of
- * that secret along. Additional encoding formats may be configured through the {@link
- * UserSecretMapper} bean.
+ * that secret along. Additional encoding formats and special types may be configured by registering
+ * additional {@link UserSecretSerde} beans.
  *
  * <h2>Key Parameter</h2>
  *

@@ -21,18 +21,17 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.netflix.spinnaker.kork.annotations.Beta;
 import com.netflix.spinnaker.kork.annotations.NonnullByDefault;
-import com.netflix.spinnaker.kork.secrets.InvalidSecretFormatException;
 import com.netflix.spinnaker.kork.secrets.SecretDecryptionException;
 import com.netflix.spinnaker.kork.secrets.SecretException;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.Map;
+import java.util.Objects;
 import java.util.TreeMap;
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * Maps decrypted secret data to a corresponding {@link UserSecretData} using different encoding
- * formats. Encoding formats are specified by an {@link ObjectMapper}'s {@link
+ * Maps structured user secret data types to a corresponding {@link UserSecretData} instance using
+ * different encoding formats. Encoding formats are specified by an {@link ObjectMapper}'s {@link
  * JsonFactory#getFormatName()} use case-insensitive string comparison. The type of user secret
  * being encoded is provided by metadata and must correspond to a UserSecretData class annotated
  * with {@link UserSecretType}.
@@ -43,13 +42,13 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 @NonnullByDefault
 @Beta
-public class UserSecretMapper {
+public class DefaultUserSecretSerde implements UserSecretSerde {
+  private final Map<String, Class<? extends UserSecretData>> userSecretTypes =
+      new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
   private final Map<String, ObjectMapper> mappersByEncodingFormat =
       new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
-  private final Map<String, Class<? extends UserSecretData>> userSecretTypes =
-      new ConcurrentHashMap<>();
 
-  public UserSecretMapper(
+  public DefaultUserSecretSerde(
       Collection<ObjectMapper> mappers, Collection<Class<? extends UserSecretData>> types) {
     mappers.forEach(
         mapper -> mappersByEncodingFormat.put(mapper.getFactory().getFormatName(), mapper));
@@ -57,51 +56,26 @@ public class UserSecretMapper {
         type -> userSecretTypes.put(type.getAnnotation(UserSecretType.class).value(), type));
   }
 
-  /**
-   * Deserializes user secret data from a secret payload using the provided metadata options.
-   *
-   * @param input secret payload to deserialize
-   * @param type type of secret being deserialized such as text or binary
-   * @param encoding encoding of secret such as JSON, YAML, or CBOR
-   * @return the deserialized user secret data
-   */
-  public UserSecretData deserialize(byte[] input, String type, String encoding) {
-    var userSecretType = userSecretTypes.get(type);
-    if (userSecretType == null) {
-      throw new InvalidSecretFormatException(
-          String.format(
-              "Unsupported user secret type: %s. Known user secret types: %s",
-              type, userSecretTypes.keySet()));
-    }
-    var mapper = mappersByEncodingFormat.get(encoding);
-    if (mapper == null) {
-      throw new InvalidSecretFormatException(
-          String.format(
-              "Unsupported user secret encoding: %s. Known encoding formats: %s",
-              encoding, mappersByEncodingFormat.keySet()));
-    }
+  @Override
+  public boolean supports(UserSecretMetadata metadata) {
+    return userSecretTypes.containsKey(metadata.getType())
+        && mappersByEncodingFormat.containsKey(metadata.getEncoding());
+  }
+
+  @Override
+  public UserSecret deserialize(byte[] encoded, UserSecretMetadata metadata) {
+    var type = Objects.requireNonNull(userSecretTypes.get(metadata.getType()));
+    var mapper = Objects.requireNonNull(mappersByEncodingFormat.get(metadata.getEncoding()));
     try {
-      return mapper.readValue(input, userSecretType);
+      return UserSecret.builder().metadata(metadata).data(mapper.readValue(encoded, type)).build();
     } catch (IOException e) {
       throw new SecretDecryptionException(e);
     }
   }
 
-  /**
-   * Serializes user secret data using the provided encoding.
-   *
-   * @param secret user secret data to serialize to bytes
-   * @param encoding encoding format to serialize data such as JSON, YAML, or CBOR
-   * @return the encoded user secret data
-   */
-  public byte[] serialize(UserSecretData secret, String encoding) {
-    var mapper = mappersByEncodingFormat.get(encoding);
-    if (mapper == null) {
-      throw new InvalidSecretFormatException(
-          String.format(
-              "Unsupported user secret encoding: %s. Known encoding formats: %s",
-              encoding, mappersByEncodingFormat.keySet()));
-    }
+  @Override
+  public byte[] serialize(UserSecretData secret, UserSecretMetadata metadata) {
+    var mapper = Objects.requireNonNull(mappersByEncodingFormat.get(metadata.getEncoding()));
     try {
       return mapper.writeValueAsBytes(secret);
     } catch (JsonProcessingException e) {

@@ -32,10 +32,11 @@ import com.netflix.spinnaker.kork.secrets.SecretEngine;
 import com.netflix.spinnaker.kork.secrets.SecretException;
 import com.netflix.spinnaker.kork.secrets.StandardSecretParameter;
 import com.netflix.spinnaker.kork.secrets.user.UserSecret;
-import com.netflix.spinnaker.kork.secrets.user.UserSecretData;
-import com.netflix.spinnaker.kork.secrets.user.UserSecretMapper;
 import com.netflix.spinnaker.kork.secrets.user.UserSecretMetadata;
+import com.netflix.spinnaker.kork.secrets.user.UserSecretMetadataField;
 import com.netflix.spinnaker.kork.secrets.user.UserSecretReference;
+import com.netflix.spinnaker.kork.secrets.user.UserSecretSerde;
+import com.netflix.spinnaker.kork.secrets.user.UserSecretSerdeFactory;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
@@ -45,25 +46,36 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.lang.NonNull;
+import lombok.NonNull;
 import org.springframework.stereotype.Component;
 
+/**
+ * Secret engine using AWS Secrets Manager. Authentication is performed using the local AWS
+ * credentials and must have permission to perform {@code secretsmanager:DescribeSecret} and {@code
+ * secretsmanager:GetSecretValue} actions on relevant secrets. The "describe secret" action is used
+ * for {@link UserSecretMetadata} data which encodes said metadata as tags on the corresponding
+ * secret. Tag keys correspond to {@link UserSecretMetadataField} constants, and the {@code
+ * spinnaker:roles} tag should contain a comma-separated list of roles in its tag value (tags are
+ * string:string key/value pairs, not arbitrary JSON). User secrets without a {@code
+ * spinnaker:encoding} tag are assumed to be encoded as JSON to match existing typical usage of AWS
+ * Secrets Manager, though other user secret encoding formats are still supported via that tag.
+ */
 @Component
 public class SecretsManagerSecretEngine implements SecretEngine {
   protected static final String SECRET_NAME = "s";
   protected static final String SECRET_REGION = "r";
   protected static final String SECRET_KEY = StandardSecretParameter.KEY.getParameterName();
 
-  private static String IDENTIFIER = "secrets-manager";
+  private static final String IDENTIFIER = "secrets-manager";
 
-  private Map<String, Map<String, String>> cache = new HashMap<>();
-  private UserSecretMapper userSecretMapper;
-  private static final ObjectMapper mapper = new ObjectMapper();
+  private final Map<String, Map<String, String>> cache = new HashMap<>();
+  private final ObjectMapper mapper;
+  private final UserSecretSerdeFactory userSecretSerdeFactory;
 
-  @Autowired
-  void setUserSecretMapper(UserSecretMapper userSecretMapper) {
-    this.userSecretMapper = userSecretMapper;
+  public SecretsManagerSecretEngine(
+      ObjectMapper mapper, UserSecretSerdeFactory userSecretSerdeFactory) {
+    this.mapper = mapper;
+    this.userSecretSerdeFactory = userSecretSerdeFactory;
   }
 
   @Override
@@ -80,9 +92,9 @@ public class SecretsManagerSecretEngine implements SecretEngine {
     if (encryptedSecret.isEncryptedFile()) {
       GetSecretValueResult secretFileValue = getSecretValue(secretRegion, secretName);
       if (secretFileValue.getSecretBinary() != null) {
-        return secretFileValue.getSecretBinary().array();
+        return toByteArray(secretFileValue.getSecretBinary());
       } else {
-        return secretFileValue.getSecretString().getBytes();
+        return secretFileValue.getSecretString().getBytes(StandardCharsets.UTF_8);
       }
     } else if (secretKey != null) {
       return getSecretString(secretRegion, secretName, secretKey);
@@ -100,27 +112,27 @@ public class SecretsManagerSecretEngine implements SecretEngine {
     String secretName = parameters.get(SECRET_NAME);
     Map<String, String> tags =
         getSecretDescription(secretRegion, secretName).getTags().stream()
-            .filter(tag -> tag.getKey().startsWith("spinnaker:"))
+            .filter(tag -> tag.getKey().startsWith(UserSecretMetadataField.PREFIX))
             .collect(Collectors.toMap(Tag::getKey, Tag::getValue));
-    String type = tags.get("spinnaker:type");
+    String type = tags.get(UserSecretMetadataField.TYPE.getTagKey());
     if (type == null) {
       throw new InvalidSecretFormatException("No spinnaker:type tag found for " + reference);
     }
-    String encoding = tags.getOrDefault("spinnaker:encoding", "json");
+    String encoding = tags.getOrDefault(UserSecretMetadataField.ENCODING.getTagKey(), "json");
     List<String> roles =
-        Optional.ofNullable(tags.get("spinnaker:roles")).stream()
+        Optional.ofNullable(tags.get(UserSecretMetadataField.ROLES.getTagKey())).stream()
             .flatMap(rolesValue -> Stream.of(rolesValue.split("\\s*,\\s*")))
             .collect(Collectors.toList());
     UserSecretMetadata metadata =
         UserSecretMetadata.builder().type(type).encoding(encoding).roles(roles).build();
+    UserSecretSerde serde = userSecretSerdeFactory.serdeFor(metadata);
     GetSecretValueResult secretValue = getSecretValue(secretRegion, secretName);
     ByteBuffer secretBinary = secretValue.getSecretBinary();
     byte[] encodedData =
         secretBinary != null
-            ? secretBinary.array()
+            ? toByteArray(secretBinary)
             : secretValue.getSecretString().getBytes(StandardCharsets.UTF_8);
-    UserSecretData data = userSecretMapper.deserialize(encodedData, type, encoding);
-    return UserSecret.builder().metadata(metadata).data(data).build();
+    return serde.deserialize(encodedData, metadata);
   }
 
   @Override
@@ -216,5 +228,11 @@ public class SecretsManagerSecretEngine implements SecretEngine {
 
   private byte[] getSecretString(String secretRegion, String secretName) {
     return getSecretValue(secretRegion, secretName).getSecretString().getBytes();
+  }
+
+  private static byte[] toByteArray(ByteBuffer buffer) {
+    byte[] bytes = new byte[buffer.remaining()];
+    buffer.get(bytes);
+    return bytes;
   }
 }

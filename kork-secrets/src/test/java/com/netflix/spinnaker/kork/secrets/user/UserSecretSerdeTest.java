@@ -18,9 +18,9 @@ package com.netflix.spinnaker.kork.secrets.user;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
-import static org.hamcrest.Matchers.instanceOf;
 
 import com.netflix.spinnaker.kork.secrets.SecretConfiguration;
+import java.util.List;
 import java.util.Map;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -30,27 +30,35 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringBootTest(classes = SecretConfiguration.class)
-public class UserSecretMapperTest {
+public class UserSecretSerdeTest {
 
-  @Autowired UserSecretMapper mapper;
+  @Autowired UserSecretSerdeFactory factory;
 
   @Test
   public void jsonStringMap() {
+    var metadata =
+        UserSecretMetadata.builder().type("opaque").encoding("json").roles(List.of()).build();
+    var serde = factory.serdeFor(metadata);
     var bytes =
-        mapper.serialize(
-            new OpaqueUserSecretData(Map.of("foo", "bar", "second", "second")), "json");
-    var secret = mapper.deserialize(bytes, "opaque", "json");
-    assertThat(secret, instanceOf(OpaqueUserSecretData.class));
+        serde.serialize(
+            new OpaqueUserSecretData(Map.of("foo", "bar", "second", "second")), metadata);
+    var secret = serde.deserialize(bytes, metadata);
+    assertThat(secret.getType(), equalTo("opaque"));
+    assertThat(secret.getEncoding(), equalTo("json"));
     assertThat(secret.getSecretString("foo"), equalTo("bar"));
     assertThat(secret.getSecretString("second"), equalTo("second"));
   }
 
   @Test
   public void yamlStringMap() {
+    var metadata =
+        UserSecretMetadata.builder().type("opaque").encoding("yaml").roles(List.of()).build();
+    var serde = factory.serdeFor(metadata);
     var bytes =
-        mapper.serialize(new OpaqueUserSecretData(Map.of("a", "A", "b", "B", "c", "C")), "yaml");
-    var secret = mapper.deserialize(bytes, "opaque", "yaml");
-    assertThat(secret, instanceOf(OpaqueUserSecretData.class));
+        serde.serialize(new OpaqueUserSecretData(Map.of("a", "A", "b", "B", "c", "C")), metadata);
+    var secret = serde.deserialize(bytes, metadata);
+    assertThat(secret.getType(), equalTo("opaque"));
+    assertThat(secret.getEncoding(), equalTo("yaml"));
     assertThat(secret.getSecretString("a"), equalTo("A"));
     assertThat(secret.getSecretString("b"), equalTo("B"));
     assertThat(secret.getSecretString("c"), equalTo("C"));
@@ -58,9 +66,13 @@ public class UserSecretMapperTest {
 
   @Test
   public void cborStringMap() {
-    var bytes = mapper.serialize(new OpaqueUserSecretData(Map.of("bin", "packed")), "cbor");
-    var secret = mapper.deserialize(bytes, "opaque", "cbor");
-    assertThat(secret, instanceOf(OpaqueUserSecretData.class));
+    var metadata =
+        UserSecretMetadata.builder().type("opaque").encoding("cbor").roles(List.of()).build();
+    var serde = factory.serdeFor(metadata);
+    var bytes = serde.serialize(new OpaqueUserSecretData(Map.of("bin", "packed")), metadata);
+    var secret = serde.deserialize(bytes, metadata);
+    assertThat(secret.getType(), equalTo("opaque"));
+    assertThat(secret.getEncoding(), equalTo("cbor"));
     assertThat(secret.getSecretString("bin"), equalTo("packed"));
   }
 }

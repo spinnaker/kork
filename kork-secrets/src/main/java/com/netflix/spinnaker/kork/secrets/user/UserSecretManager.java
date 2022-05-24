@@ -22,6 +22,8 @@ import com.netflix.spinnaker.kork.secrets.SecretDecryptionException;
 import com.netflix.spinnaker.kork.secrets.SecretEngine;
 import com.netflix.spinnaker.kork.secrets.SecretEngineRegistry;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheConfig;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Component;
 
 /**
@@ -34,6 +36,7 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 @NonnullByDefault
 @Beta
+@CacheConfig(cacheManager = "secretsCacheManager", cacheNames = "userSecrets")
 public class UserSecretManager {
   private final SecretEngineRegistry registry;
 
@@ -43,6 +46,7 @@ public class UserSecretManager {
    * @param reference parsed user secret reference to fetch
    * @return the decrypted user secret
    */
+  @Cacheable
   public UserSecret getUserSecret(UserSecretReference reference) {
     String engineIdentifier = reference.getEngineIdentifier();
     SecretEngine engine = registry.getEngine(engineIdentifier);

@@ -19,30 +19,31 @@ package com.netflix.spinnaker.kork.secrets;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.cbor.databind.CBORMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
+import com.github.benmanes.caffeine.cache.Caffeine;
+import com.netflix.spinnaker.kork.secrets.user.DefaultUserSecretSerde;
 import com.netflix.spinnaker.kork.secrets.user.UserSecretData;
-import com.netflix.spinnaker.kork.secrets.user.UserSecretMapper;
+import com.netflix.spinnaker.kork.secrets.user.UserSecretSerde;
+import com.netflix.spinnaker.kork.secrets.user.UserSecretSerdeFactory;
 import com.netflix.spinnaker.kork.secrets.user.UserSecretType;
 import com.netflix.spinnaker.kork.secrets.user.UserSecretTypeProvider;
 import java.util.List;
-import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
-import lombok.extern.log4j.Log4j2;
-import org.springframework.beans.factory.config.BeanDefinition;
+import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.cache.CacheManager;
+import org.springframework.cache.annotation.EnableCaching;
+import org.springframework.cache.caffeine.CaffeineCacheManager;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.ClassPathScanningCandidateComponentProvider;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.ResourceLoader;
-import org.springframework.core.type.filter.AssignableTypeFilter;
-import org.springframework.util.ClassUtils;
 
 @Configuration
 @ComponentScan
-@Log4j2
+@EnableCaching
+@EnableConfigurationProperties(SecretCacheProperties.class)
 public class SecretConfiguration {
 
   @Bean
@@ -53,32 +54,11 @@ public class SecretConfiguration {
 
   @Bean
   public UserSecretTypeProvider defaultUserSecretTypeProvider(ResourceLoader loader) {
-    var provider = new ClassPathScanningCandidateComponentProvider(false);
-    provider.setResourceLoader(loader);
-    provider.addIncludeFilter(new AssignableTypeFilter(UserSecretData.class));
-    return () ->
-        provider.findCandidateComponents(UserSecretData.class.getPackageName()).stream()
-            .map(BeanDefinition::getBeanClassName)
-            .filter(Objects::nonNull)
-            .map(className -> tryLoadUserSecretClass(className, loader.getClassLoader()));
-  }
-
-  @Nullable
-  private static Class<? extends UserSecretData> tryLoadUserSecretClass(
-      @Nonnull String className, @Nullable ClassLoader classLoader) {
-    try {
-      return ClassUtils.forName(className, classLoader).asSubclass(UserSecretData.class);
-    } catch (ClassNotFoundException e) {
-      log.error(
-          "Unable to load discovered UserSecret class {}. User secrets with this type will not be parseable.",
-          className,
-          e);
-      return null;
-    }
+    return UserSecretTypeProvider.fromPackage(UserSecretData.class.getPackageName(), loader);
   }
 
   @Bean
-  public UserSecretMapper userSecretMapper(
+  public UserSecretSerde userSecretSerde(
       final List<UserSecretTypeProvider> userSecretTypeProviders) {
     List<ObjectMapper> mappers = List.of(new ObjectMapper(), new YAMLMapper(), new CBORMapper());
     Set<Class<? extends UserSecretData>> classes =
@@ -86,6 +66,23 @@ public class SecretConfiguration {
             .flatMap(UserSecretTypeProvider::getUserSecretTypes)
             .filter(type -> type != null && type.isAnnotationPresent(UserSecretType.class))
             .collect(Collectors.toSet());
-    return new UserSecretMapper(mappers, classes);
+    return new DefaultUserSecretSerde(mappers, classes);
+  }
+
+  @Bean
+  public UserSecretSerdeFactory userSecretSerdeFactory(ObjectProvider<UserSecretSerde> serdes) {
+    return new UserSecretSerdeFactory(serdes);
+  }
+
+  @Bean
+  public CacheManager secretsCacheManager(SecretCacheProperties properties) {
+    Caffeine<Object, Object> caffeine =
+        Caffeine.newBuilder()
+            .maximumSize(properties.getMaximumSize())
+            .expireAfterWrite(properties.getExpireAfterWrite())
+            .expireAfterAccess(properties.getExpireAfterAccess());
+    CaffeineCacheManager cacheManager = new CaffeineCacheManager();
+    cacheManager.setCaffeine(caffeine);
+    return cacheManager;
   }
 }
