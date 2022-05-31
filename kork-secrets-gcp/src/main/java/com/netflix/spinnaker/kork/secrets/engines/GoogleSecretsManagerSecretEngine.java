@@ -50,14 +50,6 @@ public class GoogleSecretsManagerSecretEngine implements SecretEngine {
 
   private static SecretManagerServiceClient client;
 
-  public GoogleSecretsManagerSecretEngine() {
-    try {
-      client = SecretManagerServiceClient.create();
-    } catch (IOException e) {
-      throw new RuntimeException(e);
-    }
-  }
-
   @Override
   public String identifier() {
     return GoogleSecretsManagerSecretEngine.IDENTIFIER;
@@ -100,6 +92,9 @@ public class GoogleSecretsManagerSecretEngine implements SecretEngine {
   protected SecretPayload getSecretPayload(
       String projectNumber, String secretId, String secretVersion) {
     try {
+      if (client == null) {
+        client = SecretManagerServiceClient.create();
+      }
       if (secretVersion == null) {
         secretVersion = LATEST;
       }
@@ -107,7 +102,7 @@ public class GoogleSecretsManagerSecretEngine implements SecretEngine {
           SecretVersionName.of(projectNumber, secretId, secretVersion);
       AccessSecretVersionResponse response = client.accessSecretVersion(secretVersionName);
       return response.getPayload();
-    } catch (ApiException e) {
+    } catch (IOException | ApiException e) {
       throw new SecretException(
           String.format(
               "Failed to parse secret when using Google Secrets Manager to fetch: [projectNumber: %s, secretId: %s]",
