@@ -72,7 +72,7 @@ public class GoogleSecretsManagerSecretEngineTest {
             "encrypted:google-secrets-manager!p:824069899151!s:spinnaker-store!k:minioAccessKeyId");
     doReturn(minioAccessKeyId)
         .when(googleSecretsManagerSecretEngine)
-        .getSecretPayload(any(), any());
+        .getSecretPayload(any(), any(), any());
     assertArrayEquals("minioadmin".getBytes(), googleSecretsManagerSecretEngine.decrypt(kvSecret));
   }
 
@@ -82,7 +82,7 @@ public class GoogleSecretsManagerSecretEngineTest {
         EncryptedSecret.parse("encrypted:google-secrets-manager!p:824069899151!s:account-name");
     doReturn(plaintextSecretValue)
         .when(googleSecretsManagerSecretEngine)
-        .getSecretPayload(any(), any());
+        .getSecretPayload(any(), any(), any());
     assertArrayEquals(
         "my-k8s-v2-account-name".getBytes(),
         googleSecretsManagerSecretEngine.decrypt(plaintextSecret));
@@ -94,7 +94,9 @@ public class GoogleSecretsManagerSecretEngineTest {
         EncryptedSecret.parse(
             "encryptedFile:google-secrets-manager!p:824069899151!s:spinnaker-store!k:minioAccessKeyId");
     exceptionRule.expect(InvalidSecretFormatException.class);
-    doReturn(kvSecretValue).when(googleSecretsManagerSecretEngine).getSecretPayload(any(), any());
+    doReturn(kvSecretValue)
+        .when(googleSecretsManagerSecretEngine)
+        .getSecretPayload(any(), any(), any());
     googleSecretsManagerSecretEngine.validate(kvSecret);
   }
 
@@ -104,7 +106,7 @@ public class GoogleSecretsManagerSecretEngineTest {
         EncryptedSecret.parse("encryptedFile:google-secrets-manager!p:824069899151!s:certificate");
     doReturn(secretStringFileValue)
         .when(googleSecretsManagerSecretEngine)
-        .getSecretPayload(any(), any());
+        .getSecretPayload(any(), any(), any());
     assertArrayEquals(
         "-----BEGIN CERTIFICATE-----".getBytes(),
         googleSecretsManagerSecretEngine.decrypt(secretStringFile));
@@ -116,7 +118,7 @@ public class GoogleSecretsManagerSecretEngineTest {
         EncryptedSecret.parse("encryptedFile:google-secrets-manager!p:824069899151!s:certificate");
     doReturn(binarySecretValue)
         .when(googleSecretsManagerSecretEngine)
-        .getSecretPayload(any(), any());
+        .getSecretPayload(any(), any(), any());
     assertArrayEquals(
         "-----BEGIN CERTIFICATE-----".getBytes(),
         googleSecretsManagerSecretEngine.decrypt(secretBinaryFile));
@@ -129,7 +131,7 @@ public class GoogleSecretsManagerSecretEngineTest {
             "encrypted:google-secrets-manager!p:824069899151!s:spinnaker-store!k:minioAccessKeyId");
     doReturn(binarySecretValue)
         .when(googleSecretsManagerSecretEngine)
-        .getSecretPayload(any(), any());
+        .getSecretPayload(any(), any(), any());
     exceptionRule.expect(SecretException.class);
     googleSecretsManagerSecretEngine.decrypt(kvSecret);
   }
@@ -141,7 +143,7 @@ public class GoogleSecretsManagerSecretEngineTest {
             "encrypted:google-secrets-manager!j:824069899151!s:spinnaker-store!k:account-name");
     doReturn(binarySecretValue)
         .when(googleSecretsManagerSecretEngine)
-        .getSecretPayload(any(), any());
+        .getSecretPayload(any(), any(), any());
     exceptionRule.expect(SecretException.class);
     googleSecretsManagerSecretEngine.decrypt(kvSecret);
   }

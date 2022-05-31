@@ -40,12 +40,23 @@ public class GoogleSecretsManagerSecretEngine implements SecretEngine {
   protected static final String PROJECT_NUMBER = "p";
   protected static final String SECRET_ID = "s";
   protected static final String SECRET_KEY = "k";
-  protected static final String VERSION_ID = "latest";
+  protected static final String VERSION_ID = "v";
+  protected static final String LATEST = "latest";
 
   private static final String IDENTIFIER = "google-secrets-manager";
 
   private final Map<String, Map<String, String>> cache = new HashMap<>();
   private static final ObjectMapper objectMapper = new ObjectMapper();
+
+  private static SecretManagerServiceClient client;
+
+  public GoogleSecretsManagerSecretEngine() {
+    try {
+      client = SecretManagerServiceClient.create();
+    } catch (IOException e) {
+      throw new RuntimeException(e);
+    }
+  }
 
   @Override
   public String identifier() {
@@ -57,12 +68,16 @@ public class GoogleSecretsManagerSecretEngine implements SecretEngine {
     String projectNumber = encryptedSecret.getParams().get(PROJECT_NUMBER);
     String secretId = encryptedSecret.getParams().get(SECRET_ID);
     String secretKey = encryptedSecret.getParams().get(SECRET_KEY);
+    String secretVersion = encryptedSecret.getParams().get(VERSION_ID);
     if (encryptedSecret.isEncryptedFile()) {
-      return getSecretPayload(projectNumber, secretId).getData().toStringUtf8().getBytes();
+      return getSecretPayload(projectNumber, secretId, secretVersion)
+          .getData()
+          .toStringUtf8()
+          .getBytes();
     } else if (secretKey != null) {
-      return getSecretPayloadString(projectNumber, secretId, secretKey);
+      return getSecretPayloadString(projectNumber, secretId, secretVersion, secretKey);
     } else {
-      return getSecretPayloadString(projectNumber, secretId);
+      return getSecretPayloadString(projectNumber, secretId, secretVersion);
     }
   }
 
@@ -82,14 +97,17 @@ public class GoogleSecretsManagerSecretEngine implements SecretEngine {
     }
   }
 
-  protected SecretPayload getSecretPayload(String projectNumber, String secretId) {
+  protected SecretPayload getSecretPayload(
+      String projectNumber, String secretId, String secretVersion) {
     try {
-      SecretManagerServiceClient client = SecretManagerServiceClient.create();
+      if (secretVersion == null) {
+        secretVersion = LATEST;
+      }
       SecretVersionName secretVersionName =
-          SecretVersionName.of(projectNumber, secretId, VERSION_ID);
+          SecretVersionName.of(projectNumber, secretId, secretVersion);
       AccessSecretVersionResponse response = client.accessSecretVersion(secretVersionName);
       return response.getPayload();
-    } catch (IOException | ApiException e) {
+    } catch (ApiException e) {
       throw new SecretException(
           String.format(
               "Failed to parse secret when using Google Secrets Manager to fetch: [projectNumber: %s, secretId: %s]",
@@ -103,9 +121,11 @@ public class GoogleSecretsManagerSecretEngine implements SecretEngine {
     cache.clear();
   }
 
-  private byte[] getSecretPayloadString(String projectNumber, String secretId, String secretKey) {
+  private byte[] getSecretPayloadString(
+      String projectNumber, String secretId, String secretVersion, String secretKey) {
     if (!cache.containsKey(secretId)) {
-      String secretString = getSecretPayload(projectNumber, secretId).getData().toStringUtf8();
+      String secretString =
+          getSecretPayload(projectNumber, secretId, secretVersion).getData().toStringUtf8();
       try {
         Map<String, String> map = objectMapper.readValue(secretString, Map.class);
         cache.put(secretId, map);
@@ -127,7 +147,11 @@ public class GoogleSecretsManagerSecretEngine implements SecretEngine {
         .getBytes();
   }
 
-  private byte[] getSecretPayloadString(String projectNumber, String secretId) {
-    return getSecretPayload(projectNumber, secretId).getData().toStringUtf8().getBytes();
+  private byte[] getSecretPayloadString(
+      String projectNumber, String secretId, String secretVersion) {
+    return getSecretPayload(projectNumber, secretId, secretVersion)
+        .getData()
+        .toStringUtf8()
+        .getBytes();
   }
 }
