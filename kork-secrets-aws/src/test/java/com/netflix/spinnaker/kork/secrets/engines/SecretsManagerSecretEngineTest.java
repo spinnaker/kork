@@ -17,10 +17,12 @@ package com.netflix.spinnaker.kork.secrets.engines;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.doReturn;
-import static org.mockito.MockitoAnnotations.initMocks;
+import static org.mockito.Mockito.when;
 
+import com.amazonaws.services.secretsmanager.AWSSecretsManager;
 import com.amazonaws.services.secretsmanager.model.DescribeSecretResult;
 import com.amazonaws.services.secretsmanager.model.GetSecretValueResult;
 import com.amazonaws.services.secretsmanager.model.Tag;
@@ -41,15 +43,17 @@ import java.nio.ByteBuffer;
 import java.util.List;
 import java.util.Map;
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.ExpectedException;
-import org.mockito.Spy;
+import org.junit.runner.RunWith;
+import org.mockito.Mock;
+import org.mockito.junit.MockitoJUnitRunner;
 
+@RunWith(MockitoJUnitRunner.class)
 public class SecretsManagerSecretEngineTest {
-  @Spy private SecretsManagerSecretEngine secretsManagerSecretEngine;
+  private SecretsManagerSecretEngine secretsManagerSecretEngine;
 
-  private UserSecretSerdeFactory userSecretSerdeFactory;
+  @Mock private AWSSecretsManager awsSecretsManager;
+
   private UserSecretSerde userSecretSerde;
 
   private GetSecretValueResult kvSecretValue =
@@ -61,23 +65,24 @@ public class SecretsManagerSecretEngineTest {
   private GetSecretValueResult secretStringFileValue =
       new GetSecretValueResult().withSecretString("BEGIN RSA PRIVATE KEY");
 
-  @Rule public ExpectedException exceptionRule = ExpectedException.none();
-
   @Before
   public void setup() {
     ObjectMapper mapper = new ObjectMapper();
     List<ObjectMapper> mappers = List.of(mapper);
     userSecretSerde = new DefaultUserSecretSerde(mappers, List.of(OpaqueUserSecretData.class));
-    userSecretSerdeFactory = new UserSecretSerdeFactory(List.of(userSecretSerde));
-    secretsManagerSecretEngine = new SecretsManagerSecretEngine(mapper, userSecretSerdeFactory);
-    initMocks(this);
+    UserSecretSerdeFactory userSecretSerdeFactory =
+        new UserSecretSerdeFactory(List.of(userSecretSerde));
+    secretsManagerSecretEngine =
+        new SecretsManagerSecretEngine(
+            mapper, userSecretSerdeFactory, (ignore, ignored) -> awsSecretsManager);
   }
 
   @Test
   public void decryptStringWithKey() {
     EncryptedSecret kvSecret =
         EncryptedSecret.parse("encrypted:secrets-manager!r:us-west-2!s:test-secret!k:password");
-    doReturn(kvSecretValue).when(secretsManagerSecretEngine).getSecretValue(any(), any());
+    assertNotNull(kvSecret);
+    when(awsSecretsManager.getSecretValue(any())).thenReturn(kvSecretValue);
     assertArrayEquals("hunter2".getBytes(), secretsManagerSecretEngine.decrypt(kvSecret));
   }
 
@@ -85,7 +90,8 @@ public class SecretsManagerSecretEngineTest {
   public void decryptStringWithoutKey() {
     EncryptedSecret plaintextSecret =
         EncryptedSecret.parse("encrypted:secrets-manager!r:us-west-2!s:test-secret");
-    doReturn(plaintextSecretValue).when(secretsManagerSecretEngine).getSecretValue(any(), any());
+    assertNotNull(plaintextSecret);
+    when(awsSecretsManager.getSecretValue(any())).thenReturn(plaintextSecretValue);
     assertArrayEquals("letmein".getBytes(), secretsManagerSecretEngine.decrypt(plaintextSecret));
   }
 
@@ -93,16 +99,17 @@ public class SecretsManagerSecretEngineTest {
   public void decryptFileWithKey() {
     EncryptedSecret kvSecret =
         EncryptedSecret.parse("encryptedFile:secrets-manager!r:us-west-2!s:private-key!k:password");
-    exceptionRule.expect(InvalidSecretFormatException.class);
-    doReturn(kvSecretValue).when(secretsManagerSecretEngine).getSecretValue(any(), any());
-    secretsManagerSecretEngine.validate(kvSecret);
+    assertNotNull(kvSecret);
+    assertThrows(
+        InvalidSecretFormatException.class, () -> secretsManagerSecretEngine.validate(kvSecret));
   }
 
   @Test
   public void decryptSecretStringAsFile() {
     EncryptedSecret secretStringFile =
         EncryptedSecret.parse("encryptedFile:secrets-manager!r:us-west-2!s:private-key");
-    doReturn(secretStringFileValue).when(secretsManagerSecretEngine).getSecretValue(any(), any());
+    assertNotNull(secretStringFile);
+    when(awsSecretsManager.getSecretValue(any())).thenReturn(secretStringFileValue);
     assertArrayEquals(
         "BEGIN RSA PRIVATE KEY".getBytes(), secretsManagerSecretEngine.decrypt(secretStringFile));
   }
@@ -111,7 +118,8 @@ public class SecretsManagerSecretEngineTest {
   public void decryptSecretBinaryAsFile() {
     EncryptedSecret secretBinaryFile =
         EncryptedSecret.parse("encryptedFile:secrets-manager!r:us-west-2!s:private-key");
-    doReturn(binarySecretValue).when(secretsManagerSecretEngine).getSecretValue(any(), any());
+    assertNotNull(secretBinaryFile);
+    when(awsSecretsManager.getSecretValue(any())).thenReturn(binarySecretValue);
     assertArrayEquals(
         "i'm binary".getBytes(), secretsManagerSecretEngine.decrypt(secretBinaryFile));
   }
@@ -120,9 +128,9 @@ public class SecretsManagerSecretEngineTest {
   public void decryptStringWithBinaryResult() {
     EncryptedSecret kvSecret =
         EncryptedSecret.parse("encrypted:secrets-manager!r:us-west-2!s:test-secret!k:password");
-    doReturn(binarySecretValue).when(secretsManagerSecretEngine).getSecretValue(any(), any());
-    exceptionRule.expect(SecretException.class);
-    secretsManagerSecretEngine.decrypt(kvSecret);
+    assertNotNull(kvSecret);
+    when(awsSecretsManager.getSecretValue(any())).thenReturn(binarySecretValue);
+    assertThrows(SecretException.class, () -> secretsManagerSecretEngine.decrypt(kvSecret));
   }
 
   @Test
@@ -132,7 +140,7 @@ public class SecretsManagerSecretEngineTest {
             .withTags(
                 new Tag().withKey(UserSecretMetadataField.TYPE.getTagKey()).withValue("opaque"),
                 new Tag().withKey(UserSecretMetadataField.ROLES.getTagKey()).withValue("a, b, c"));
-    doReturn(description).when(secretsManagerSecretEngine).getSecretDescription(any(), any());
+    when(awsSecretsManager.describeSecret(any())).thenReturn(description);
 
     UserSecretData data = new OpaqueUserSecretData(Map.of("password", "hunter2"));
     UserSecretMetadata metadata =
@@ -144,7 +152,7 @@ public class SecretsManagerSecretEngineTest {
     byte[] secretBytes = userSecretSerde.serialize(data, metadata);
     GetSecretValueResult stubResult =
         new GetSecretValueResult().withSecretBinary(ByteBuffer.wrap(secretBytes));
-    doReturn(stubResult).when(secretsManagerSecretEngine).getSecretValue(any(), any());
+    when(awsSecretsManager.getSecretValue(any())).thenReturn(stubResult);
 
     UserSecretReference reference =
         UserSecretReference.parse("secret://secrets-manager?r=us-west-2&s=private-key");

@@ -17,7 +17,6 @@
 package com.netflix.spinnaker.kork.secrets.engines;
 
 import com.amazonaws.services.secretsmanager.AWSSecretsManager;
-import com.amazonaws.services.secretsmanager.AWSSecretsManagerClientBuilder;
 import com.amazonaws.services.secretsmanager.model.AWSSecretsManagerException;
 import com.amazonaws.services.secretsmanager.model.DescribeSecretRequest;
 import com.amazonaws.services.secretsmanager.model.DescribeSecretResult;
@@ -47,7 +46,6 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import lombok.NonNull;
-import org.springframework.stereotype.Component;
 
 /**
  * Secret engine using AWS Secrets Manager. Authentication is performed using the local AWS
@@ -60,7 +58,6 @@ import org.springframework.stereotype.Component;
  * spinnaker:encoding} tag are assumed to be encoded as JSON to match existing typical usage of AWS
  * Secrets Manager, though other user secret encoding formats are still supported via that tag.
  */
-@Component
 public class SecretsManagerSecretEngine implements SecretEngine {
   protected static final String SECRET_NAME = "s";
   protected static final String SECRET_REGION = "r";
@@ -71,11 +68,15 @@ public class SecretsManagerSecretEngine implements SecretEngine {
   private final Map<String, Map<String, String>> cache = new HashMap<>();
   private final ObjectMapper mapper;
   private final UserSecretSerdeFactory userSecretSerdeFactory;
+  private final SecretsManagerClientProvider clientProvider;
 
   public SecretsManagerSecretEngine(
-      ObjectMapper mapper, UserSecretSerdeFactory userSecretSerdeFactory) {
+      ObjectMapper mapper,
+      UserSecretSerdeFactory userSecretSerdeFactory,
+      SecretsManagerClientProvider clientProvider) {
     this.mapper = mapper;
     this.userSecretSerdeFactory = userSecretSerdeFactory;
+    this.clientProvider = clientProvider;
   }
 
   @Override
@@ -170,8 +171,7 @@ public class SecretsManagerSecretEngine implements SecretEngine {
   }
 
   protected DescribeSecretResult getSecretDescription(String secretRegion, String secretName) {
-    AWSSecretsManager client =
-        AWSSecretsManagerClientBuilder.standard().withRegion(secretRegion).build();
+    AWSSecretsManager client = clientProvider.clientForSecret(secretRegion, secretName);
     var request = new DescribeSecretRequest().withSecretId(secretName);
     try {
       return client.describeSecret(request);
@@ -185,8 +185,7 @@ public class SecretsManagerSecretEngine implements SecretEngine {
   }
 
   protected GetSecretValueResult getSecretValue(String secretRegion, String secretName) {
-    AWSSecretsManager client =
-        AWSSecretsManagerClientBuilder.standard().withRegion(secretRegion).build();
+    AWSSecretsManager client = clientProvider.clientForSecret(secretRegion, secretName);
 
     GetSecretValueRequest getSecretValueRequest =
         new GetSecretValueRequest().withSecretId(secretName);
