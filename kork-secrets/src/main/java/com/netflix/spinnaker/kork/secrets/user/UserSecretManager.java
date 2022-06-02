@@ -36,7 +36,7 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 @NonnullByDefault
 @Beta
-@CacheConfig(cacheManager = "secretsCacheManager", cacheNames = "userSecrets")
+@CacheConfig(cacheManager = "userSecretsCacheManager", cacheNames = "userSecretsByRef")
 public class UserSecretManager {
   private final SecretEngineRegistry registry;
 
