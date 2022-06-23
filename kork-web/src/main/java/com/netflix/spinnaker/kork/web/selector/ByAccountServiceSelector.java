@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Netflix, Inc.
+ * Copyright 2022 JPMorgan Chase & Co
  *
  * Licensed under the Apache License, Version 2.0 (the "License")
  * you may not use this file except in compliance with the License.
@@ -16,22 +16,18 @@
 
 package com.netflix.spinnaker.kork.web.selector;
 
-import java.util.HashSet;
 import java.util.Map;
-import java.util.Set;
+import java.util.regex.Pattern;
 
-public class ByExecutionTypeServiceSelector implements ServiceSelector {
+public class ByAccountServiceSelector implements ServiceSelector {
   private final Object service;
   private final int priority;
-  private final Set<String> executionTypes;
+  private final Pattern accountPattern;
 
-  @SuppressWarnings("unchecked")
-  public ByExecutionTypeServiceSelector(
-      Object service, Integer priority, Map<String, Object> config) {
+  public ByAccountServiceSelector(Object service, Integer priority, Map<String, Object> config) {
     this.service = service;
     this.priority = priority;
-    this.executionTypes =
-        new HashSet<>(((Map<String, String>) config.get("executionTypes")).values());
+    this.accountPattern = Pattern.compile((String) config.get("accountPattern"));
   }
 
   @Override
@@ -46,6 +42,10 @@ public class ByExecutionTypeServiceSelector implements ServiceSelector {
 
   @Override
   public boolean supports(SelectableService.Criteria criteria) {
-    return executionTypes.contains(criteria.getExecutionType());
+    if (criteria.getAccount() == null) {
+      return false;
+    }
+
+    return accountPattern.matcher(criteria.getAccount().toLowerCase()).matches();
   }
 }

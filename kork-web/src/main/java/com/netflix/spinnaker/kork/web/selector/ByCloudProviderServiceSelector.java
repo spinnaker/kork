@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Netflix, Inc.
+ * Copyright 2022 JPMorgan Chase & Co
  *
  * Licensed under the Apache License, Version 2.0 (the "License")
  * you may not use this file except in compliance with the License.
@@ -20,18 +20,18 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-public class ByExecutionTypeServiceSelector implements ServiceSelector {
+public class ByCloudProviderServiceSelector implements ServiceSelector {
   private final Object service;
   private final int priority;
-  private final Set<String> executionTypes;
+  private final Set<String> cloudProviders;
 
   @SuppressWarnings("unchecked")
-  public ByExecutionTypeServiceSelector(
+  public ByCloudProviderServiceSelector(
       Object service, Integer priority, Map<String, Object> config) {
     this.service = service;
     this.priority = priority;
-    this.executionTypes =
-        new HashSet<>(((Map<String, String>) config.get("executionTypes")).values());
+    this.cloudProviders =
+        new HashSet<>(((Map<String, String>) config.get("cloudProviders")).values());
   }
 
   @Override
@@ -46,6 +46,6 @@ public class ByExecutionTypeServiceSelector implements ServiceSelector {
 
   @Override
   public boolean supports(SelectableService.Criteria criteria) {
-    return executionTypes.contains(criteria.getExecutionType());
+    return cloudProviders.contains(criteria.getCloudProvider());
   }
 }
