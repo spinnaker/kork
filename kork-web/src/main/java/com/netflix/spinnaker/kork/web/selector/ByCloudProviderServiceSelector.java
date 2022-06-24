@@ -20,6 +20,26 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+/**
+ * Provides logic to select a service from a configured list of options (e.g. a Clouddriver service
+ * in Orca) using the cloudProvider as a criteria. This can be used to send traffic to a specific
+ * service endpoint based on the cloud provider the traffic is touching.
+ *
+ * <p>Example usage in Orca
+ *
+ * <pre>
+ * clouddriver:
+ *   readonly:
+ *     baseUrls:
+ *     - baseUrl: https://clouddriver-readonly-orca-1.example.com
+ *       priority: 10
+ *       config:
+ *         selectorClass: com.netflix.spinnaker.kork.web.selector.ByCloudProviderServiceSelector
+ *         cloudProviders:
+ *           - kubernetes
+ *           - titus
+ * </pre>
+ */
 public class ByCloudProviderServiceSelector implements ServiceSelector {
   private final Object service;
   private final int priority;

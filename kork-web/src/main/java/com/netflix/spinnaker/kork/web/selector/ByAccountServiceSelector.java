@@ -19,6 +19,24 @@ package com.netflix.spinnaker.kork.web.selector;
 import java.util.Map;
 import java.util.regex.Pattern;
 
+/**
+ * Provides logic to select a service from a configured list of options (e.g. a Clouddriver service
+ * in Orca) using the account name as a criteria. This can be used to send traffic to a specific
+ * service endpoint based on the account the traffic is interacting with.
+ *
+ * <p>Example usage in Orca
+ *
+ * <pre>
+ * clouddriver:
+ *   readonly:
+ *     baseUrls:
+ *     - baseUrl: https://clouddriver-readonly-orca-1.example.com
+ *       priority: 10
+ *       config:
+ *         selectorClass: com.netflix.spinnaker.kork.web.selector.ByAccountServiceSelector
+ *         accountPattern: kube-internal-.*
+ * </pre>
+ */
 public class ByAccountServiceSelector implements ServiceSelector {
   private final Object service;
   private final int priority;
