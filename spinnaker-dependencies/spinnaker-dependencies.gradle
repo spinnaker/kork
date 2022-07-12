@@ -146,6 +146,7 @@ dependencies {
     api("org.bouncycastle:bcprov-jdk15on:${versions.bouncycastle}")
     api("org.codehaus.groovy:groovy-all:${versions.groovy}")
     api("org.jetbrains:annotations:19.0.0")
+    api("org.liquibase:liquibase-core:4.13.0")
     api("org.spekframework.spek2:spek-dsl-jvm:${versions.spek2}")
     api("org.spekframework.spek2:spek-runner-junit5:${versions.spek2}")
     api("org.jetbrains.spek:spek-api:${versions.spek}")

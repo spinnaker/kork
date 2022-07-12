@@ -36,6 +36,13 @@ import strikt.assertions.isA
 import strikt.assertions.isEqualTo
 import strikt.assertions.isNotNull
 
+// Without sql.migration.duplicateFileMode=WARN, liquibase complains:
+//
+// Found 2 files with the path 'classpath:db/healthcheck.yml':
+//  - file:/src/spinnaker/kork/kork-sql/build/resources/main/db/healthcheck.yml
+//  - jar:file:/src/spinnaker/kork/kork-sql/build/libs/kork-sql.jar!/db/healthcheck.yml
+//
+// Since we know the files are identical, WARN mode is OK.
 @RunWith(SpringRunner::class)
 @SpringBootTest(
   classes = [StartupTestApp::class],
@@ -43,6 +50,7 @@ import strikt.assertions.isNotNull
     "sql.enabled=true",
     "sql.migration.jdbcUrl=jdbc:h2:mem:test",
     "sql.migration.dialect=H2",
+    "sql.migration.duplicateFileMode=WARN",
     "sql.connectionPool.jdbcUrl=jdbc:h2:mem:test",
     "sql.connectionPool.dialect=H2"
   ]
