@@ -29,23 +29,23 @@ import com.netflix.spinnaker.kork.secrets.InvalidSecretFormatException;
 import com.netflix.spinnaker.kork.secrets.SecretEngine;
 import com.netflix.spinnaker.kork.secrets.SecretException;
 import java.io.IOException;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import org.springframework.stereotype.Component;
 
 @Component
 public class GoogleSecretsManagerSecretEngine implements SecretEngine {
-  protected static final String PROJECT_NUMBER = "p";
-  protected static final String SECRET_ID = "s";
-  protected static final String SECRET_KEY = "k";
-  protected static final String VERSION_ID = "v";
-  protected static final String LATEST = "latest";
+  private static final String PROJECT_NUMBER = "p";
+  private static final String SECRET_ID = "s";
+  private static final String SECRET_KEY = "k";
+  private static final String VERSION_ID = "v";
+  private static final String LATEST = "latest";
 
   private static final String IDENTIFIER = "google-secrets-manager";
 
-  private final Map<String, Map<String, String>> cache = new HashMap<>();
+  private final Map<String, Map<String, String>> cache = new ConcurrentHashMap<>();
   private static final ObjectMapper objectMapper = new ObjectMapper();
 
   private static SecretManagerServiceClient client;
