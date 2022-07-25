@@ -45,7 +45,7 @@ data class ConnectionPoolProperties(
   var connectionTimeoutMs: Long = TimeUnit.SECONDS.toMillis(5),
   var validationTimeoutMs: Long = TimeUnit.SECONDS.toMillis(5),
   var idleTimeoutMs: Long = TimeUnit.MINUTES.toMillis(3),
-  var maxLifetimeMs: Long = TimeUnit.SECONDS.toMillis(300),
+  var maxLifetimeMs: Long = TimeUnit.MINUTES.toMillis(5),
   var minIdle: Int = 5,
   var maxPoolSize: Int = 100,
   var default: Boolean = false,
