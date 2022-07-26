@@ -21,19 +21,22 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.MockitoAnnotations.initMocks;
 
+import com.amazonaws.services.secretsmanager.model.DescribeSecretResult;
 import com.amazonaws.services.secretsmanager.model.GetSecretValueResult;
+import com.amazonaws.services.secretsmanager.model.Tag;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.dataformat.cbor.databind.CBORMapper;
-import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
-import com.netflix.spinnaker.kork.jackson.ObjectMapperSubtypeConfigurer;
 import com.netflix.spinnaker.kork.secrets.EncryptedSecret;
 import com.netflix.spinnaker.kork.secrets.InvalidSecretFormatException;
 import com.netflix.spinnaker.kork.secrets.SecretException;
-import com.netflix.spinnaker.kork.secrets.user.OpaqueUserSecret;
+import com.netflix.spinnaker.kork.secrets.user.DefaultUserSecretSerde;
+import com.netflix.spinnaker.kork.secrets.user.OpaqueUserSecretData;
 import com.netflix.spinnaker.kork.secrets.user.UserSecret;
-import com.netflix.spinnaker.kork.secrets.user.UserSecretMapper;
-import com.netflix.spinnaker.kork.secrets.user.UserSecretMixin;
+import com.netflix.spinnaker.kork.secrets.user.UserSecretData;
+import com.netflix.spinnaker.kork.secrets.user.UserSecretMetadata;
+import com.netflix.spinnaker.kork.secrets.user.UserSecretMetadataField;
 import com.netflix.spinnaker.kork.secrets.user.UserSecretReference;
+import com.netflix.spinnaker.kork.secrets.user.UserSecretSerde;
+import com.netflix.spinnaker.kork.secrets.user.UserSecretSerdeFactory;
 import java.nio.ByteBuffer;
 import java.util.List;
 import java.util.Map;
@@ -44,10 +47,10 @@ import org.junit.rules.ExpectedException;
 import org.mockito.Spy;
 
 public class SecretsManagerSecretEngineTest {
-  @Spy
-  private SecretsManagerSecretEngine secretsManagerSecretEngine = new SecretsManagerSecretEngine();
+  @Spy private SecretsManagerSecretEngine secretsManagerSecretEngine;
 
-  private UserSecretMapper userSecretMapper;
+  private UserSecretSerdeFactory userSecretSerdeFactory;
+  private UserSecretSerde userSecretSerde;
 
   private GetSecretValueResult kvSecretValue =
       new GetSecretValueResult().withSecretString("{\"password\":\"hunter2\"}");
@@ -62,20 +65,11 @@ public class SecretsManagerSecretEngineTest {
 
   @Before
   public void setup() {
-    // logic copied from com.netflix.spinnaker.kork.secrets.SecretConfiguration to avoid turning
-    // this into a Spring test
-    var subtypeConfigurer = new ObjectMapperSubtypeConfigurer(true);
-    var subtypeLocator =
-        new ObjectMapperSubtypeConfigurer.ClassSubtypeLocator(
-            UserSecret.class, List.of("com.netflix.spinnaker.kork.secrets.user"));
-    List<ObjectMapper> mappers = List.of(new ObjectMapper(), new YAMLMapper(), new CBORMapper());
-    mappers.forEach(
-        mapper -> {
-          mapper.addMixIn(UserSecret.class, UserSecretMixin.class);
-          subtypeConfigurer.registerSubtype(mapper, subtypeLocator);
-        });
-    userSecretMapper = new UserSecretMapper(mappers);
-    secretsManagerSecretEngine.setUserSecretMapper(userSecretMapper);
+    ObjectMapper mapper = new ObjectMapper();
+    List<ObjectMapper> mappers = List.of(mapper);
+    userSecretSerde = new DefaultUserSecretSerde(mappers, List.of(OpaqueUserSecretData.class));
+    userSecretSerdeFactory = new UserSecretSerdeFactory(List.of(userSecretSerde));
+    secretsManagerSecretEngine = new SecretsManagerSecretEngine(mapper, userSecretSerdeFactory);
     initMocks(this);
   }
 
@@ -133,18 +127,29 @@ public class SecretsManagerSecretEngineTest {
 
   @Test
   public void decryptJsonUserSecret() {
-    OpaqueUserSecret userSecret =
-        OpaqueUserSecret.builder()
+    DescribeSecretResult description =
+        new DescribeSecretResult()
+            .withTags(
+                new Tag().withKey(UserSecretMetadataField.TYPE.getTagKey()).withValue("opaque"),
+                new Tag().withKey(UserSecretMetadataField.ROLES.getTagKey()).withValue("a, b, c"));
+    doReturn(description).when(secretsManagerSecretEngine).getSecretDescription(any(), any());
+
+    UserSecretData data = new OpaqueUserSecretData(Map.of("password", "hunter2"));
+    UserSecretMetadata metadata =
+        UserSecretMetadata.builder()
+            .type("opaque")
+            .encoding("json")
             .roles(List.of("a", "b", "c"))
-            .stringData(Map.of("password", "hunter2"))
             .build();
-    byte[] secretBytes = userSecretMapper.serialize(userSecret, "json");
+    byte[] secretBytes = userSecretSerde.serialize(data, metadata);
     GetSecretValueResult stubResult =
         new GetSecretValueResult().withSecretBinary(ByteBuffer.wrap(secretBytes));
     doReturn(stubResult).when(secretsManagerSecretEngine).getSecretValue(any(), any());
+
     UserSecretReference reference =
-        UserSecretReference.parse("secret://secrets-manager?r=us-west-2&s=private-key&e=json");
-    assertEquals(
-        "hunter2", secretsManagerSecretEngine.decrypt(reference).getSecretString("password"));
+        UserSecretReference.parse("secret://secrets-manager?r=us-west-2&s=private-key");
+    UserSecret secret = secretsManagerSecretEngine.decrypt(reference);
+    assertEquals("hunter2", secret.getSecretString("password"));
+    assertEquals(List.of("a", "b", "c"), secret.getRoles());
   }
 }
