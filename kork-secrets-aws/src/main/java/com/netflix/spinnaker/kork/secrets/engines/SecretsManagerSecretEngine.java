@@ -50,7 +50,7 @@ import lombok.NonNull;
 import org.springframework.stereotype.Component;
 
 /**
- * Secret engine using AWS Secrets Manager. Authentication is performed using the local AWS
+ * Secret engine using AWS Secrets Manager. Authentication is performed using the AWS managing
  * credentials and must have permission to perform {@code secretsmanager:DescribeSecret} and {@code
  * secretsmanager:GetSecretValue} actions on relevant secrets. The "describe secret" action is used
  * for {@link UserSecretMetadata} data which encodes said metadata as tags on the corresponding
