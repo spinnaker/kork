@@ -116,7 +116,8 @@ public class SecretsManagerSecretEngine implements SecretEngine {
             .collect(Collectors.toMap(Tag::getKey, Tag::getValue));
     String type = tags.get(UserSecretMetadataField.TYPE.getTagKey());
     if (type == null) {
-      throw new InvalidSecretFormatException("No spinnaker:type tag found for " + reference);
+      throw new InvalidSecretFormatException(
+          "No " + UserSecretMetadataField.TYPE.getTagKey() + " tag found for " + reference);
     }
     String encoding = tags.getOrDefault(UserSecretMetadataField.ENCODING.getTagKey(), "json");
     List<String> roles =
