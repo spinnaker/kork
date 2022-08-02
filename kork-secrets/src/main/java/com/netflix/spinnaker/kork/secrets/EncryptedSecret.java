@@ -18,6 +18,8 @@ package com.netflix.spinnaker.kork.secrets;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
+import javax.annotation.Nullable;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -66,6 +68,21 @@ public class EncryptedSecret {
       return new EncryptedSecret(secretConfig);
     }
     return null;
+  }
+
+  /**
+   * Tries to parse the provided value as an EncryptedSecret if possible or returns an empty
+   * Optional otherwise.
+   */
+  public static Optional<EncryptedSecret> tryParse(@Nullable Object value) {
+    if (!(value instanceof String && isEncryptedSecret((String) value))) {
+      return Optional.empty();
+    }
+    try {
+      return Optional.of(new EncryptedSecret((String) value));
+    } catch (InvalidSecretFormatException e) {
+      return Optional.empty();
+    }
   }
 
   protected void update(String secretConfig) {
