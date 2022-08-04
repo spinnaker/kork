@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 Google, Inc.
+ * Copyright 2022 Apple Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,15 +14,12 @@
  * limitations under the License.
  */
 
-dependencies {
-  api(platform(project(":spinnaker-dependencies")))
+package com.netflix.spinnaker.kork.secrets.user;
 
-  compileOnly "org.projectlombok:lombok"
-  annotationProcessor "org.projectlombok:lombok"
-  implementation "com.netflix.frigga:frigga"
+import com.netflix.spinnaker.kork.annotations.NonnullByDefault;
 
-  testImplementation "org.spockframework:spock-core"
-  testImplementation "org.junit.jupiter:junit-jupiter-api"
-  testRuntimeOnly "org.junit.vintage:junit-vintage-engine"
-  testRuntimeOnly "org.junit.jupiter:junit-jupiter-engine"
+@NonnullByDefault
+public interface UserSecretData {
+  /** Gets the value of this secret with the provided key and returns a string encoding of it. */
+  String getSecretString(String key);
 }
