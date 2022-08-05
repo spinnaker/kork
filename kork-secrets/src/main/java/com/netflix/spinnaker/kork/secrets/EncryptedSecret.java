@@ -24,6 +24,7 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import lombok.extern.log4j.Log4j2;
 
 /**
  * EncryptedSecrets contain an engineIdentifier and named parameters. EncryptedSecrets can be used
@@ -40,6 +41,7 @@ import lombok.Setter;
  */
 @EqualsAndHashCode
 @NoArgsConstructor
+@Log4j2
 public class EncryptedSecret {
 
   public static final String ENCRYPTED_STRING_PREFIX = "encrypted:";
@@ -81,6 +83,7 @@ public class EncryptedSecret {
     try {
       return Optional.of(new EncryptedSecret((String) value));
     } catch (InvalidSecretFormatException e) {
+      log.warn("Tried to parse invalid encrypted secret URI '{}'", value, e);
       return Optional.empty();
     }
   }
