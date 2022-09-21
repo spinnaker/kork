@@ -194,12 +194,7 @@ public class ExpressionsSupport {
      */
     public static String toJson(Object o) {
       try {
-        String converted = mapper.writeValueAsString(o);
-        if (converted != null && converted.contains("${")) {
-          throw new SpelHelperFunctionException("result for toJson cannot contain an expression");
-        }
-
-        return converted;
+        return mapper.writeValueAsString(o);
       } catch (Exception e) {
         throw new SpelHelperFunctionException(format("#toJson(%s) failed", o.toString()), e);
       }
