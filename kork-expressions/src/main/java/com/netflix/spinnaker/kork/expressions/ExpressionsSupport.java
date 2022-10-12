@@ -20,6 +20,7 @@ import static java.lang.String.format;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.netflix.spinnaker.kork.api.expressions.ExpressionFunctionProvider;
+import com.netflix.spinnaker.kork.dynamicconfig.DynamicConfigService;
 import com.netflix.spinnaker.kork.expressions.allowlist.AllowListTypeLocator;
 import com.netflix.spinnaker.kork.expressions.allowlist.FilteredMethodResolver;
 import com.netflix.spinnaker.kork.expressions.allowlist.FilteredPropertyAccessor;
@@ -58,15 +59,19 @@ public class ExpressionsSupport {
 
   private final Set<Class<?>> allowedReturnTypes;
   private final List<ExpressionFunctionProvider> expressionFunctionProviders;
+  private final DynamicConfigService dynamicConfigService;
 
-  public ExpressionsSupport(Class<?> extraAllowedReturnType) {
-    this(new Class[] {extraAllowedReturnType}, null, null);
+  public ExpressionsSupport(
+      Class<?> extraAllowedReturnType, DynamicConfigService dynamicConfigService) {
+    this(new Class[] {extraAllowedReturnType}, null, null, dynamicConfigService);
   }
 
   public ExpressionsSupport(
       Class<?>[] extraAllowedReturnTypes,
       List<ExpressionFunctionProvider> extraExpressionFunctionProviders,
-      PluginManager pluginManager) {
+      PluginManager pluginManager,
+      DynamicConfigService dynamicConfigService) {
+    this.dynamicConfigService = dynamicConfigService;
 
     allowedReturnTypes =
         new HashSet<>(
@@ -84,16 +89,13 @@ public class ExpressionsSupport {
                 HashMap.class,
                 LinkedHashMap.class,
                 TreeMap.class,
-                TreeSet.class,
-                NotEvaluableExpression.class));
+                TreeSet.class));
     Collections.addAll(allowedReturnTypes, extraAllowedReturnTypes);
 
     expressionFunctionProviders =
         new ArrayList<>(
             Arrays.asList(
-                new FlowExpressionFunctionProvider(),
-                new JsonExpressionFunctionProvider(),
-                new StringExpressionFunctionProvider()));
+                new JsonExpressionFunctionProvider(), new StringExpressionFunctionProvider()));
 
     if (extraExpressionFunctionProviders != null) {
       expressionFunctionProviders.addAll(extraExpressionFunctionProviders);
@@ -104,6 +106,11 @@ public class ExpressionsSupport {
     if (pluginManager != null) {
       expressionFunctionProviders.addAll(
           pluginManager.getExtensions(ExpressionFunctionProvider.class));
+    }
+
+    if (dynamicConfigService.isEnabled("expression.do-not-eval-spel.enabled", false)) {
+      allowedReturnTypes.add(NotEvaluableExpression.class);
+      expressionFunctionProviders.add(new FlowExpressionFunctionProvider());
     }
   }
 
