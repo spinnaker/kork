@@ -20,7 +20,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-import com.netflix.spinnaker.kork.dynamicconfig.SpringDynamicConfigService;
+import com.netflix.spinnaker.kork.expressions.config.ExpressionProperties;
 import java.util.Collections;
 import java.util.Map;
 import java.util.function.Function;
@@ -29,7 +29,6 @@ import org.springframework.expression.ExpressionParser;
 import org.springframework.expression.ParserContext;
 import org.springframework.expression.common.TemplateParserContext;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
-import org.springframework.mock.env.MockEnvironment;
 
 public class ExpressionsSupportTest {
   private final ExpressionParser parser = new SpelExpressionParser();
@@ -58,11 +57,8 @@ public class ExpressionsSupportTest {
 
   @Test
   public void testToJsonWhenExpressionAndEvaluationContext() {
-    MockEnvironment environment = new MockEnvironment();
-    environment.setProperty("expression.do-not-eval-spel.enabled", "true");
-
-    SpringDynamicConfigService dynamicConfigService = new SpringDynamicConfigService();
-    dynamicConfigService.setEnvironment(environment);
+    ExpressionProperties expressionProperties = new ExpressionProperties();
+    expressionProperties.getDoNotEvalSpel().setEnabled(true);
 
     Map<String, Object> testContext =
         Collections.singletonMap(
@@ -73,7 +69,7 @@ public class ExpressionsSupportTest {
         new ExpressionTransform(parserContext, parser, Function.identity())
             .transformString(
                 testInput,
-                new ExpressionsSupport(null, dynamicConfigService)
+                new ExpressionsSupport(null, expressionProperties)
                     .buildEvaluationContext(testContext, true),
                 new ExpressionEvaluationSummary());
 
@@ -82,11 +78,8 @@ public class ExpressionsSupportTest {
 
   @Test
   public void testToJsonWhenComposedExpressionAndEvaluationContext() {
-    MockEnvironment environment = new MockEnvironment();
-    environment.setProperty("expression.do-not-eval-spel.enabled", "true");
-
-    SpringDynamicConfigService dynamicConfigService = new SpringDynamicConfigService();
-    dynamicConfigService.setEnvironment(environment);
+    ExpressionProperties expressionProperties = new ExpressionProperties();
+    expressionProperties.getDoNotEvalSpel().setEnabled(true);
 
     Map<String, Object> testContext =
         Collections.singletonMap(
@@ -98,7 +91,7 @@ public class ExpressionsSupportTest {
         new ExpressionTransform(parserContext, parser, Function.identity())
             .transformString(
                 testInput,
-                new ExpressionsSupport(null, dynamicConfigService)
+                new ExpressionsSupport(null, expressionProperties)
                     .buildEvaluationContext(testContext, true),
                 new ExpressionEvaluationSummary());
 

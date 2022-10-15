@@ -20,12 +20,12 @@ import static java.lang.String.format;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.netflix.spinnaker.kork.api.expressions.ExpressionFunctionProvider;
-import com.netflix.spinnaker.kork.dynamicconfig.DynamicConfigService;
 import com.netflix.spinnaker.kork.expressions.allowlist.AllowListTypeLocator;
 import com.netflix.spinnaker.kork.expressions.allowlist.FilteredMethodResolver;
 import com.netflix.spinnaker.kork.expressions.allowlist.FilteredPropertyAccessor;
 import com.netflix.spinnaker.kork.expressions.allowlist.MapPropertyAccessor;
 import com.netflix.spinnaker.kork.expressions.allowlist.ReturnTypeRestrictor;
+import com.netflix.spinnaker.kork.expressions.config.ExpressionProperties;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -59,19 +59,19 @@ public class ExpressionsSupport {
 
   private final Set<Class<?>> allowedReturnTypes;
   private final List<ExpressionFunctionProvider> expressionFunctionProviders;
-  private final DynamicConfigService dynamicConfigService;
+  private final ExpressionProperties expressionProperties;
 
   public ExpressionsSupport(
-      Class<?> extraAllowedReturnType, DynamicConfigService dynamicConfigService) {
-    this(new Class[] {extraAllowedReturnType}, null, null, dynamicConfigService);
+      Class<?> extraAllowedReturnType, ExpressionProperties expressionProperties) {
+    this(new Class[] {extraAllowedReturnType}, null, null, expressionProperties);
   }
 
   public ExpressionsSupport(
       Class<?>[] extraAllowedReturnTypes,
       List<ExpressionFunctionProvider> extraExpressionFunctionProviders,
       PluginManager pluginManager,
-      DynamicConfigService dynamicConfigService) {
-    this.dynamicConfigService = dynamicConfigService;
+      ExpressionProperties expressionProperties) {
+    this.expressionProperties = expressionProperties;
 
     allowedReturnTypes =
         new HashSet<>(
@@ -108,7 +108,7 @@ public class ExpressionsSupport {
           pluginManager.getExtensions(ExpressionFunctionProvider.class));
     }
 
-    if (dynamicConfigService.isEnabled("expression.do-not-eval-spel.enabled", false)) {
+    if (expressionProperties.getDoNotEvalSpel().isEnabled()) {
       allowedReturnTypes.add(NotEvaluableExpression.class);
       expressionFunctionProviders.add(new FlowExpressionFunctionProvider());
     }

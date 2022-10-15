@@ -2,7 +2,7 @@ package com.netflix.spinnaker.kork.expressions;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.netflix.spinnaker.kork.dynamicconfig.DynamicConfigService;
+import com.netflix.spinnaker.kork.expressions.config.ExpressionProperties;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -22,9 +22,11 @@ class ExpressionTransformTest {
 
   @Test
   void evaluateCompositeExpression() {
+    ExpressionProperties expressionProperties = new ExpressionProperties();
+
     ExpressionEvaluationSummary summary = new ExpressionEvaluationSummary();
     StandardEvaluationContext evaluationContext =
-        new ExpressionsSupport(Trigger.class, DynamicConfigService.NOOP)
+        new ExpressionsSupport(Trigger.class, expressionProperties)
             .buildEvaluationContext(new Pipeline(new Trigger(100)), true);
 
     String evaluated =
