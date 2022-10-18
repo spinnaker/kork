@@ -16,19 +16,16 @@
 
 package com.netflix.spinnaker.kork.expressions.config;
 
-import lombok.Getter;
-import lombok.Setter;
+import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
-@Getter
-@Setter
+@Data
 @ConfigurationProperties(prefix = "expression")
 public class ExpressionProperties {
 
-  private FeatureFlag doNotEvalSpel = new FeatureFlag();
+  private final FeatureFlag doNotEvalSpel = new FeatureFlag();
 
-  @Getter
-  @Setter
+  @Data
   public static class FeatureFlag {
     private boolean enabled;
   }
