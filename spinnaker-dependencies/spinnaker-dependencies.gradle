@@ -27,7 +27,7 @@ ext {
     spectator        : "1.0.6",
     spek             : "1.1.5",
     spek2            : "2.0.9",
-    springBoot       : "2.4.13",
+    springBoot       : "2.5.14",
     springCloud      : "2020.0.6",
     springfoxSwagger : "2.9.2",
     swagger          : "1.5.20", //this should stay in sync with what springfoxSwagger expects
