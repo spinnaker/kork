@@ -16,18 +16,19 @@
 
 package com.netflix.spinnaker.retrofit;
 
+import okhttp3.logging.HttpLoggingInterceptor;
 import org.springframework.boot.context.properties.ConfigurationProperties;
-import retrofit.RestAdapter;
 
-@ConfigurationProperties("retrofit")
+@ConfigurationProperties("retrofit2")
 public class RetrofitConfigurationProperties {
-  RestAdapter.LogLevel logLevel = RestAdapter.LogLevel.BASIC;
 
-  public RestAdapter.LogLevel getLogLevel() {
+  private HttpLoggingInterceptor.Level logLevel = HttpLoggingInterceptor.Level.BASIC;
+
+  public HttpLoggingInterceptor.Level getLogLevel() {
     return logLevel;
   }
 
-  public void setLogLevel(RestAdapter.LogLevel logLevel) {
+  public void setLogLevel(HttpLoggingInterceptor.Level logLevel) {
     this.logLevel = logLevel;
   }
 }

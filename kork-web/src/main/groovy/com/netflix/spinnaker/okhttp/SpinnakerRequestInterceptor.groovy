@@ -17,25 +17,30 @@
 package com.netflix.spinnaker.okhttp
 
 import com.netflix.spinnaker.security.AuthenticatedRequest
-import retrofit.RequestInterceptor
+import okhttp3.Interceptor
+import okhttp3.Request
+import okhttp3.Response
 
-class SpinnakerRequestInterceptor implements RequestInterceptor {
+class SpinnakerRequestInterceptor implements Interceptor {
   private final OkHttpClientConfigurationProperties okHttpClientConfigurationProperties
 
   SpinnakerRequestInterceptor(OkHttpClientConfigurationProperties okHttpClientConfigurationProperties) {
     this.okHttpClientConfigurationProperties = okHttpClientConfigurationProperties
   }
 
-  void intercept(RequestInterceptor.RequestFacade request) {
+  @Override
+  Response intercept(Chain chain) throws IOException {
+    Request request = chain.request();
     if (!okHttpClientConfigurationProperties.propagateSpinnakerHeaders) {
-      // noop
-      return
+      return chain.proceed(request);
     }
 
     AuthenticatedRequest.authenticationHeaders.each { String key, Optional<String> value ->
       if (value.present) {
-        request.addHeader(key, value.get())
+        request = request.newBuilder().addHeader(key, value.get())
       }
+      return chain.proceed(request);
     }
   }
 }
+

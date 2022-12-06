@@ -18,16 +18,14 @@ package com.netflix.spinnaker.kork.retrofit.exceptions;
 
 import com.netflix.spinnaker.kork.annotations.NonnullByDefault;
 import org.springframework.http.HttpStatus;
-import retrofit.ErrorHandler;
-import retrofit.RetrofitError;
 
 /**
- * An error handler to be registered with a {@link retrofit.RestAdapter}. Allows clients to catch a
+ * An error handler to be registered with a {@link retrofit2.Retrofit}. Allows clients to catch a
  * SpinnakerServerException or something more specific (e.g. {@link SpinnakerHttpException}, or
- * {@link SpinnakerNetworkException}) depending on the properties of the {@link RetrofitError}.
+ * {@link SpinnakerNetworkException}) depending on the properties of the {@link RetrofitException})
  */
 @NonnullByDefault
-public final class SpinnakerRetrofitErrorHandler implements ErrorHandler {
+public final class SpinnakerRetrofitErrorHandler {
   private SpinnakerRetrofitErrorHandler() {}
 
   /**
@@ -41,18 +39,18 @@ public final class SpinnakerRetrofitErrorHandler implements ErrorHandler {
 
   /**
    * Returns a more specific {@link Throwable} depending on properties of the caught {@link
-   * RetrofitError}.
+   * RetrofitException}.
    *
-   * @param e The {@link RetrofitError} thrown by an invocation of the {@link retrofit.RestAdapter}
+   * @param e The {@link RetrofitException} thrown by an invocation of the {@link
+   *     retrofit2.Retrofit}
    * @return A more informative {@link Throwable}
    */
-  @Override
-  public Throwable handleError(RetrofitError e) {
+  public Throwable handleError(RetrofitException e) {
     switch (e.getKind()) {
       case HTTP:
         SpinnakerHttpException retval = new SpinnakerHttpException(e);
-        if ((e.getResponse().getStatus() == HttpStatus.NOT_FOUND.value())
-            || (e.getResponse().getStatus() == HttpStatus.BAD_REQUEST.value())) {
+        if ((e.getResponse().code() == HttpStatus.NOT_FOUND.value())
+            || (e.getResponse().code() == HttpStatus.BAD_REQUEST.value())) {
           retval.setRetryable(false);
         }
         return retval;

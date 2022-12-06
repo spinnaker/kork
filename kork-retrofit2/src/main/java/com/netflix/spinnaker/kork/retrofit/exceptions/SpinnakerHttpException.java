@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 Google, Inc.
+ * Copyright 2022 Netflix, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,19 +18,18 @@ package com.netflix.spinnaker.kork.retrofit.exceptions;
 
 import com.netflix.spinnaker.kork.annotations.NonnullByDefault;
 import lombok.Getter;
-import retrofit.RetrofitError;
-import retrofit.client.Response;
+import retrofit2.Response;
 
 /**
- * An exception that exposes the {@link Response} of a given HTTP {@link RetrofitError} and a detail
- * message that extracts useful information from the {@link Response}.
+ * An exception that exposes the {@link Response} of a given HTTP {@link RetrofitException} and a
+ * detail message that extracts useful information from the {@link Response}.
  */
 @Getter
 @NonnullByDefault
 public class SpinnakerHttpException extends SpinnakerServerException {
   private final Response response;
 
-  public SpinnakerHttpException(RetrofitError e) {
+  public SpinnakerHttpException(RetrofitException e) {
     super(e);
     this.response = e.getResponse();
   }
@@ -61,8 +60,6 @@ public class SpinnakerHttpException extends SpinnakerServerException {
     if (getRawMessage() == null) {
       return super.getMessage();
     }
-    return String.format(
-        "Status: %s, URL: %s, Message: %s",
-        response.getStatus(), response.getUrl(), getRawMessage());
+    return String.format("Status: %s, URL: %s, Message: %s", response.code(), getRawMessage());
   }
 }
