@@ -25,4 +25,8 @@ public final class SpinnakerNetworkException extends SpinnakerServerException {
   public SpinnakerNetworkException(RetrofitError e) {
     super(e);
   }
+
+  public SpinnakerNetworkException(RetrofitException e) {
+    super(e);
+  }
 }
