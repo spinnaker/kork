@@ -23,9 +23,8 @@ import com.netflix.spinnaker.kork.annotations.NonnullByDefault;
 import com.netflix.spinnaker.kork.exceptions.SpinnakerException;
 import java.util.Optional;
 import lombok.Getter;
-import retrofit.RetrofitError;
 
-/** An exception that exposes the message of a {@link RetrofitError}, or a custom message. */
+/** An exception that exposes the message of a {@link RetrofitException}, or a custom message. */
 @NonnullByDefault
 public class SpinnakerServerException extends SpinnakerException {
 
@@ -36,11 +35,12 @@ public class SpinnakerServerException extends SpinnakerException {
   private final String rawMessage;
 
   /**
-   * Parses the message from the {@link RetrofitErrorResponseBody} of a {@link RetrofitError}.
+   * Parses the message from the {@link RetrofitErrorResponseBody} of a {@link RetrofitException}.
    *
-   * @param e The {@link RetrofitError} thrown by an invocation of the {@link retrofit.RestAdapter}
+   * @param e The {@link RetrofitException} thrown by an invocation of the {@link
+   *     retrofit2.Retrofit}
    */
-  public SpinnakerServerException(RetrofitError e) {
+  public SpinnakerServerException(RetrofitException e) {
     super(e.getCause());
     RetrofitErrorResponseBody body =
         (RetrofitErrorResponseBody) e.getBodyAs(RetrofitErrorResponseBody.class);

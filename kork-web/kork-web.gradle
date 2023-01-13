@@ -22,7 +22,8 @@ dependencies {
   api "com.fasterxml.jackson.core:jackson-annotations"
   api "com.squareup.okhttp:okhttp"
   api "com.squareup.okhttp3:okhttp"
-  api "com.squareup.retrofit:retrofit"
+  implementation "com.squareup.retrofit2:retrofit"
+  implementation "com.squareup.okhttp3:logging-interceptor"
 
   implementation "com.google.guava:guava"
   implementation "javax.inject:javax.inject:1"
