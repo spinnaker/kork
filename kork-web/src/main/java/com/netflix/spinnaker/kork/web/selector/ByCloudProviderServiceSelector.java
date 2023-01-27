@@ -50,7 +50,8 @@ public class ByCloudProviderServiceSelector implements ServiceSelector {
       Object service, Integer priority, Map<String, Object> config) {
     this.service = service;
     this.priority = priority;
-    this.cloudProviders = new HashSet<>(((Map<String, String>) config.get("cloudProviders")).values());
+    this.cloudProviders =
+        new HashSet<>(((Map<String, String>) config.get("cloudProviders")).values());
   }
 
   @Override
