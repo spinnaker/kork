@@ -22,6 +22,11 @@ ext {
     okhttp           : "2.7.5", // CVE-2016-2402
     okhttp3          : "3.14.9",
     openapi          : "1.3.9", // this needs to be kept in sync with spring boot as it pulls in the spring-boot-dependencies BOM
+    //Spring boot 2.5.14 upgrade brings io.rest-assured 4.3.3 as transitive dependency.
+    //io.rest-assured 4.3.x require groovy 3.0.2. So, pinning the nearest version
+    //using groovy 2.x. This can be removed with groovy 3.x upgrade.
+    //[https://github.com/rest-assured/rest-assured/blob/9b683130c93188cabdef850e89d0c9417d847a17/changelog.txt#L200]
+    restassured      : "4.2.0",
     retrofit         : "1.9.0",
     retrofit2        : "2.8.1",
     spectator        : "1.0.6",
@@ -140,6 +145,18 @@ dependencies {
     api("de.huxhorn.sulky:de.huxhorn.sulky.ulid:8.2.0")
     api("dev.minutest:minutest:1.13.0")
     api("io.mockk:mockk:1.10.5")
+    api("io.rest-assured:rest-assured:${versions.restassured}"){
+       force = true
+    }
+    api("io.rest-assured:rest-assured-common:${versions.restassured}"){
+       force = true
+    }
+    api("io.rest-assured:json-path:${versions.restassured}"){
+       force = true
+    }
+    api("io.rest-assured:xml-path:${versions.restassured}"){
+       force = true
+    }
     api("io.springfox:springfox-swagger-ui:${versions.springfoxSwagger}")
     api("io.springfox:springfox-swagger2:${versions.springfoxSwagger}")
     api("io.swagger:swagger-annotations:${versions.swagger}")
