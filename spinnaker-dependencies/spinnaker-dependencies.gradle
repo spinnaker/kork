@@ -79,9 +79,18 @@ dependencies {
 
   constraints {
     api("cglib:cglib-nodep:3.3.0")
-    api("ch.qos.logback:logback-access:${versions.logback}")
-    api("ch.qos.logback:logback-classic:${versions.logback}")
-    api("ch.qos.logback:logback-core:${versions.logback}")
+    //A bug is reported in 1.2.11 and fixed in 1.2.12.
+    //So pinning the version to 1.2.10 untill required package is released.
+    //[https://jira.qos.ch/browse/LOGBACK-1623]
+    api("ch.qos.logback:logback-core:${versions.logback}"){
+       force = true
+    }
+    api("ch.qos.logback:logback-classic:${versions.logback}"){
+       force = true
+    }
+    api("ch.qos.logback:logback-classic:${versions.logback}"){
+       force = true
+    }
     api("com.amazonaws:aws-java-sdk:${versions.aws}")
     api("com.google.api-client:google-api-client:1.30.10") // TODO: Track update for CVE-2020-7692, reanalysis pending.
     api("com.google.apis:google-api-services-admin-directory:directory_v1-rev105-1.25.0")
