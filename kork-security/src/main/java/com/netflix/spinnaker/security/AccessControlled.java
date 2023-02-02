@@ -30,4 +30,13 @@ public interface AccessControlled {
    * org.springframework.security.access.PermissionEvaluator} rather than in these domain objects.
    */
   boolean isAuthorized(Authentication authentication, Object authorization);
+
+  /**
+   * Checks if the authenticated user is a Spinnaker admin.
+   *
+   * @see SpinnakerAuthorities#ADMIN_AUTHORITY
+   */
+  static boolean isAdmin(Authentication authentication) {
+    return authentication.getAuthorities().contains(SpinnakerAuthorities.ADMIN_AUTHORITY);
+  }
 }
