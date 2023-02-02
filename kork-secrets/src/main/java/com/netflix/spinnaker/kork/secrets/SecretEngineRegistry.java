@@ -19,6 +19,7 @@ package com.netflix.spinnaker.kork.secrets;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import javax.annotation.Nullable;
 import javax.annotation.PostConstruct;
 import lombok.Getter;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,6 +39,7 @@ public class SecretEngineRegistry {
     }
   }
 
+  @Nullable
   public SecretEngine getEngine(String key) {
     return registeredEngines.get(key);
   }
