@@ -30,4 +30,9 @@ public class StringUserSecretData implements UserSecretData {
   public String getSecretString(String key) {
     return data;
   }
+
+  @Override
+  public String getSecretString() {
+    return data;
+  }
 }
