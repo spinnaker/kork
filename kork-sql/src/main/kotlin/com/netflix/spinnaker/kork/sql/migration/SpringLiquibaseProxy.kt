@@ -18,6 +18,7 @@ package com.netflix.spinnaker.kork.sql.migration
 import com.netflix.spinnaker.kork.sql.config.SqlMigrationProperties
 import javax.sql.DataSource
 import liquibase.integration.spring.SpringLiquibase
+import org.springframework.beans.factory.ObjectProvider
 import org.springframework.jdbc.datasource.SingleConnectionDataSource
 
 /**
@@ -35,7 +36,7 @@ import org.springframework.jdbc.datasource.SingleConnectionDataSource
 class SpringLiquibaseProxy(
   private val sqlMigrationProperties: SqlMigrationProperties,
   private val sqlReadOnly: Boolean,
-  private val korkAdditionalChangelogs: List<String> = listOf("db/healthcheck.yml")
+  private val liquibaseChangeLogSources: ObjectProvider<LiquibaseChangeLogSource>,
 ) : SpringLiquibase() {
 
   init {
@@ -52,7 +53,8 @@ class SpringLiquibaseProxy(
     super.afterPropertiesSet()
 
     // Then if anything else has been defined, do that afterwards
-    (sqlMigrationProperties.additionalChangeLogs + korkAdditionalChangelogs)
+    val additionalSources = liquibaseChangeLogSources.map(LiquibaseChangeLogSource::changeLogSource)
+    (sqlMigrationProperties.additionalChangeLogs + additionalSources)
       .map {
         SpringLiquibase().apply {
           changeLog = "classpath:$it"

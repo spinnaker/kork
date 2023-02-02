@@ -18,8 +18,10 @@ package com.netflix.spinnaker.kork.sql.config
 import com.netflix.spectator.api.Registry
 import com.netflix.spinnaker.kork.sql.JooqSqlCommentAppender
 import com.netflix.spinnaker.kork.sql.JooqToSpringExceptionTransformer
+import com.netflix.spinnaker.kork.sql.health.HealthcheckChangeLogSource
 import com.netflix.spinnaker.kork.sql.health.SqlHealthIndicator
 import com.netflix.spinnaker.kork.sql.health.SqlHealthProvider
+import com.netflix.spinnaker.kork.sql.migration.LiquibaseChangeLogSource
 import com.netflix.spinnaker.kork.sql.migration.SpringLiquibaseProxy
 import com.netflix.spinnaker.kork.sql.routing.NamedDataSourceRouter
 import com.netflix.spinnaker.kork.sql.routing.StaticDataSourceLookup
@@ -34,6 +36,7 @@ import org.jooq.impl.DefaultDSLContext
 import org.jooq.impl.DefaultExecuteListenerProvider
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.BeanCreationException
+import org.springframework.beans.factory.ObjectProvider
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
@@ -68,14 +71,23 @@ class DefaultSqlConfiguration {
   @Suppress("UndocumentedPublicFunction")
   @Bean
   @ConditionalOnMissingBean(SpringLiquibase::class)
-  fun liquibase(properties: SqlProperties, @Value("\${sql.read-only:false}") sqlReadOnly: Boolean): SpringLiquibase =
-    SpringLiquibaseProxy(properties.migration, sqlReadOnly)
+  fun liquibase(
+    properties: SqlProperties,
+    @Value("\${sql.read-only:false}") sqlReadOnly: Boolean,
+    liquibaseChangeLogSources: ObjectProvider<LiquibaseChangeLogSource>
+  ): SpringLiquibase =
+    SpringLiquibaseProxy(properties.migration, sqlReadOnly, liquibaseChangeLogSources)
 
   @Suppress("UndocumentedPublicFunction")
   @Bean
   @ConditionalOnProperty("sql.secondary-migration.jdbc-url")
-  fun secondaryLiquibase(properties: SqlProperties, @Value("\${sql.read-only:false}") sqlReadOnly: Boolean): SpringLiquibase =
-    SpringLiquibaseProxy(properties.secondaryMigration, sqlReadOnly)
+  fun secondaryLiquibase(
+    properties: SqlProperties,
+    @Value("\${sql.read-only:false}") sqlReadOnly: Boolean,
+    liquibaseChangeLogSources: ObjectProvider<LiquibaseChangeLogSource>
+  ): SpringLiquibase =
+    SpringLiquibaseProxy(properties.secondaryMigration, sqlReadOnly, liquibaseChangeLogSources)
+
 
   @Suppress("ThrowsCount", "UndocumentedPublicFunction")
   @DependsOn("liquibase")
@@ -219,6 +231,12 @@ class DefaultSqlConfiguration {
     sqlProperties: SqlProperties
   ) =
     SqlHealthIndicator(sqlHealthProvider, sqlProperties.getDefaultConnectionPoolProperties().dialect)
+
+  /**
+   * Provides a Liquibase change log source for the healthcheck table.
+   */
+  @Bean
+  fun healthcheckChangeLogSource(): LiquibaseChangeLogSource = HealthcheckChangeLogSource
 }
 
 @Suppress("ThrowsCount")
