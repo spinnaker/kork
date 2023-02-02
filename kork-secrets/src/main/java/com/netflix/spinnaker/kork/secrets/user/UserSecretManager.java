@@ -17,10 +17,7 @@
 package com.netflix.spinnaker.kork.secrets.user;
 
 import com.netflix.spinnaker.kork.annotations.NonnullByDefault;
-import com.netflix.spinnaker.kork.secrets.EncryptedSecret;
-import com.netflix.spinnaker.kork.secrets.SecretDecryptionException;
-import com.netflix.spinnaker.kork.secrets.SecretEngine;
-import com.netflix.spinnaker.kork.secrets.SecretEngineRegistry;
+import com.netflix.spinnaker.kork.secrets.*;
 import java.nio.charset.StandardCharsets;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -42,6 +39,12 @@ public class UserSecretManager {
    *
    * @param reference parsed user secret reference to fetch
    * @return the decrypted user secret
+   * @throws SecretDecryptionException if the secret reference does not have a corresponding secret
+   *     engine or cannot be fetched
+   * @throws InvalidSecretFormatException if the secret is missing its {@link UserSecretMetadata} or
+   *     said metadata cannot be parsed
+   * @throws UnsupportedOperationException if the underlying {@link SecretEngine} does not support
+   *     user secrets
    */
   public UserSecret getUserSecret(UserSecretReference reference) {
     String engineIdentifier = reference.getEngineIdentifier();
@@ -59,6 +62,9 @@ public class UserSecretManager {
    *
    * @param reference parsed external secret reference to fetch
    * @return the decrypted external secret
+   * @throws SecretDecryptionException if the external secret does not have a corresponding secret
+   *     engine or cannot be fetched
+   * @throws InvalidSecretFormatException if the external secret reference is invalid
    */
   public byte[] getExternalSecret(EncryptedSecret reference) {
     String engineIdentifier = reference.getEngineIdentifier();
@@ -76,6 +82,9 @@ public class UserSecretManager {
    *
    * @param reference parsed external secret reference to fetch
    * @return the decrypted external secret string
+   * @throws SecretDecryptionException if the external secret does not have a corresponding secret
+   *     engine or cannot be fetched
+   * @throws InvalidSecretFormatException if the external secret reference is invalid
    */
   public String getExternalSecretString(EncryptedSecret reference) {
     return new String(getExternalSecret(reference), StandardCharsets.UTF_8);
