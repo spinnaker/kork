@@ -11,6 +11,7 @@ ext {
     bouncycastle     : "1.70",
     brave            : "5.12.3",
     gcp              : "25.3.0",
+    groovy           : "2.5.15",
     jooq             : "3.13.6",
     jsch             : "0.1.54",
     jschAgentProxy   : "0.0.9",
@@ -58,6 +59,12 @@ dependencies {
 
   api(platform("org.apache.logging.log4j:log4j-bom:2.16.0"))
 
+  //Upgrade of spring boot 2.5.x brings groovy 3.x as transitive dependency.
+  //To avoid transitive upgrade of groovy, pinning it with enforcedPlatform() closure.
+  //It forces version for internal submodules of kork as well as for all the consumer spinnaker services.
+  api(enforcedPlatform("org.codehaus.groovy:groovy-bom:${versions.groovy}")){
+     force = true
+  }
   api(platform("org.jetbrains.kotlinx:kotlinx-coroutines-bom:1.4.3"))
   //kotlinVersion comes from gradle.properties since we have kotlin code in
   // this project and need to configure gradle plugins etc.
