@@ -21,6 +21,8 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.netflix.spinnaker.kork.annotations.NonnullByDefault;
 import com.netflix.spinnaker.kork.exceptions.SpinnakerException;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 import lombok.Getter;
 import retrofit.RetrofitError;
@@ -35,6 +37,8 @@ public class SpinnakerServerException extends SpinnakerException {
    */
   private final String rawMessage;
 
+  private final Map<String, Object> errorBodyAs;
+
   /**
    * Parses the message from the {@link RetrofitErrorResponseBody} of a {@link RetrofitError}.
    *
@@ -46,6 +50,7 @@ public class SpinnakerServerException extends SpinnakerException {
         (RetrofitErrorResponseBody) e.getBodyAs(RetrofitErrorResponseBody.class);
     this.rawMessage =
         Optional.ofNullable(body).map(RetrofitErrorResponseBody::getMessage).orElse(e.getMessage());
+    this.errorBodyAs = (Map<String, Object>) e.getBodyAs(HashMap.class);
   }
 
   public SpinnakerServerException(RetrofitException e) {
@@ -68,6 +73,11 @@ public class SpinnakerServerException extends SpinnakerException {
   public SpinnakerServerException(String message, Throwable cause) {
     super(message, cause);
     rawMessage = null;
+    errorBodyAs = null;
+  }
+
+  public Map<String, Object> getErrorBodyAs() {
+    return errorBodyAs;
   }
 
   @Override
