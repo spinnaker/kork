@@ -18,14 +18,12 @@ package com.netflix.spinnaker.credentials.definition;
 
 import com.netflix.spinnaker.credentials.CredentialsView;
 import com.netflix.spinnaker.kork.annotations.Alpha;
-import com.netflix.spinnaker.kork.annotations.NonnullByDefault;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import javax.annotation.Nullable;
 
 /** Provides CRUD persistence operations for account {@link CredentialsDefinition} instances. */
-@NonnullByDefault
 @Alpha
 public interface CredentialsDefinitionRepository {
 

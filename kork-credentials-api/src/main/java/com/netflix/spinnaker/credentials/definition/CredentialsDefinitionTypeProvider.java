@@ -17,7 +17,6 @@
 package com.netflix.spinnaker.credentials.definition;
 
 import com.netflix.spinnaker.kork.annotations.Alpha;
-import com.netflix.spinnaker.kork.annotations.NonnullByDefault;
 import com.netflix.spinnaker.kork.plugins.api.internal.SpinnakerExtensionPoint;
 import java.util.Map;
 
@@ -25,7 +24,6 @@ import java.util.Map;
  * Provides subtypes of {@link CredentialsDefinition} for registration as account definition types.
  * All beans of this type contribute zero or more account classes.
  */
-@NonnullByDefault
 @Alpha
 public interface CredentialsDefinitionTypeProvider extends SpinnakerExtensionPoint {
   Map<String, Class<? extends CredentialsDefinition>> getCredentialsTypes();
