@@ -21,41 +21,40 @@ import com.netflix.spinnaker.credentials.CredentialsView;
 import com.netflix.spinnaker.credentials.definition.CredentialsDefinition;
 import com.netflix.spinnaker.credentials.definition.CredentialsDefinitionRepository;
 import com.netflix.spinnaker.credentials.definition.CredentialsDefinitionSource;
+import com.netflix.spinnaker.credentials.definition.CredentialsNavigator;
 import com.netflix.spinnaker.credentials.validator.CredentialsDefinitionErrorCode;
 import com.netflix.spinnaker.kork.annotations.NonnullByDefault;
 import com.netflix.spinnaker.security.AccessControlled;
 import com.netflix.spinnaker.security.Authorization;
 import java.util.*;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.security.access.PermissionEvaluator;
 import org.springframework.security.core.Authentication;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Component;
 
 /**
  * Service for inspecting credentials accessible by the current user. This checks for various errors
  * that may occur when mis-configuring credentials.
  */
 @NonnullByDefault
-@Service
+@Component
 public class CredentialsInspector {
-  private final Map<String, CompositeCredentialsDefinitionSource<? extends CredentialsDefinition>>
-      sources;
+  private final List<CredentialsNavigator<? extends CredentialsDefinition>> navigators;
   private final PermissionEvaluator permissionEvaluator;
 
   public CredentialsInspector(
       ObjectProvider<CredentialsDefinitionSource<? extends CredentialsDefinition>> sources,
       PermissionEvaluator permissionEvaluator) {
-    this.sources =
-        sources.stream()
-            .filter(CompositeCredentialsDefinitionSource.class::isInstance)
-            .map(
-                source ->
-                    (CompositeCredentialsDefinitionSource<? extends CredentialsDefinition>) source)
-            .collect(
-                Collectors.toMap(
-                    CompositeCredentialsDefinitionSource::getTypeName, Function.identity()));
+    List<CredentialsNavigator<? extends CredentialsDefinition>> navigators = new ArrayList<>();
+    for (CredentialsDefinitionSource<? extends CredentialsDefinition> source : sources) {
+      if (source instanceof CredentialsNavigator<?>) {
+        CredentialsNavigator<? extends CredentialsDefinition> navigator =
+            (CredentialsNavigator<? extends CredentialsDefinition>) source;
+        navigators.add(navigator);
+      }
+    }
+    this.navigators = Collections.unmodifiableList(navigators);
     this.permissionEvaluator = permissionEvaluator;
   }
 
@@ -71,8 +70,8 @@ public class CredentialsInspector {
    */
   public List<CredentialsView> listCredentialsViews(Authentication auth) {
     Set<String> validNames = new HashSet<>();
-    return sources.values().stream()
-        .flatMap(source -> source.listCredentialsViews().stream())
+    return navigators.stream()
+        .flatMap(navigator -> navigator.listCredentialsViews().stream())
         .map(
             view -> {
               if (view.getStatus().isValid()) {

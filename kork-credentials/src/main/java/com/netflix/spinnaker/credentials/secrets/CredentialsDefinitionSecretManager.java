@@ -81,9 +81,7 @@ public class CredentialsDefinitionSecretManager {
     }
     if (refsByAccountName.getOrDefault(accountName, Set.of()).stream()
         .map(this::getUserSecret)
-        .anyMatch(
-            secret ->
-                !permissionEvaluator.hasPermission(authentication, secret, Authorization.READ))) {
+        .anyMatch(secret -> !canReadUserSecret(authentication, secret))) {
       return false;
     }
     return permissionEvaluator.hasPermission(

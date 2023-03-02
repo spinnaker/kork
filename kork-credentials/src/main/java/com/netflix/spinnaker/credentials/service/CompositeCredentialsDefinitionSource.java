@@ -17,17 +17,11 @@
 package com.netflix.spinnaker.credentials.service;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
-import com.netflix.spinnaker.credentials.CredentialsSource;
 import com.netflix.spinnaker.credentials.CredentialsTypes;
 import com.netflix.spinnaker.credentials.CredentialsView;
-import com.netflix.spinnaker.credentials.definition.CredentialsDefinition;
-import com.netflix.spinnaker.credentials.definition.CredentialsDefinitionRepository;
-import com.netflix.spinnaker.credentials.definition.CredentialsDefinitionSource;
+import com.netflix.spinnaker.credentials.definition.*;
 import com.netflix.spinnaker.kork.annotations.NonnullByDefault;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -35,8 +29,8 @@ import lombok.Getter;
 import lombok.extern.log4j.Log4j2;
 
 /**
- * Provides a full list of CredentialsDefinition account instances for a given credentials type.
- * Given an {@link CredentialsDefinitionRepository} bean and an optional list of {@link
+ * Navigates all CredentialsDefinition account instances for a given credentials type. Given an
+ * {@link CredentialsDefinitionRepository} bean and an optional list of {@link
  * CredentialsDefinitionSource} beans for a given account type {@code T}, this class combines the
  * lists from all the given credentials definition sources. When no {@link
  * CredentialsDefinitionSource} beans are available for a given account type, then a default source
@@ -47,12 +41,12 @@ import lombok.extern.log4j.Log4j2;
 @NonnullByDefault
 @Log4j2
 public class CompositeCredentialsDefinitionSource<T extends CredentialsDefinition>
-    implements CredentialsDefinitionSource<T> {
+    implements CredentialsNavigator<T> {
 
   private final CredentialsDefinitionRepository repository;
-  private final Class<T> type;
+  @Getter private final Class<T> type;
   @Getter private final String typeName;
-  private final List<CredentialsDefinitionSource<T>> configSources;
+  private final CredentialsNavigator<T> configNavigator;
 
   // used to report duplicate accounts only once, instead of spamming the logs
   private final Set<String> duplicateAccountNames = ConcurrentHashMap.newKeySet();
@@ -78,7 +72,7 @@ public class CompositeCredentialsDefinitionSource<T extends CredentialsDefinitio
           "No @CredentialsType or @JsonTypeName annotation found on " + type);
     }
     this.typeName = typeName;
-    this.configSources = configSources;
+    this.configNavigator = new CompositeCredentialsNavigator<>(configSources, type, typeName);
   }
 
   @Override
@@ -86,7 +80,7 @@ public class CompositeCredentialsDefinitionSource<T extends CredentialsDefinitio
     Set<String> seen = new HashSet<>();
     return Stream.concat(
             repository.listByType(typeName).stream().map(type::cast),
-            configSources.stream().flatMap(source -> source.getCredentialsDefinitions().stream()))
+            configNavigator.getCredentialsDefinitions().stream())
         .filter(
             definition -> {
               String name = definition.getName();
@@ -107,20 +101,19 @@ public class CompositeCredentialsDefinitionSource<T extends CredentialsDefinitio
    * Lists all views into credentials accessible to the current user of the type tracked by this
    * instance.
    */
+  @Override
   public List<CredentialsView> listCredentialsViews() {
     List<CredentialsView> views = new ArrayList<>(repository.listCredentialsViews(typeName));
-    for (CredentialsDefinitionSource<T> source : configSources) {
-      for (T definition : source.getCredentialsDefinitions()) {
-        CredentialsView view = new CredentialsView();
-        view.getMetadata().setSource(CredentialsSource.CONFIG);
-        view.getMetadata().setType(typeName);
-        view.getMetadata().setName(definition.getName());
-        view.setSpec(definition);
-        // valid for now until proven otherwise
-        view.getStatus().setValid(true);
-        views.add(view);
-      }
-    }
+    views.addAll(configNavigator.listCredentialsViews());
     return views;
+  }
+
+  @Override
+  public Optional<T> findByName(String accountName) {
+    return repository
+        .findByName(accountName)
+        .filter(type::isInstance)
+        .map(type::cast)
+        .or(() -> configNavigator.findByName(accountName));
   }
 }
