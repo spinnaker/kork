@@ -97,10 +97,7 @@ public class CompositeCredentialsDefinitionSource<T extends CredentialsDefinitio
         .collect(Collectors.toList());
   }
 
-  /**
-   * Lists all views into credentials accessible to the current user of the type tracked by this
-   * instance.
-   */
+  /** Lists all views into credentials of the type tracked by this instance. */
   @Override
   public List<CredentialsView> listCredentialsViews() {
     List<CredentialsView> views = new ArrayList<>(repository.listCredentialsViews(typeName));

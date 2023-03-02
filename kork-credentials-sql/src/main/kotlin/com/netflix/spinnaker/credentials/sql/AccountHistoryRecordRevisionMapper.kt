@@ -23,7 +23,7 @@ import org.jooq.RecordMapper
 import org.springframework.stereotype.Component
 
 /**
- * [RecordMapper] for historical account revisions.
+ * [RecordMapper] for loading historical account revisions.
  */
 @Component
 class AccountHistoryRecordRevisionMapper(private val mapper: CredentialsDefinitionMapper) :
@@ -33,6 +33,7 @@ class AccountHistoryRecordRevisionMapper(private val mapper: CredentialsDefiniti
       try {
         mapper.deserialize(it.data())
       } catch (e: JsonProcessingException) {
+        // potentially invalid accounts from the history should not break the listing
         null
       }
     }.let { Revision(record.version, record.lastModifiedAt, it) }

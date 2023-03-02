@@ -46,7 +46,7 @@ public interface CredentialsDefinitionRepository {
   List<? extends CredentialsDefinition> listByType(String typeName);
 
   /**
-   * Lists credentials views for a given credentials type accessible to the current user.
+   * Lists credentials views for a given credentials type.
    *
    * @return list of accessible credentials and their statuses
    */
