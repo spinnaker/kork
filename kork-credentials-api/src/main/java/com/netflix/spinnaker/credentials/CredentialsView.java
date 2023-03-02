@@ -17,7 +17,6 @@
 package com.netflix.spinnaker.credentials;
 
 import com.netflix.spinnaker.credentials.definition.CredentialsDefinition;
-import com.netflix.spinnaker.credentials.definition.CredentialsDefinitionRepository;
 import com.netflix.spinnaker.credentials.definition.CredentialsType;
 import java.util.List;
 import java.util.Map;
@@ -45,7 +44,7 @@ public class CredentialsView {
    * which it came, and the type of credentials (corresponding to its {@link CredentialsType} type
    * discriminator value).
    *
-   * @see Source
+   * @see CredentialsSource
    */
   @Data
   public static class Metadata {
@@ -54,7 +53,7 @@ public class CredentialsView {
     /** Provides the type discriminator of the credentials. May be null if unknown. */
     private String type;
     /** Describes the source of this credential definition. */
-    private Source source;
+    private CredentialsSource source;
   }
 
   /** Describes the status of this credential definition. */
@@ -66,15 +65,5 @@ public class CredentialsView {
     private boolean valid;
     /** Lists the errors encountered if the account is invalid. */
     private List<CredentialsError> errors;
-  }
-
-  /** Describes where these credentials come from. */
-  public enum Source {
-    /**
-     * Describes credentials stored in {@linkplain CredentialsDefinitionRepository account storage}.
-     */
-    STORAGE,
-    /** Describes credentials stored in configuration files. */
-    CONFIG,
   }
 }

@@ -16,6 +16,7 @@
 
 package com.netflix.spinnaker.credentials.sql
 
+import com.netflix.spinnaker.credentials.CredentialsSource
 import com.netflix.spinnaker.credentials.CredentialsView
 import com.netflix.spinnaker.credentials.secrets.CredentialsDefinitionMapper
 import org.jooq.RecordMapper
@@ -29,6 +30,6 @@ class AccountRecordCredentialsViewMapper(private val mapper: CredentialsDefiniti
   RecordMapper<AccountRecord, CredentialsView> {
   override fun map(record: AccountRecord): CredentialsView =
     mapper.deserializeWithErrors(record.body.data()).apply {
-      metadata.source = CredentialsView.Source.STORAGE
+      metadata.source = CredentialsSource.STORAGE
     }
 }

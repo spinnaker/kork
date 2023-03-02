@@ -17,6 +17,7 @@
 package com.netflix.spinnaker.credentials.service;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import com.netflix.spinnaker.credentials.CredentialsSource;
 import com.netflix.spinnaker.credentials.CredentialsTypes;
 import com.netflix.spinnaker.credentials.CredentialsView;
 import com.netflix.spinnaker.credentials.definition.CredentialsDefinition;
@@ -111,7 +112,7 @@ public class CompositeCredentialsDefinitionSource<T extends CredentialsDefinitio
     for (CredentialsDefinitionSource<T> source : configSources) {
       for (T definition : source.getCredentialsDefinitions()) {
         CredentialsView view = new CredentialsView();
-        view.getMetadata().setSource(CredentialsView.Source.CONFIG);
+        view.getMetadata().setSource(CredentialsSource.CONFIG);
         view.getMetadata().setType(typeName);
         view.getMetadata().setName(definition.getName());
         view.setSpec(definition);
