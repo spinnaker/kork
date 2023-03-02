@@ -27,8 +27,8 @@ import org.springframework.stereotype.Component;
 import org.springframework.validation.Errors;
 
 /**
- * Validates that an authenticated user has authorization to write with credentials. This helps to
- * prevent users from inadvertently locking themselves out from their own credentials.
+ * Validates that an authenticated user has authorization to use credentials. This helps to prevent
+ * users from inadvertently locking themselves out from their own credentials.
  */
 @Component
 @NonnullByDefault
