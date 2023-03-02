@@ -16,11 +16,16 @@
 
 package com.netflix.spinnaker.kork.secrets.user;
 
-import com.netflix.spinnaker.kork.annotations.NonnullByDefault;
 import java.nio.charset.StandardCharsets;
 import org.springframework.stereotype.Component;
 
-@NonnullByDefault
+/**
+ * Provides support for serializing and deserializing {@link StringUserSecretData} instances.
+ *
+ * @see UserSecretData
+ * @see UserSecretType
+ * @see UserSecretReference
+ */
 @Component
 public class StringUserSecretSerde implements UserSecretSerde {
   @Override

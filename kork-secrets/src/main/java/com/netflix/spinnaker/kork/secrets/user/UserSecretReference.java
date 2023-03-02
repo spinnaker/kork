@@ -24,7 +24,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Pattern;
-import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -62,8 +61,8 @@ public class UserSecretReference {
   private static final Pattern SECRET_URI = Pattern.compile("^secret(File)?://.+");
   public static final String SECRET_SCHEME = "secret";
 
-  @Nonnull private final String engineIdentifier;
-  @Nonnull private final Map<String, String> parameters = new ConcurrentHashMap<>();
+  private final String engineIdentifier;
+  private final Map<String, String> parameters = new ConcurrentHashMap<>();
 
   private UserSecretReference(URI uri) {
     if (!SECRET_SCHEME.equals(uri.getScheme())) {
@@ -92,8 +91,7 @@ public class UserSecretReference {
    * @return the parsed UserSecretReference
    * @throws InvalidSecretFormatException when the URI is invalid
    */
-  @Nonnull
-  public static UserSecretReference parse(@Nonnull String input) {
+  public static UserSecretReference parse(String input) {
     try {
       return new UserSecretReference(new URI(input));
     } catch (URISyntaxException e) {
@@ -105,7 +103,6 @@ public class UserSecretReference {
    * Tries to parse a user secret URI into a UserSecretReference. Invalid secret URIs return an
    * empty value.
    */
-  @Nonnull
   public static Optional<UserSecretReference> tryParse(@Nullable Object value) {
     if (!(value instanceof String && isUserSecret((String) value))) {
       return Optional.empty();
@@ -118,7 +115,7 @@ public class UserSecretReference {
   }
 
   /** Checks if the provided input string looks like a user secret URI. */
-  public static boolean isUserSecret(@Nonnull String input) {
+  public static boolean isUserSecret(String input) {
     return SECRET_URI.matcher(input).matches();
   }
 }

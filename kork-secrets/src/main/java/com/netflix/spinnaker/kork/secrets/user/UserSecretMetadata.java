@@ -24,6 +24,12 @@ import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.jackson.Jacksonized;
 
+/**
+ * Contains metadata for a {@linkplain UserSecretData user secret}. A user secret consists of a
+ * {@linkplain #getType() secret type}, a {@linkplain #getRoles() list of authorized roles}, and an
+ * optional {@linkplain #getEncoding() encoding format} if the corresponding {@linkplain
+ * UserSecretSerde secret type} supports it.
+ */
 @Getter
 @Builder
 @Jacksonized

@@ -16,10 +16,13 @@
 
 package com.netflix.spinnaker.kork.secrets.user;
 
-import com.netflix.spinnaker.kork.annotations.NonnullByDefault;
 import java.util.NoSuchElementException;
 
-@NonnullByDefault
+/**
+ * Provides a handle into a decrypted user secret. User secret data encoding is determined by its
+ * corresponding {@linkplain UserSecretMetadata metadata}. Different {@link UserSecretSerde}
+ * implementations should implement this interface.
+ */
 public interface UserSecretData {
   /**
    * Gets the value of this secret with the provided key and returns a string encoding of it.

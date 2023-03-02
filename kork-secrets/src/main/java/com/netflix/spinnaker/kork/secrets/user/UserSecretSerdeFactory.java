@@ -16,12 +16,14 @@
 
 package com.netflix.spinnaker.kork.secrets.user;
 
-import com.netflix.spinnaker.kork.annotations.NonnullByDefault;
 import com.netflix.spinnaker.kork.secrets.InvalidSecretFormatException;
 import java.util.stream.StreamSupport;
 import lombok.RequiredArgsConstructor;
 
-@NonnullByDefault
+/**
+ * Factory for {@link UserSecretSerde} components based on their claimed support for a user secret's
+ * {@linkplain UserSecretMetadata metadata}.
+ */
 @RequiredArgsConstructor
 public class UserSecretSerdeFactory {
   private final Iterable<UserSecretSerde> serdes;

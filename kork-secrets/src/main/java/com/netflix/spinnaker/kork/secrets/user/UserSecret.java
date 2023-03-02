@@ -16,7 +16,6 @@
 
 package com.netflix.spinnaker.kork.secrets.user;
 
-import com.netflix.spinnaker.kork.annotations.NonnullByDefault;
 import com.netflix.spinnaker.kork.secrets.SecretEngine;
 import com.netflix.spinnaker.security.AccessControlled;
 import java.util.Collections;
@@ -39,7 +38,6 @@ import org.springframework.security.core.authority.AuthorityUtils;
  * @see UserSecretMetadata
  * @see UserSecretManager
  */
-@NonnullByDefault
 @Getter
 @Builder
 public class UserSecret implements AccessControlled {

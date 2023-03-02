@@ -16,10 +16,12 @@
 
 package com.netflix.spinnaker.kork.secrets.user;
 
-import com.netflix.spinnaker.kork.annotations.NonnullByDefault;
 import lombok.RequiredArgsConstructor;
 
-@NonnullByDefault
+/**
+ * String user secrets are generic user secrets encoded as a UTF-8 string. This is particularly
+ * useful for representing textual configuration files without additional encoding.
+ */
 @RequiredArgsConstructor
 // not using @UserSecretType as this is an unstructured type
 // see StringUserSecretSerde

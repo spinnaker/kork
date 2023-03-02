@@ -16,11 +16,9 @@
 
 package com.netflix.spinnaker.kork.secrets.user;
 
-import com.netflix.spinnaker.kork.annotations.NonnullByDefault;
 import com.netflix.spinnaker.kork.secrets.SecretDecryptionException;
 import com.netflix.spinnaker.kork.secrets.SecretException;
 
-@NonnullByDefault
 public interface UserSecretSerde {
 
   /**

@@ -19,7 +19,6 @@ package com.netflix.spinnaker.kork.secrets.user;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.netflix.spinnaker.kork.annotations.NonnullByDefault;
 import com.netflix.spinnaker.kork.secrets.SecretDecryptionException;
 import com.netflix.spinnaker.kork.secrets.SecretException;
 import java.io.IOException;
@@ -38,7 +37,6 @@ import java.util.TreeMap;
  * @see UserSecretReference
  * @see UserSecretType
  */
-@NonnullByDefault
 public class DefaultUserSecretSerde implements UserSecretSerde {
   private final Map<String, Class<? extends UserSecretData>> userSecretTypes =
       new TreeMap<>(String.CASE_INSENSITIVE_ORDER);

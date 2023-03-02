@@ -16,21 +16,25 @@
 
 package com.netflix.spinnaker.kork.secrets.user;
 
-import com.netflix.spinnaker.kork.annotations.NonnullByDefault;
-import com.netflix.spinnaker.kork.secrets.*;
+import com.netflix.spinnaker.kork.secrets.EncryptedSecret;
+import com.netflix.spinnaker.kork.secrets.InvalidSecretFormatException;
+import com.netflix.spinnaker.kork.secrets.SecretDecryptionException;
+import com.netflix.spinnaker.kork.secrets.SecretEngine;
+import com.netflix.spinnaker.kork.secrets.SecretEngineRegistry;
 import java.nio.charset.StandardCharsets;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 /**
- * Central component for obtaining user secrets by reference.
+ * Central component for obtaining {@linkplain UserSecret user secrets} by {@linkplain
+ * UserSecretReference reference}.
  *
  * @see UserSecretReference
  * @see UserSecret
+ * @see UserSecretService
  */
 @Component
 @RequiredArgsConstructor
-@NonnullByDefault
 public class UserSecretManager {
   private final SecretEngineRegistry registry;
 
