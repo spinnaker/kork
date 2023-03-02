@@ -27,10 +27,10 @@ public class CredentialsDefinitionTypeProperties {
    * Additional packages to scan for {@link
    * com.netflix.spinnaker.credentials.definition.CredentialsDefinition} implementation classes that
    * may be annotated with {@link CredentialsType} to participate in the account management system.
-   * These packages are in addition to the default scan package from within Clouddriver. Note that
-   * this configuration option only works for account types that are compiled in Spinnaker; plugin
-   * account types must register a {@link CredentialsDefinitionTypeProvider} bean for additional
-   * types.
+   * These packages are in addition to the default scan package from within {@code com.netflix}.
+   * Note that this configuration option only works for account types that are compiled in
+   * Spinnaker; plugin account types must register a {@link CredentialsDefinitionTypeProvider} bean
+   * for additional types.
    */
   private List<String> additionalScanPackages = List.of();
 }

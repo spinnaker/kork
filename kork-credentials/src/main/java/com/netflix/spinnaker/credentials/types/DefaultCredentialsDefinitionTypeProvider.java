@@ -60,7 +60,9 @@ public class DefaultCredentialsDefinitionTypeProvider implements CredentialsDefi
     this.resourceLoader = resourceLoader;
     this.pluginManagerProvider = pluginManagerProvider;
     scanPackages = new ArrayList<>();
-    scanPackages.add("com.netflix.spinnaker");
+    // most classes in spinnaker are packaged under com.netflix.spinnaker;
+    // however, kayenta is packaged under com.netflix.kayenta
+    scanPackages.add("com.netflix");
     scanPackages.addAll(properties.getAdditionalScanPackages());
   }
 
