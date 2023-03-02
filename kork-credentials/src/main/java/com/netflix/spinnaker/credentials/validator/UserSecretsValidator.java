@@ -18,17 +18,17 @@ package com.netflix.spinnaker.credentials.validator;
 
 import com.netflix.spinnaker.credentials.definition.CredentialsDefinition;
 import com.netflix.spinnaker.credentials.secrets.CredentialsDefinitionSecretManager;
-import com.netflix.spinnaker.kork.annotations.NonnullByDefault;
 import com.netflix.spinnaker.kork.secrets.EncryptedSecret;
 import com.netflix.spinnaker.kork.secrets.InvalidSecretFormatException;
-import com.netflix.spinnaker.kork.secrets.SecretDecryptionException;
 import com.netflix.spinnaker.kork.secrets.SecretErrorCode;
+import com.netflix.spinnaker.kork.secrets.SecretException;
 import com.netflix.spinnaker.kork.secrets.user.UserSecret;
 import com.netflix.spinnaker.kork.secrets.user.UserSecretReference;
 import com.netflix.spinnaker.security.AccessControlled;
 import java.beans.PropertyDescriptor;
 import java.util.stream.Stream;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.BeanWrapper;
 import org.springframework.beans.PropertyAccessorFactory;
 import org.springframework.security.core.Authentication;
@@ -39,14 +39,10 @@ import org.springframework.validation.Validator;
 
 /**
  * Validates that {@link UserSecretReference} strings point to valid user secrets that the current
- * user is authorized to use. When invoked as a Spring {@link Validator}, this should validate that
- * the current user can read referenced secrets. When invoked as a {@link
- * CredentialsDefinitionValidator}, though, this should validate that the current user is allowed to
- * save credentials that reference secrets. This is primarily relevant when using {@link
- * EncryptedSecret} URIs which may only be configured by a Spinnaker administrator.
+ * user is authorized to use.
  */
+@Log4j2
 @Component
-@NonnullByDefault
 @RequiredArgsConstructor
 public class UserSecretsValidator implements CredentialsDefinitionValidator, Validator {
   private final CredentialsDefinitionSecretManager secretManager;
@@ -59,6 +55,7 @@ public class UserSecretsValidator implements CredentialsDefinitionValidator, Val
   @Override
   public void validate(Object target, Errors errors) {
     Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+    log.debug("Validating user secrets in account");
     BeanWrapper bean = PropertyAccessorFactory.forBeanPropertyAccess(target);
     validate(bean, errors, authentication, false);
   }
@@ -85,20 +82,28 @@ public class UserSecretsValidator implements CredentialsDefinitionValidator, Val
               }
               if (UserSecretReference.isUserSecret(value)) {
                 try {
+                  log.debug("Validating user secret reference '{}'", value);
                   UserSecretReference ref = UserSecretReference.parse(value);
                   UserSecret secret = secretManager.getUserSecret(ref);
                   if (!secretManager.canReadUserSecret(authentication, secret)) {
+                    log.info(
+                        "Access denied for secret reference '{}' with allowed roles {} to {}",
+                        value,
+                        secret.getRoles(),
+                        authentication);
                     errors.rejectValue(
                         propertyName,
                         SecretErrorCode.DENIED_ACCESS_TO_USER_SECRET.getErrorCode(),
                         "Access denied to user secret");
                   }
                 } catch (InvalidSecretFormatException e) {
+                  log.info("Invalid user secret URI format for string '{}'", value, e);
                   errors.rejectValue(
                       propertyName,
                       SecretErrorCode.INVALID_USER_SECRET_URI.getErrorCode(),
                       e.getMessage());
-                } catch (SecretDecryptionException e) {
+                } catch (SecretException e) {
+                  log.info("Unable to decrypt user secret reference '{}'", value, e);
                   errors.rejectValue(
                       propertyName,
                       SecretErrorCode.USER_SECRET_DECRYPTION_FAILURE.getErrorCode(),
@@ -116,6 +121,7 @@ public class UserSecretsValidator implements CredentialsDefinitionValidator, Val
                 try {
                   EncryptedSecret ref = EncryptedSecret.parse(value);
                   if (ref == null) {
+                    log.info("Invalid external secret URI '{}'", value);
                     errors.rejectValue(
                         propertyName,
                         SecretErrorCode.INVALID_EXTERNAL_SECRET_URI.getErrorCode(),
@@ -125,11 +131,13 @@ public class UserSecretsValidator implements CredentialsDefinitionValidator, Val
                     secretManager.getExternalSecretString(ref);
                   }
                 } catch (InvalidSecretFormatException e) {
+                  log.info("Invalid external secret URI format for string '{}'", value, e);
                   errors.rejectValue(
                       propertyName,
                       SecretErrorCode.INVALID_EXTERNAL_SECRET_URI.getErrorCode(),
                       e.getMessage());
-                } catch (SecretDecryptionException e) {
+                } catch (SecretException e) {
+                  log.info("Unable to decrypt external secret URI '{}'", value, e);
                   errors.rejectValue(
                       propertyName,
                       SecretErrorCode.EXTERNAL_SECRET_DECRYPTION_FAILURE.getErrorCode(),

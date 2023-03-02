@@ -19,6 +19,7 @@ package com.netflix.spinnaker.credentials.secrets;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.JsonNodeType;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.netflix.spinnaker.credentials.CredentialsError;
 import com.netflix.spinnaker.credentials.CredentialsView;
@@ -27,6 +28,7 @@ import com.netflix.spinnaker.credentials.definition.CredentialsType;
 import com.netflix.spinnaker.credentials.validator.CredentialsDefinitionErrorCode;
 import com.netflix.spinnaker.kork.annotations.NonnullByDefault;
 import com.netflix.spinnaker.kork.exceptions.SpinnakerException;
+import com.netflix.spinnaker.kork.jackson.ObjectNodeErrors;
 import com.netflix.spinnaker.kork.secrets.EncryptedSecret;
 import com.netflix.spinnaker.kork.secrets.user.UserSecretReference;
 import java.util.Iterator;
@@ -34,9 +36,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import lombok.extern.log4j.Log4j2;
+import org.apache.logging.log4j.ThreadContext;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Component;
-import org.springframework.validation.BeanPropertyBindingResult;
 import org.springframework.validation.Errors;
 import org.springframework.validation.FieldError;
 import org.springframework.validation.Validator;
@@ -48,6 +51,7 @@ import org.springframework.validation.Validator;
  * along with recording an associated account name for time of use permission checks on the user
  * secret.
  */
+@Log4j2
 @Component
 @NonnullByDefault
 public class CredentialsDefinitionMapper {
@@ -148,6 +152,7 @@ public class CredentialsDefinitionMapper {
     try {
       jsonNode = objectMapper.readTree(string);
     } catch (JsonProcessingException e) {
+      log.info("Cannot deserialize invalid JSON credentials data", e);
       view.setSpec(Map.of("data", string));
       view.getStatus()
           .setErrors(
@@ -161,42 +166,59 @@ public class CredentialsDefinitionMapper {
     view.setSpec(jsonNode);
 
     if (!jsonNode.isObject()) {
+      JsonNodeType nodeType = jsonNode.getNodeType();
+      log.info(
+          "Encountered invalid structured JSON credentials data. Expected an object but got {}",
+          nodeType);
       view.getStatus()
           .setErrors(
               List.of(
                   new CredentialsError(
                       CredentialsDefinitionErrorCode.INVALID_STRUCTURE.getErrorCode(),
-                      "Expected an object node but instead got " + jsonNode.getNodeType())));
+                      "Expected an object node but instead got " + nodeType)));
       return view;
     }
 
     // ensure we have a `name` and `type` field
     ObjectNode account = (ObjectNode) jsonNode;
-    Errors errors = new BeanPropertyBindingResult(account, "definition");
+    Errors errors = new ObjectNodeErrors(account, "CredentialsDefinition");
+    String name;
+    String type;
     if (!account.hasNonNull("name")) {
+      log.info("Missing or empty 'name' field in credentials definition");
       errors.rejectValue(
           "name",
           CredentialsDefinitionErrorCode.MISSING_NAME.getErrorCode(),
           "No 'name' field in credentials definition");
     } else {
-      view.getMetadata().setName(account.get("name").asText());
+      name = account.get("name").asText();
+      ThreadContext.put("accountName", name);
+      view.getMetadata().setName(name);
     }
     if (!account.hasNonNull("type")) {
+      log.info("Missing or empty 'type' field in credentials definition");
       errors.rejectValue(
           "type",
           CredentialsDefinitionErrorCode.MISSING_TYPE.getErrorCode(),
           "No 'type' field in credentials definition");
     } else {
-      view.getMetadata().setType(account.get("type").asText());
+      type = account.get("type").asText();
+      ThreadContext.put("accountType", type);
+      log.debug("Validating account with type '{}'", type);
+      view.getMetadata().setType(type);
     }
 
     try {
       CredentialsDefinition loaded =
           objectMapper.convertValue(account, CredentialsDefinition.class);
       view.setSpec(loaded);
+      log.debug("Running credentials definition validator beans");
       validators.forEach(validator -> validator.validate(loaded, errors));
     } catch (IllegalArgumentException e) {
+      log.info("Invalid credentials JSON binding", e);
       errors.reject(CredentialsDefinitionErrorCode.INVALID_BINDING.getErrorCode(), e.getMessage());
+    } finally {
+      ThreadContext.removeAll(List.of("accountName", "accountType"));
     }
 
     if (errors.hasErrors()) {
