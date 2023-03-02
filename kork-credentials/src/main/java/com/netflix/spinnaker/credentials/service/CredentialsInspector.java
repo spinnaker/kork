@@ -61,9 +61,9 @@ public class CredentialsInspector {
   /**
    * Enumerates and inspects all credential definitions the given authenticated user has access to.
    * This combines all {@link CredentialsDefinitionRepository} and {@link
-   * CredentialsDefinitionSource} definitions. The resulting list of credentials should be checked
-   * for duplicate account names. Credentials with permissions defined should be filtered in or out
-   * of the resulting list depending on whether the user has {@link Authorization#READ} permission.
+   * CredentialsDefinitionSource} definitions. The resulting list of credentials is checked for
+   * duplicate account names. Credentials with permissions defined are filtered in or out of the
+   * resulting list depending on whether the user has {@link Authorization#READ} permission.
    *
    * @param auth the authenticated user to inspect credentials for
    * @return a list of views into the inspected credentials
