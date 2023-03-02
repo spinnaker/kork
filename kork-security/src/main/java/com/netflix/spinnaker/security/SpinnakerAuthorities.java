@@ -29,11 +29,6 @@ public class SpinnakerAuthorities {
   /** Granted authority for Spinnaker administrators. */
   public static final GrantedAuthority ADMIN_AUTHORITY = new SimpleGrantedAuthority(ADMIN);
 
-  public static final String ACCOUNT_MANAGER = "SPINNAKER_ACCOUNT_MANAGER";
-  /** Granted authority for Spinnaker account managers. */
-  public static final GrantedAuthority ACCOUNT_MANAGER_AUTHORITY =
-      new SimpleGrantedAuthority(ACCOUNT_MANAGER);
-
   /** Granted authority for anonymous users. */
   public static final GrantedAuthority ANONYMOUS_AUTHORITY = forRoleName("ANONYMOUS");
 
