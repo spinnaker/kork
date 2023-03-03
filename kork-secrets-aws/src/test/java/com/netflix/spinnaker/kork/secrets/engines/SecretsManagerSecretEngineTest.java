@@ -15,11 +15,9 @@
  */
 package com.netflix.spinnaker.kork.secrets.engines;
 
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doReturn;
-import static org.mockito.MockitoAnnotations.initMocks;
 
 import com.amazonaws.services.secretsmanager.model.DescribeSecretResult;
 import com.amazonaws.services.secretsmanager.model.GetSecretValueResult;
@@ -44,9 +42,13 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
+import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.Spy;
+import org.mockito.junit.MockitoJUnitRunner;
+import org.springframework.cache.concurrent.ConcurrentMapCacheManager;
 
+@RunWith(MockitoJUnitRunner.class)
 public class SecretsManagerSecretEngineTest {
   @Spy private SecretsManagerSecretEngine secretsManagerSecretEngine;
   @Mock private SecretsManagerClientProvider clientProvider;
@@ -72,14 +74,15 @@ public class SecretsManagerSecretEngineTest {
     userSecretSerde = new DefaultUserSecretSerde(mappers, List.of(OpaqueUserSecretData.class));
     userSecretSerdeFactory = new UserSecretSerdeFactory(List.of(userSecretSerde));
     secretsManagerSecretEngine =
-        new SecretsManagerSecretEngine(mapper, userSecretSerdeFactory, clientProvider);
-    initMocks(this);
+        new SecretsManagerSecretEngine(
+            mapper, userSecretSerdeFactory, clientProvider, new ConcurrentMapCacheManager());
   }
 
   @Test
   public void decryptStringWithKey() {
     EncryptedSecret kvSecret =
         EncryptedSecret.parse("encrypted:secrets-manager!r:us-west-2!s:test-secret!k:password");
+    assertNotNull(kvSecret);
     doReturn(kvSecretValue).when(secretsManagerSecretEngine).getSecretValue(any());
     assertArrayEquals("hunter2".getBytes(), secretsManagerSecretEngine.decrypt(kvSecret));
   }
@@ -88,6 +91,7 @@ public class SecretsManagerSecretEngineTest {
   public void decryptStringWithoutKey() {
     EncryptedSecret plaintextSecret =
         EncryptedSecret.parse("encrypted:secrets-manager!r:us-west-2!s:test-secret");
+    assertNotNull(plaintextSecret);
     doReturn(plaintextSecretValue).when(secretsManagerSecretEngine).getSecretValue(any());
     assertArrayEquals("letmein".getBytes(), secretsManagerSecretEngine.decrypt(plaintextSecret));
   }
@@ -96,6 +100,7 @@ public class SecretsManagerSecretEngineTest {
   public void decryptFileWithKey() {
     EncryptedSecret kvSecret =
         EncryptedSecret.parse("encryptedFile:secrets-manager!r:us-west-2!s:private-key!k:password");
+    assertNotNull(kvSecret);
     exceptionRule.expect(InvalidSecretFormatException.class);
     doReturn(kvSecretValue).when(secretsManagerSecretEngine).getSecretValue(any());
     secretsManagerSecretEngine.validate(kvSecret);
@@ -105,6 +110,7 @@ public class SecretsManagerSecretEngineTest {
   public void decryptSecretStringAsFile() {
     EncryptedSecret secretStringFile =
         EncryptedSecret.parse("encryptedFile:secrets-manager!r:us-west-2!s:private-key");
+    assertNotNull(secretStringFile);
     doReturn(secretStringFileValue).when(secretsManagerSecretEngine).getSecretValue(any());
     assertArrayEquals(
         "BEGIN RSA PRIVATE KEY".getBytes(), secretsManagerSecretEngine.decrypt(secretStringFile));
@@ -114,6 +120,7 @@ public class SecretsManagerSecretEngineTest {
   public void decryptSecretBinaryAsFile() {
     EncryptedSecret secretBinaryFile =
         EncryptedSecret.parse("encryptedFile:secrets-manager!r:us-west-2!s:private-key");
+    assertNotNull(secretBinaryFile);
     doReturn(binarySecretValue).when(secretsManagerSecretEngine).getSecretValue(any());
     assertArrayEquals(
         "i'm binary".getBytes(), secretsManagerSecretEngine.decrypt(secretBinaryFile));
@@ -123,6 +130,7 @@ public class SecretsManagerSecretEngineTest {
   public void decryptStringWithBinaryResult() {
     EncryptedSecret kvSecret =
         EncryptedSecret.parse("encrypted:secrets-manager!r:us-west-2!s:test-secret!k:password");
+    assertNotNull(kvSecret);
     doReturn(binarySecretValue).when(secretsManagerSecretEngine).getSecretValue(any());
     exceptionRule.expect(SecretException.class);
     secretsManagerSecretEngine.decrypt(kvSecret);

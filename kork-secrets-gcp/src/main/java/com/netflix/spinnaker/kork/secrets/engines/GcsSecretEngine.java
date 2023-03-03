@@ -30,6 +30,7 @@ import java.io.InputStream;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.CacheManager;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -38,7 +39,11 @@ public class GcsSecretEngine extends AbstractStorageSecretEngine {
   private static final String IDENTIFIER = "gcs";
   private static final String APPLICATION_NAME = "Spinnaker";
 
-  private final AtomicReference<Storage> googleStorage = new AtomicReference();
+  private final AtomicReference<Storage> googleStorage = new AtomicReference<>();
+
+  public GcsSecretEngine(CacheManager cacheManager) {
+    super(cacheManager.getCache(IDENTIFIER));
+  }
 
   public String identifier() {
     return IDENTIFIER;
@@ -58,10 +63,9 @@ public class GcsSecretEngine extends AbstractStorageSecretEngine {
   }
 
   @Override
-  protected InputStream downloadRemoteFile(EncryptedSecret encryptedSecret) {
-
-    String bucket = encryptedSecret.getParams().get(STORAGE_BUCKET);
-    String objName = encryptedSecret.getParams().get(STORAGE_FILE_URI);
+  protected InputStream downloadRemoteFile(CacheKey cacheKey) throws IOException {
+    String bucket = cacheKey.getBucket();
+    String objName = cacheKey.getFile();
 
     log.info("Getting contents of object {} from bucket {}", objName, bucket);
 

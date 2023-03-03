@@ -16,16 +16,23 @@
 
 package com.netflix.spinnaker.kork.secrets.engines;
 
-import com.google.common.base.Splitter;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
+import com.netflix.spinnaker.kork.annotations.NonnullByDefault;
 import com.netflix.spinnaker.kork.secrets.EncryptedSecret;
 import com.netflix.spinnaker.kork.secrets.InvalidSecretFormatException;
 import com.netflix.spinnaker.kork.secrets.SecretDecryptionException;
 import com.netflix.spinnaker.kork.secrets.SecretEngine;
-import java.io.ByteArrayOutputStream;
+import com.netflix.spinnaker.kork.secrets.SecretException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.*;
-import org.yaml.snakeyaml.Yaml;
+import java.nio.charset.StandardCharsets;
+import java.util.Map;
+import java.util.Set;
+import java.util.regex.Pattern;
+import javax.annotation.Nullable;
+import lombok.Value;
+import org.springframework.cache.Cache;
 
 public abstract class AbstractStorageSecretEngine implements SecretEngine {
   protected static final String STORAGE_BUCKET = "b";
@@ -33,40 +40,30 @@ public abstract class AbstractStorageSecretEngine implements SecretEngine {
   protected static final String STORAGE_FILE_URI = "f";
   protected static final String STORAGE_PROP_KEY = "k";
 
-  protected Map<String, Map<String, Object>> cache = new HashMap<>();
+  private static final Pattern KEY_PATH_SEPARATOR = Pattern.compile("\\.");
+
+  protected final Cache cache;
+  protected final YAMLMapper yamlMapper = YAMLMapper.builder().deactivateDefaultTyping().build();
+
+  protected AbstractStorageSecretEngine(Cache cache) {
+    this.cache = cache;
+  }
 
   public byte[] decrypt(EncryptedSecret encryptedSecret) {
-    String fileUri = encryptedSecret.getParams().get(STORAGE_FILE_URI);
-    String key = encryptedSecret.getParams().get(STORAGE_PROP_KEY);
+    Map<String, String> params = encryptedSecret.getParams();
+    String bucket = params.get(STORAGE_BUCKET);
+    String region = params.get(STORAGE_REGION);
+    String fileUri = params.get(STORAGE_FILE_URI);
+    String key = params.get(STORAGE_PROP_KEY);
+    CacheKey cacheKey = new CacheKey(bucket, region, fileUri);
 
-    InputStream is = null;
     try {
-      if (key == null || !cache.containsKey(fileUri)) {
-        // We don't cache direct file references
-        is = downloadRemoteFile(encryptedSecret);
-      }
-
-      // Return the whole content as a string
-      if (key == null) {
-        return readAll(is);
-      }
-
-      // Parse as YAML
-      if (!cache.containsKey(fileUri)) {
-        parseAsYaml(fileUri, is);
-      }
-      return getParsedValue(fileUri, key);
-
-    } catch (IOException e) {
-      throw new SecretDecryptionException(e);
-
-    } finally {
-      if (is != null) {
-        try {
-          is.close();
-        } catch (IOException e) {
-        }
-      }
+      return cache.get(cacheKey, () -> getSecretValue(cacheKey, key));
+    } catch (Cache.ValueRetrievalException e) {
+      Throwable cause = e.getCause();
+      throw cause instanceof SecretException
+          ? (SecretException) cause
+          : new SecretDecryptionException(cause);
     }
   }
 
@@ -90,47 +87,42 @@ public abstract class AbstractStorageSecretEngine implements SecretEngine {
     throw new UnsupportedOperationException("This operation is not supported");
   }
 
-  protected abstract InputStream downloadRemoteFile(EncryptedSecret encryptedSecret)
-      throws IOException;
+  protected abstract InputStream downloadRemoteFile(CacheKey cacheKey) throws IOException;
 
-  protected byte[] readAll(InputStream inputStream) throws IOException {
-    try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
-      byte[] buf = new byte[4096];
-      for (; ; ) {
-        int read = inputStream.read(buf, 0, buf.length);
-        if (read <= 0) {
-          break;
+  protected byte[] getSecretValue(CacheKey cacheKey, @Nullable String key) {
+    try (InputStream remoteFile = downloadRemoteFile(cacheKey)) {
+      if (key == null) {
+        return remoteFile.readAllBytes();
+      }
+      JsonNode node = yamlMapper.readTree(remoteFile);
+      for (String path : KEY_PATH_SEPARATOR.split(key)) {
+        if (node.isObject()) {
+          node = node.path(path);
+        } else if (node.isArray()) {
+          node = node.path(Integer.parseInt(path));
+        } else {
+          throw new SecretDecryptionException(
+              String.format("Invalid secret key specified: %s", key));
         }
-        out.write(buf, 0, read);
       }
-      return out.toByteArray();
-    }
-  }
-
-  protected void parseAsYaml(String fileURI, InputStream inputStream) {
-    Map<String, Object> parsed = new Yaml().load(inputStream);
-    cache.put(fileURI, parsed);
-  }
-
-  protected byte[] getParsedValue(String fileURI, String yamlPath)
-      throws SecretDecryptionException {
-    Map<String, Object> parsed = cache.get(fileURI);
-
-    for (Iterator<String> it = Splitter.on(".").split(yamlPath).iterator(); it.hasNext(); ) {
-      String pathElt = it.next();
-      Object o = parsed.get(pathElt);
-      if (o instanceof Map) {
-        parsed = (Map<String, Object>) o;
-      } else if (o instanceof List) {
-        parsed = ((List<Map<String, Object>>) o).get(Integer.valueOf(pathElt));
-      } else {
-        return ((String) o).getBytes();
+      if (node.isValueNode()) {
+        return node.asText().getBytes(StandardCharsets.UTF_8);
       }
+      throw new SecretDecryptionException(String.format("Invalid secret key specified: %s", key));
+    } catch (IOException e) {
+      throw new SecretDecryptionException(e);
     }
-    throw new SecretDecryptionException("Invalid secret key specified: " + yamlPath);
   }
 
   public void clearCache() {
     cache.clear();
+  }
+
+  @Value
+  @NonnullByDefault
+  public static class CacheKey {
+    String bucket;
+    String region;
+    String file;
   }
 }

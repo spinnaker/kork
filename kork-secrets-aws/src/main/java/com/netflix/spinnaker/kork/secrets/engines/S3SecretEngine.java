@@ -22,19 +22,21 @@ import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3ClientBuilder;
 import com.amazonaws.services.s3.model.AmazonS3Exception;
 import com.amazonaws.services.s3.model.S3Object;
-import com.netflix.spinnaker.kork.secrets.EncryptedSecret;
 import com.netflix.spinnaker.kork.secrets.SecretException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Optional;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.cache.CacheManager;
 import org.springframework.stereotype.Component;
 
 @Component
 public class S3SecretEngine extends AbstractStorageSecretEngine {
-  private static String IDENTIFIER = "s3";
+  private static final String IDENTIFIER = "s3";
 
-  public S3SecretEngine(Optional<S3ConfigurationProperties> s3ConfigurationProperties) {
+  public S3SecretEngine(
+      Optional<S3ConfigurationProperties> s3ConfigurationProperties, CacheManager cacheManager) {
+    super(cacheManager.getCache(IDENTIFIER));
     this.s3ConfigurationProperties = s3ConfigurationProperties;
   }
 
@@ -45,10 +47,10 @@ public class S3SecretEngine extends AbstractStorageSecretEngine {
   }
 
   @Override
-  protected InputStream downloadRemoteFile(EncryptedSecret encryptedSecret) throws IOException {
-    String region = encryptedSecret.getParams().get(STORAGE_REGION);
-    String bucket = encryptedSecret.getParams().get(STORAGE_BUCKET);
-    String objName = encryptedSecret.getParams().get(STORAGE_FILE_URI);
+  protected InputStream downloadRemoteFile(CacheKey cacheKey) throws IOException {
+    String region = cacheKey.getRegion();
+    String bucket = cacheKey.getBucket();
+    String objName = cacheKey.getFile();
 
     AmazonS3ClientBuilder s3ClientBuilder = AmazonS3ClientBuilder.standard();
     if (this.s3ConfigurationProperties.isPresent()) {

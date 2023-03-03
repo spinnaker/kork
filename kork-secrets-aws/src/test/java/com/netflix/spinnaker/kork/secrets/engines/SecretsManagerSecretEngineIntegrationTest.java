@@ -16,7 +16,7 @@
 
 package com.netflix.spinnaker.kork.secrets.engines;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import com.amazonaws.services.secretsmanager.AWSSecretsManager;
 import com.amazonaws.services.secretsmanager.AWSSecretsManagerClientBuilder;
@@ -118,7 +118,7 @@ public class SecretsManagerSecretEngineIntegrationTest {
 
     @Bean
     public SecretsManagerClientProvider localstackClientProvider(LocalStackContainer container) {
-      return (params) ->
+      return (region, secret) ->
           AWSSecretsManagerClientBuilder.standard()
               .withEndpointConfiguration(
                   container.getEndpointConfiguration(LocalStackContainer.Service.SECRETSMANAGER))
