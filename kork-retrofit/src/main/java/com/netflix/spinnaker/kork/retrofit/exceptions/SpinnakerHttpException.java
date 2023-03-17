@@ -28,6 +28,7 @@ import retrofit.client.Response;
 @NonnullByDefault
 public class SpinnakerHttpException extends SpinnakerServerException {
   private final Response response;
+  private HttpHeaders headers;
 
   public SpinnakerHttpException(RetrofitError e) {
     super(e);
@@ -56,8 +57,10 @@ public class SpinnakerHttpException extends SpinnakerServerException {
   }
 
   public HttpHeaders getHeaders() {
-    HttpHeaders headers = new HttpHeaders();
-    response.getHeaders().forEach(header -> headers.add(header.getName(), header.getValue()));
+    if (headers == null) {
+      headers = new HttpHeaders();
+      response.getHeaders().forEach(header -> headers.add(header.getName(), header.getValue()));
+    }
     return headers;
   }
 
