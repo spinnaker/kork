@@ -38,7 +38,6 @@ import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.http.HttpStatus;
 import retrofit.RestAdapter;
 import retrofit.RetrofitError;
-import retrofit.client.Header;
 import retrofit.client.Response;
 import retrofit.converter.JacksonConverter;
 import retrofit.http.GET;
@@ -156,14 +155,14 @@ public class SpinnakerRetrofitErrorHandlerTest {
   @Test
   public void testResponseHeadersInException() {
     // Check response headers are retrievable from a SpinnakerHttpException
-    Header testHeader = new Header("Test", "true");
     mockWebServer.enqueue(
         new MockResponse()
             .setResponseCode(HttpStatus.BAD_REQUEST.value())
             .setHeader("Test", "true"));
     SpinnakerHttpException spinnakerHttpException =
         assertThrows(SpinnakerHttpException.class, () -> retrofitService.getFoo());
-    assertTrue(spinnakerHttpException.getHeaders().contains(testHeader));
+    assertTrue(spinnakerHttpException.getHeaders().containsKey("Test"));
+    assertTrue(spinnakerHttpException.getHeaders().get("Test").contains("true"));
   }
 
   @Test
