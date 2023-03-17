@@ -17,7 +17,9 @@
 package com.netflix.spinnaker.kork.retrofit.exceptions;
 
 import com.netflix.spinnaker.kork.annotations.NonnullByDefault;
+import java.util.List;
 import retrofit.RetrofitError;
+import retrofit.client.Header;
 import retrofit.client.Response;
 
 /**
@@ -52,6 +54,10 @@ public class SpinnakerHttpException extends SpinnakerServerException {
 
   public int getResponseCode() {
     return response.getStatus();
+  }
+
+  public List<Header> getHeaders() {
+    return response.getHeaders();
   }
 
   @Override

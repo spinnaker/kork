@@ -16,10 +16,7 @@
 
 package com.netflix.spinnaker.kork.retrofit.exceptions;
 
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -37,6 +34,7 @@ import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.http.HttpStatus;
 import retrofit.RestAdapter;
 import retrofit.RetrofitError;
+import retrofit.client.Header;
 import retrofit.client.Response;
 import retrofit.converter.JacksonConverter;
 import retrofit.http.GET;
@@ -149,6 +147,19 @@ public class SpinnakerRetrofitErrorHandlerTest {
     SpinnakerHttpException spinnakerHttpException =
         assertThrows(SpinnakerHttpException.class, () -> retrofitService.getFoo());
     assertNull(spinnakerHttpException.getRetryable());
+  }
+
+  @Test
+  public void testResponseHeadersInException() {
+    // Check response headers are retrievable from a SpinnakerHttpException
+    Header testHeader = new Header("Test", "true");
+    mockWebServer.enqueue(
+        new MockResponse()
+            .setResponseCode(HttpStatus.BAD_REQUEST.value())
+            .setHeader("Test", "true"));
+    SpinnakerHttpException spinnakerHttpException =
+        assertThrows(SpinnakerHttpException.class, () -> retrofitService.getFoo());
+    assertTrue(spinnakerHttpException.getHeaders().contains(testHeader));
   }
 
   @Test
