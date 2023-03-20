@@ -58,6 +58,11 @@ public final class SpinnakerRetrofitErrorHandler implements ErrorHandler {
           retval.setRetryable(false);
         }
         return retval;
+        // assuming that a conversion error is unlikely to succeed on retry
+      case CONVERSION:
+        SpinnakerConversionException ex = new SpinnakerConversionException(e);
+        ex.setRetryable(false);
+        return ex;
       case NETWORK:
         return new SpinnakerNetworkException(e);
       default:
