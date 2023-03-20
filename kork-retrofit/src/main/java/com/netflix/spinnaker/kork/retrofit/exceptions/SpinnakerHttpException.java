@@ -84,7 +84,17 @@ public class SpinnakerHttpException extends SpinnakerServerException {
   public HttpHeaders getHeaders() {
     if (headers == null) {
       headers = new HttpHeaders();
-      response.getHeaders().forEach(header -> headers.add(header.getName(), header.getValue()));
+      if (response != null) {
+        response.getHeaders().forEach(header -> headers.add(header.getName(), header.getValue()));
+      } else {
+        retrofit2Response
+            .headers()
+            .names()
+            .forEach(
+                key -> {
+                  headers.addAll(key, retrofit2Response.headers().values(key));
+                });
+      }
     }
     return headers;
   }

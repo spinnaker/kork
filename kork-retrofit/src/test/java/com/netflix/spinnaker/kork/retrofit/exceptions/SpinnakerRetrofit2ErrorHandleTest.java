@@ -20,6 +20,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -125,6 +126,24 @@ public class SpinnakerRetrofit2ErrorHandleTest {
     SpinnakerServerException spinnakerNetworkException =
         assertThrows(
             SpinnakerServerException.class, () -> retrofit2Service.getRetrofit2().execute());
+  }
+
+  @Test
+  public void testResponseHeadersInException() throws JsonProcessingException {
+    Map<String, String> responseBodyMap = new HashMap<>();
+    responseBodyMap.put("timestamp", "123123133123");
+    responseBodyMap.put("message", "Something happened");
+    String responseBodyString = new ObjectMapper().writeValueAsString(responseBodyMap);
+    // Check response headers are retrievable from a SpinnakerHttpException
+    mockWebServer.enqueue(
+        new MockResponse()
+            .setResponseCode(HttpStatus.NOT_FOUND.value())
+            .setBody(responseBodyString)
+            .setHeader("Test", "true"));
+    SpinnakerHttpException spinnakerHttpException =
+        assertThrows(SpinnakerHttpException.class, () -> retrofit2Service.getRetrofit2().execute());
+    assertTrue(spinnakerHttpException.getHeaders().containsKey("Test"));
+    assertTrue(spinnakerHttpException.getHeaders().get("Test").contains("true"));
   }
 
   interface Retrofit2Service {
