@@ -98,8 +98,13 @@ public class ErrorHandlingExecutorCallAdapterFactory extends CallAdapter.Factory
    */
   static final class ExecutorCallbackCall<T> implements Call<T> {
 
+    /*The executor used for Callback methods on a Call.*/
     private final Executor callbackExecutor;
+
+    /*Original delegate which has request to execute*/
     private final Call<T> delegate;
+
+    /*Client used while the service creation, which has convertor logic to be used to parse the response*/
     private final Retrofit retrofit;
 
     ExecutorCallbackCall(Executor callbackExecutor, Call<T> delegate, Retrofit retrofit) {
@@ -111,8 +116,8 @@ public class ErrorHandlingExecutorCallAdapterFactory extends CallAdapter.Factory
     /**
      * Synchronously send the request and return its response.
      *
-     * @throws SpinnakerServerException (and subclasses) if an unexpected error occurs while
-     *     creating the request or decoding the response
+     * @throws SpinnakerServerException (and subclasses) if an error occurs while creating the
+     *     request or decoding the response
      */
     @Override
     public Response<T> execute() {

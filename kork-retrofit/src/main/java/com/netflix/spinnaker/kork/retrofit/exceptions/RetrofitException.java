@@ -47,6 +47,7 @@ public class RetrofitException extends RuntimeException {
    * */
   private final Response response;
 
+  /*Client used while the service creation, which has convertor logic to be used to parse the response*/
   private final Retrofit retrofit;
 
   RetrofitException(String message, Response response, Throwable exception, Retrofit retrofit) {
@@ -63,7 +64,8 @@ public class RetrofitException extends RuntimeException {
   /**
    * HTTP response body converted to specified {@code type}. {@code null} if there is no response.
    *
-   * @throws IOException if unable to convert the body to the specified {@code type}.
+   * @throws RuntimeException wrapping the underlying IOException if unable to convert the body to
+   *     the specified {@code type}.
    */
   public <T> T getErrorBodyAs(Class<T> type) {
     if (response == null || response.errorBody() == null) {
