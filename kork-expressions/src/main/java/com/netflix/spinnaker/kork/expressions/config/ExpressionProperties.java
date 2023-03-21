@@ -27,6 +27,6 @@ public class ExpressionProperties {
 
   @Data
   public static class FeatureFlag {
-    private boolean enabled;
+    private boolean enabled = true;
   }
 }
