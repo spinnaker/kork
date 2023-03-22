@@ -25,8 +25,13 @@ public class ExpressionProperties {
 
   private final FeatureFlag doNotEvalSpel = new FeatureFlag();
 
+  public FeatureFlag getDoNotEvalSpel() {
+    doNotEvalSpel.setEnabled(true);
+    return doNotEvalSpel;
+  }
+
   @Data
   public static class FeatureFlag {
-    private boolean enabled = true;
+    private boolean enabled;
   }
 }
