@@ -23,15 +23,15 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 @ConfigurationProperties(prefix = "expression")
 public class ExpressionProperties {
 
-  private final FeatureFlag doNotEvalSpel = new FeatureFlag();
-
-  public FeatureFlag getDoNotEvalSpel() {
-    doNotEvalSpel.setEnabled(true);
-    return doNotEvalSpel;
-  }
+  private final FeatureFlag doNotEvalSpel = new FeatureFlag().setEnabled(true);
 
   @Data
   public static class FeatureFlag {
     private boolean enabled;
+
+    public FeatureFlag setEnabled(boolean enabled) {
+      this.enabled = enabled;
+      return this;
+    }
   }
 }
