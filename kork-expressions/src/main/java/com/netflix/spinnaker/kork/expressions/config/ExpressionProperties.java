@@ -17,6 +17,7 @@
 package com.netflix.spinnaker.kork.expressions.config;
 
 import lombok.Data;
+import lombok.experimental.Accessors;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 @Data
@@ -26,12 +27,8 @@ public class ExpressionProperties {
   private final FeatureFlag doNotEvalSpel = new FeatureFlag().setEnabled(true);
 
   @Data
+  @Accessors(chain = true)
   public static class FeatureFlag {
     private boolean enabled;
-
-    public FeatureFlag setEnabled(boolean enabled) {
-      this.enabled = enabled;
-      return this;
-    }
   }
 }
