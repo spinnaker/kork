@@ -37,7 +37,8 @@ public class SpinnakerServerException extends SpinnakerException {
    */
   private final String rawMessage;
 
-  private final Map<String, Object> errorBodyAs;
+  /* RetrofitError's response body derived as map or null if response not provided in RetrofitError */
+  private final Map<String, Object> responseBody;
 
   /**
    * Parses the message from the {@link RetrofitErrorResponseBody} of a {@link RetrofitError}.
@@ -50,7 +51,7 @@ public class SpinnakerServerException extends SpinnakerException {
         (RetrofitErrorResponseBody) e.getBodyAs(RetrofitErrorResponseBody.class);
     this.rawMessage =
         Optional.ofNullable(body).map(RetrofitErrorResponseBody::getMessage).orElse(e.getMessage());
-    this.errorBodyAs = (Map<String, Object>) e.getBodyAs(HashMap.class);
+    this.responseBody = (Map<String, Object>) e.getBodyAs(HashMap.class);
   }
 
   public SpinnakerServerException(RetrofitException e) {
@@ -73,11 +74,11 @@ public class SpinnakerServerException extends SpinnakerException {
   public SpinnakerServerException(String message, Throwable cause) {
     super(message, cause);
     rawMessage = null;
-    errorBodyAs = null;
+    responseBody = null;
   }
 
-  public Map<String, Object> getErrorBodyAs() {
-    return errorBodyAs;
+  public Map<String, Object> getResponseBody() {
+    return responseBody;
   }
 
   @Override
