@@ -51,7 +51,7 @@ public class SpinnakerRetrofit2ErrorHandleTest {
     retrofit2Service =
         new Retrofit.Builder()
             .baseUrl(mockWebServer.url("/").toString())
-            .addCallAdapterFactory(ErrorHandlingExecutorCallAdapterFactory.getInstance(null))
+            .addCallAdapterFactory(ErrorHandlingExecutorCallAdapterFactory.getInstance())
             .addConverterFactory(JacksonConverterFactory.create())
             .build()
             .create(Retrofit2Service.class);

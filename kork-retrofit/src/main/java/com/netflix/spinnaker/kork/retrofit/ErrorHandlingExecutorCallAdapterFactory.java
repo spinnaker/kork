@@ -50,15 +50,27 @@ public class ErrorHandlingExecutorCallAdapterFactory extends CallAdapter.Factory
    * */
   private final @Nullable Executor callbackExecutor;
 
-  ErrorHandlingExecutorCallAdapterFactory(@Nullable Executor callbackExecutor) {
+  ErrorHandlingExecutorCallAdapterFactory() {
+    this.callbackExecutor = null;
+  }
+
+  ErrorHandlingExecutorCallAdapterFactory(Executor callbackExecutor) {
     this.callbackExecutor = callbackExecutor;
   }
 
-  public static ErrorHandlingExecutorCallAdapterFactory getInstance(
-      @Nullable Executor callbackExecutor) {
+  public static ErrorHandlingExecutorCallAdapterFactory getInstance(Executor callbackExecutor) {
     return new ErrorHandlingExecutorCallAdapterFactory(callbackExecutor);
   }
 
+  public static ErrorHandlingExecutorCallAdapterFactory getInstance() {
+    return new ErrorHandlingExecutorCallAdapterFactory();
+  }
+
+  /*
+   * Returns a call adapter for interface methods that return {@code returnType}, or null if returnType is not instance of Call.
+   *
+   * throws IllegalArgumentException if returnType is not ParameterizedType.
+   * */
   @Nullable
   @Override
   public CallAdapter<?, ?> get(Type returnType, Annotation[] annotations, Retrofit retrofit) {
@@ -71,7 +83,21 @@ public class ErrorHandlingExecutorCallAdapterFactory extends CallAdapter.Factory
       return null;
     }
 
-    final Type responseType = getCallResponseType(returnType);
+    /*
+     * check whether returnType is ParameterizedType, else throws IllegalArgumentException.
+     * */
+    if (!(returnType instanceof ParameterizedType)) {
+      throw new IllegalArgumentException(
+          "Call return type must be parameterized as Call<Foo> or Call<? extends Foo>");
+    }
+
+    /*
+     * the value type that this adapter uses when converting the HTTP response body to a Java
+     * object. For example, the response type for {@code Call<Repo>} is {@code Repo}. This type
+     * is used to prepare the {@code call} passed to {@code #adapt}.
+     * */
+    final Type responseType = getParameterUpperBound(0, (ParameterizedType) returnType);
+
     return new CallAdapter<Object, Call<?>>() {
       @Override
       public Type responseType() {
@@ -249,13 +275,5 @@ public class ErrorHandlingExecutorCallAdapterFactory extends CallAdapter.Factory
             }
           });
     }
-  }
-
-  static Type getCallResponseType(Type returnType) {
-    if (!(returnType instanceof ParameterizedType)) {
-      throw new IllegalArgumentException(
-          "Call return type must be parameterized as Call<Foo> or Call<? extends Foo>");
-    }
-    return getParameterUpperBound(0, (ParameterizedType) returnType);
   }
 }
