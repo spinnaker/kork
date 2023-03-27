@@ -16,7 +16,9 @@
 
 package com.netflix.spinnaker.config
 
+import com.netflix.spinnaker.okhttp.SpinnakerRequestHeaderInterceptor
 import okhttp3.Dispatcher
+import okhttp3.Interceptor
 
 import static com.google.common.base.Preconditions.checkState
 import com.netflix.spinnaker.okhttp.OkHttp3MetricsInterceptor
@@ -47,6 +49,9 @@ class OkHttp3ClientConfiguration {
   private final OkHttp3MetricsInterceptor okHttp3MetricsInterceptor
 
   @Autowired
+  private SpinnakerRequestHeaderInterceptor spinnakerRequestHeaderInterceptor;
+
+  @Autowired
   public OkHttp3ClientConfiguration(OkHttpClientConfigurationProperties okHttpClientConfigurationProperties,
                                     OkHttp3MetricsInterceptor okHttp3MetricsInterceptor) {
     this.okHttpClientConfigurationProperties = okHttpClientConfigurationProperties
@@ -61,19 +66,8 @@ class OkHttp3ClientConfiguration {
    * @return OkHttpClient w/ <optional> key and trust stores
    */
   OkHttpClient.Builder create() {
-    Dispatcher dispatcher = new Dispatcher()
-    dispatcher.setMaxRequests(okHttpClientConfigurationProperties.maxRequests)
-    dispatcher.setMaxRequestsPerHost(okHttpClientConfigurationProperties.maxRequestsPerHost)
 
-    OkHttpClient.Builder okHttpClientBuilder = new OkHttpClient.Builder()
-      .connectTimeout(okHttpClientConfigurationProperties.connectTimeoutMs, TimeUnit.MILLISECONDS)
-      .readTimeout(okHttpClientConfigurationProperties.readTimeoutMs, TimeUnit.MILLISECONDS)
-      .retryOnConnectionFailure(okHttpClientConfigurationProperties.retryOnConnectionFailure)
-      .dispatcher(dispatcher)
-      .connectionPool(new ConnectionPool(
-        okHttpClientConfigurationProperties.connectionPool.maxIdleConnections,
-        okHttpClientConfigurationProperties.connectionPool.keepAliveDurationMs,
-        TimeUnit.MILLISECONDS))
+    OkHttpClient.Builder okHttpClientBuilder = createBasicClient()
 
     if (okHttp3MetricsInterceptor != null) {
       okHttpClientBuilder.addInterceptor(okHttp3MetricsInterceptor)
@@ -83,6 +77,33 @@ class OkHttp3ClientConfiguration {
       return okHttpClientBuilder
     }
 
+    return setTruststoreKey(okHttpClientBuilder)
+  }
+
+  /**
+   * @return OkHttpClient with SpinnakerRequestHeaderInterceptor as initial interceptor w/ <optional> key and trust stores
+   * Interceptors in okhttp are sequential, insert spinnakerRequestHeaderInterceptor initially so next okhttp interceptor aware of these headers.
+   */
+  OkHttpClient.Builder createForRetrofit2() {
+
+    OkHttpClient.Builder okHttpClientBuilder = createBasicClient()
+
+    if (spinnakerRequestHeaderInterceptor != null) {
+      okHttpClientBuilder.addInterceptor(spinnakerRequestHeaderInterceptor)
+    }
+
+    if (okHttp3MetricsInterceptor != null) {
+      okHttpClientBuilder.addInterceptor(okHttp3MetricsInterceptor)
+    }
+
+    if (!okHttpClientConfigurationProperties.keyStore && !okHttpClientConfigurationProperties.trustStore) {
+      return okHttpClientBuilder
+    }
+
+    return setTruststoreKey(okHttpClientBuilder)
+  }
+
+  private OkHttpClient.Builder setTruststoreKey(OkHttpClient.Builder okHttpClientBuilder) {
     def sslContext = SSLContext.getInstance('TLS')
 
     def keyManagerFactory = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm())
@@ -113,6 +134,23 @@ class OkHttp3ClientConfiguration {
     okHttpClientBuilder.sslSocketFactory(sslContext.socketFactory, (X509TrustManager) trustManagers.first())
 
     return applyConnectionSpecs(okHttpClientBuilder)
+  }
+
+  private OkHttpClient.Builder createBasicClient() {
+    Dispatcher dispatcher = new Dispatcher()
+    dispatcher.setMaxRequests(okHttpClientConfigurationProperties.maxRequests)
+    dispatcher.setMaxRequestsPerHost(okHttpClientConfigurationProperties.maxRequestsPerHost)
+
+    OkHttpClient.Builder okHttpClientBuilder = new OkHttpClient.Builder()
+      .connectTimeout(okHttpClientConfigurationProperties.connectTimeoutMs, TimeUnit.MILLISECONDS)
+      .readTimeout(okHttpClientConfigurationProperties.readTimeoutMs, TimeUnit.MILLISECONDS)
+      .retryOnConnectionFailure(okHttpClientConfigurationProperties.retryOnConnectionFailure)
+      .dispatcher(dispatcher)
+      .connectionPool(new ConnectionPool(
+        okHttpClientConfigurationProperties.connectionPool.maxIdleConnections,
+        okHttpClientConfigurationProperties.connectionPool.keepAliveDurationMs,
+        TimeUnit.MILLISECONDS))
+    okHttpClientBuilder
   }
 
   @CompileDynamic
