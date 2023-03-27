@@ -85,6 +85,7 @@ public class ErrorHandlingExecutorCallAdapterFactory extends CallAdapter.Factory
 
     /*
      * check whether returnType is ParameterizedType, else throws IllegalArgumentException.
+     * @see com.netflix.spinnaker.kork.retrofit.exceptions.SpinnakerRetrofit2ErrorHandleTest#testNotParameterizedException
      * */
     if (!(returnType instanceof ParameterizedType)) {
       throw new IllegalArgumentException(

@@ -16,6 +16,7 @@
 
 package com.netflix.spinnaker.kork.retrofit.exceptions;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -146,8 +147,24 @@ public class SpinnakerRetrofit2ErrorHandleTest {
     assertTrue(spinnakerHttpException.getHeaders().get("Test").contains("true"));
   }
 
+  @Test
+  public void testNotParameterizedException() {
+
+    IllegalArgumentException illegalArgumentException =
+        assertThrows(
+            IllegalArgumentException.class,
+            () -> retrofit2Service.testNotParameterized().execute());
+
+    assertEquals(
+        "Call return type must be parameterized as Call<Foo> or Call<? extends Foo>",
+        illegalArgumentException.getCause().getMessage());
+  }
+
   interface Retrofit2Service {
     @retrofit2.http.GET("/retrofit2")
     Call<String> getRetrofit2();
+
+    @retrofit2.http.GET("/retrofit2/para")
+    Call testNotParameterized();
   }
 }
