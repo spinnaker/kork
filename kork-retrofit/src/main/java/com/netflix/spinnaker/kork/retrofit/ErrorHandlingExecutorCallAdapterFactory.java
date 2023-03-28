@@ -83,13 +83,8 @@ public class ErrorHandlingExecutorCallAdapterFactory extends CallAdapter.Factory
       return null;
     }
 
-    /*
-     * check whether returnType is ParameterizedType, else throws IllegalArgumentException.
-     * @see com.netflix.spinnaker.kork.retrofit.exceptions.SpinnakerRetrofit2ErrorHandleTest#testNotParameterizedException
-     * */
     if (!(returnType instanceof ParameterizedType)) {
-      throw new IllegalArgumentException(
-          "Call return type must be parameterized as Call<Foo> or Call<? extends Foo>");
+      return null;
     }
 
     /*
