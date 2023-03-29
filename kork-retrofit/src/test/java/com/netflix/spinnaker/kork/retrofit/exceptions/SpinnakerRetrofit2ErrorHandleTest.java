@@ -29,6 +29,8 @@ import com.netflix.spinnaker.kork.retrofit.ErrorHandlingExecutorCallAdapterFacto
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
+import okhttp3.OkHttpClient;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 import okhttp3.mockwebserver.SocketPolicy;
@@ -52,6 +54,11 @@ public class SpinnakerRetrofit2ErrorHandleTest {
     retrofit2Service =
         new Retrofit.Builder()
             .baseUrl(mockWebServer.url("/").toString())
+            .client(
+                new OkHttpClient.Builder()
+                    .callTimeout(1, TimeUnit.SECONDS)
+                    .connectTimeout(1, TimeUnit.SECONDS)
+                    .build())
             .addCallAdapterFactory(ErrorHandlingExecutorCallAdapterFactory.getInstance())
             .addConverterFactory(JacksonConverterFactory.create())
             .build()
