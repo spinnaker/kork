@@ -18,7 +18,6 @@ package com.netflix.spinnaker.config
 
 import com.netflix.spinnaker.okhttp.SpinnakerRequestHeaderInterceptor
 import okhttp3.Dispatcher
-import okhttp3.Interceptor
 
 import static com.google.common.base.Preconditions.checkState
 import com.netflix.spinnaker.okhttp.OkHttp3MetricsInterceptor
@@ -48,10 +47,18 @@ class OkHttp3ClientConfiguration {
   private final OkHttpClientConfigurationProperties okHttpClientConfigurationProperties
   private final OkHttp3MetricsInterceptor okHttp3MetricsInterceptor
 
-  @Autowired
-  private SpinnakerRequestHeaderInterceptor spinnakerRequestHeaderInterceptor;
+  /* okhttp Interceptor which adds spinnaker auth headers to requests when retrofit2 client used*/
+  private final SpinnakerRequestHeaderInterceptor spinnakerRequestHeaderInterceptor;
 
   @Autowired
+  public OkHttp3ClientConfiguration(OkHttpClientConfigurationProperties okHttpClientConfigurationProperties,
+                                    OkHttp3MetricsInterceptor okHttp3MetricsInterceptor,
+                                    SpinnakerRequestHeaderInterceptor spinnakerRequestHeaderInterceptor) {
+    this.okHttpClientConfigurationProperties = okHttpClientConfigurationProperties
+    this.okHttp3MetricsInterceptor = okHttp3MetricsInterceptor
+    this.spinnakerRequestHeaderInterceptor = spinnakerRequestHeaderInterceptor
+  }
+
   public OkHttp3ClientConfiguration(OkHttpClientConfigurationProperties okHttpClientConfigurationProperties,
                                     OkHttp3MetricsInterceptor okHttp3MetricsInterceptor) {
     this.okHttpClientConfigurationProperties = okHttpClientConfigurationProperties
@@ -62,7 +69,7 @@ class OkHttp3ClientConfiguration {
     this.okHttpClientConfigurationProperties = okHttpClientConfigurationProperties
   }
 
-  /**
+/**
    * @return OkHttpClient w/ <optional> key and trust stores
    */
   OkHttpClient.Builder create() {
@@ -82,12 +89,13 @@ class OkHttp3ClientConfiguration {
 
   /**
    * @return OkHttpClient with SpinnakerRequestHeaderInterceptor as initial interceptor w/ <optional> key and trust stores
-   * Interceptors in okhttp are sequential, insert spinnakerRequestHeaderInterceptor initially so next okhttp interceptor aware of these headers.
    */
   OkHttpClient.Builder createForRetrofit2() {
 
     OkHttpClient.Builder okHttpClientBuilder = createBasicClient()
 
+    /*Interceptors in okhttp are sequential, insert spinnakerRequestHeaderInterceptor initially
+    so next okhttp interceptor aware of these spinnaker auth headers when retrofit2 client used */
     if (spinnakerRequestHeaderInterceptor != null) {
       okHttpClientBuilder.addInterceptor(spinnakerRequestHeaderInterceptor)
     }
