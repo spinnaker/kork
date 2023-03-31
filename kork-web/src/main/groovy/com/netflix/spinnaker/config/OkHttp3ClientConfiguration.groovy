@@ -47,7 +47,9 @@ class OkHttp3ClientConfiguration {
   private final OkHttpClientConfigurationProperties okHttpClientConfigurationProperties
   private final OkHttp3MetricsInterceptor okHttp3MetricsInterceptor
 
-  /* okhttp Interceptor which adds spinnaker auth headers to requests when retrofit2 client used*/
+  /**
+   *  {@link okhttp3.Interceptor} which adds spinnaker auth headers to requests when retrofit2 client used
+   */
   private final SpinnakerRequestHeaderInterceptor spinnakerRequestHeaderInterceptor;
 
   @Autowired
@@ -69,7 +71,7 @@ class OkHttp3ClientConfiguration {
     this.okHttpClientConfigurationProperties = okHttpClientConfigurationProperties
   }
 
-/**
+  /**
    * @return OkHttpClient w/ <optional> key and trust stores
    */
   OkHttpClient.Builder create() {
@@ -94,8 +96,10 @@ class OkHttp3ClientConfiguration {
 
     OkHttpClient.Builder okHttpClientBuilder = createBasicClient()
 
-    /*Interceptors in okhttp are sequential, insert spinnakerRequestHeaderInterceptor initially
-    so next okhttp interceptor aware of these spinnaker auth headers when retrofit2 client used */
+    /**
+     * {@link okhttp3.Interceptor} are sequential, insert spinnakerRequestHeaderInterceptor initially,
+     * so next okhttp interceptor aware of these spinnaker auth headers when retrofit2 client used.
+     */
     if (spinnakerRequestHeaderInterceptor != null) {
       okHttpClientBuilder.addInterceptor(spinnakerRequestHeaderInterceptor)
     }

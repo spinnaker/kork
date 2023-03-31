@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 Netflix, Inc.
+ * Copyright 2023 OpsMx, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,8 +20,8 @@ import com.netflix.spinnaker.security.AuthenticatedRequest
 import okhttp3.Interceptor
 import okhttp3.Response
 
-/*
-* As {@link retrofit.RequestInterceptor} class removed in retrofit2,
+/**
+* As {@link retrofit.RequestInterceptor} no longer present in retrofit2,
 * we have to use {@link okhttp3.Interceptor} to add authenticated headers to requests.
 * */
 class SpinnakerRequestHeaderInterceptor implements Interceptor {

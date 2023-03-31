@@ -23,13 +23,13 @@ import retrofit2.Call;
 
 public class Retrofit2SyncCall<T> {
 
-  /*
-   * Handle IOExceptions from {@link Call}.execute method centrally,
-   * instead of all places that make retrofit2 API calls.
-   * @throws SpinnakerNetworkException if IOException occurs.
+  /**
+   * Handle IOExceptions from {@link Call}.execute method centrally, instead of all places that make
+   * retrofit2 API calls.
    *
-   *  @param <T> Successful response body type.
-   * */
+   * @throws SpinnakerNetworkException if IOException occurs.
+   * @param <T> Successful response body type.
+   */
   public static <T> T execute(Call<T> call) {
     try {
       return call.execute().body();

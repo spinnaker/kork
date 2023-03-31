@@ -23,11 +23,12 @@ import retrofit2.Converter;
 import retrofit2.Response;
 import retrofit2.Retrofit;
 
-/*
- * The {@link RetrofitException} class is similar to {@link retrofit.RetrofitError}
- * as RetrofitError class is removed in retrofit2. To handle the exception globally and achieve similar logic as retrofit in retrofit2,
- * this exception used along with {@link com.netflix.spinnaker.kork.retrofit.ErrorHandlingExecutorCallAdapterFactory}.
- * */
+/**
+ * The {@link RetrofitException} class is similar to {@link retrofit.RetrofitError} as RetrofitError
+ * class is removed in retrofit2. To handle the exception globally and achieve similar logic as
+ * retrofit in retrofit2, this exception used along with {@link
+ * com.netflix.spinnaker.kork.retrofit.ErrorHandlingExecutorCallAdapterFactory}.
+ */
 public class RetrofitException extends RuntimeException {
   public static RetrofitException httpError(Response response, Retrofit retrofit) {
     String message = response.code() + " " + response.message();
@@ -42,12 +43,13 @@ public class RetrofitException extends RuntimeException {
     return new RetrofitException(exception.getMessage(), null, exception, null);
   }
 
-  /*
-   * Response from server, which contains causes for the failure
-   * */
+  /** Response from server, which contains causes for the failure */
   private final Response response;
 
-  /*Client used while the service creation, which has convertor logic to be used to parse the response*/
+  /**
+   * Client used while the service creation, which has convertor logic to be used to parse the
+   * response
+   */
   private final Retrofit retrofit;
 
   RetrofitException(String message, Response response, Throwable exception, Retrofit retrofit) {

@@ -37,17 +37,18 @@ import retrofit2.Callback;
 import retrofit2.Response;
 import retrofit2.Retrofit;
 
-/*
- * {@link retrofit.RetrofitError} and {@link retrofit.ErrorHandler} are no longer present in retrofit2.
- * So this class helps to achieve similar logic as retrofit and handle exceptions globally in retrofit2.
- * This can be achieved by setting this class as CallAdapterFactory at the time of {@link Retrofit} client creation.
- *  */
+/**
+ * {@link retrofit.RetrofitError} and {@link retrofit.ErrorHandler} are no longer present in
+ * retrofit2. So this class helps to achieve similar logic as retrofit and handle exceptions
+ * globally in retrofit2. This can be achieved by setting this class as CallAdapterFactory at the
+ * time of {@link Retrofit} client creation.
+ */
 public class ErrorHandlingExecutorCallAdapterFactory extends CallAdapter.Factory {
 
-  /*
-   * Which need to be set only if clients uses async call i.e enqueue method.
-   * Clients which make use of sync call i.e execute method only, no need to set this.
-   * */
+  /**
+   * Which need to be set only if clients uses async call i.e enqueue method. Clients which make use
+   * of sync call i.e execute method only, no need to set this.
+   */
   private final @Nullable Executor callbackExecutor;
 
   ErrorHandlingExecutorCallAdapterFactory() {
@@ -66,19 +67,18 @@ public class ErrorHandlingExecutorCallAdapterFactory extends CallAdapter.Factory
     return new ErrorHandlingExecutorCallAdapterFactory();
   }
 
-  /*
-   * Returns a call adapter for interface methods that return {@code returnType}, or null if returnType is not instance of Call.
-   *
-   * throws IllegalArgumentException if returnType is not ParameterizedType.
-   * */
+  /**
+   * Returns a call adapter for interface methods that return {@code returnType}, or null if
+   * returnType is not instance of {@link Call} and {@link ParameterizedType}.
+   */
   @Nullable
   @Override
   public CallAdapter<?, ?> get(Type returnType, Annotation[] annotations, Retrofit retrofit) {
 
-    /*
-     * Expected the raw class type from returnType to be Call class
-     * otherwise return null as it cannot be handled by this factory
-     * */
+    /**
+     * Expected the raw class type from returnType to be {@link Call} class otherwise return null as
+     * it cannot be handled by this factory
+     */
     if (getRawType(returnType) != Call.class) {
       return null;
     }
@@ -87,11 +87,11 @@ public class ErrorHandlingExecutorCallAdapterFactory extends CallAdapter.Factory
       return null;
     }
 
-    /*
-     * the value type that this adapter uses when converting the HTTP response body to a Java
-     * object. For example, the response type for {@code Call<Repo>} is {@code Repo}. This type
-     * is used to prepare the {@code call} passed to {@code #adapt}.
-     * */
+    /**
+     * The value type that this adapter uses when converting the HTTP response body to a Java
+     * object. For example, the response type for {@code Call<Repo>} is {@code Repo}. This type is
+     * used to prepare the {@code call} passed to {@code #adapt}.
+     */
     final Type responseType = getParameterUpperBound(0, (ParameterizedType) returnType);
 
     return new CallAdapter<Object, Call<?>>() {
@@ -120,13 +120,16 @@ public class ErrorHandlingExecutorCallAdapterFactory extends CallAdapter.Factory
    */
   static final class ExecutorCallbackCall<T> implements Call<T> {
 
-    /*The executor used for Callback methods on a Call.*/
+    /** The executor used for Callback methods on a Call. */
     private final Executor callbackExecutor;
 
-    /*Original delegate which has request to execute*/
+    /** Original delegate which has request to execute */
     private final Call<T> delegate;
 
-    /*Client used while the service creation, which has convertor logic to be used to parse the response*/
+    /**
+     * Client used while the service creation, which has convertor logic to be used to parse the
+     * response
+     */
     private final Retrofit retrofit;
 
     ExecutorCallbackCall(Executor callbackExecutor, Call<T> delegate, Retrofit retrofit) {
@@ -210,10 +213,11 @@ public class ErrorHandlingExecutorCallAdapterFactory extends CallAdapter.Factory
     }
   }
 
-  /*
+  /**
    * Handles exceptions globally for async calls and notify {@code callback} with response or
-   * Spinnaker(Http|Network|Server)Exception if an error occurred talking to the server, creating the request, or processing the response.
-   * */
+   * Spinnaker(Http|Network|Server)Exception if an error occurred talking to the server, creating
+   * the request, or processing the response.
+   */
   static class SpinnakerCustomExecutorCallback<T> implements Callback<T> {
     private final Executor callbackExecutor;
     private final Callback<T> callback;
