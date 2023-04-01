@@ -13,7 +13,7 @@ jobs:
   release:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - run: git fetch --prune --unshallow
       # Given a tag, determine what branch we are on, so we can bump dependencies in the correct branch
       - name: Get Branch
@@ -35,7 +35,7 @@ jobs:
           fi
           echo "exactly one branch ($BRANCHES)"
           echo BRANCH=$BRANCHES >> $GITHUB_ENV
-      - uses: actions/setup-java@v2
+      - uses: actions/setup-java@v3
         with:
           java-version: 11
           distribution: 'zulu'
@@ -62,20 +62,19 @@ jobs:
           ./gradlew --info publishToNexus closeAndReleaseNexusStagingRepository
       - name: Create release
         if: steps.release_info.outputs.SKIP_RELEASE == 'false'
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        uses: softprops/action-gh-release@v1
         with:
-           tag_name: ${{ github.ref }}
-           release_name: ${{ github.event.repository.name }} ${{ github.ref }}
-           body: |
+          body: |
             ${{ steps.release_info.outputs.CHANGELOG }}
-           draft: false
-           prerelease: ${{ steps.release_info.outputs.IS_CANDIDATE }}
+          draft: false
+          name: ${{ github.event.repository.name }} ${{ github.ref_name }}
+          prerelease: ${{ steps.release_info.outputs.IS_CANDIDATE }}
+          tag_name: ${{ github.ref }}
+          token: ${{ secrets.GITHUB_TOKEN }}
       - name: Pause before dependency bump
         run: sleep 600
       - name: Trigger dependency bump workflow
-        uses: peter-evans/repository-dispatch@v1
+        uses: peter-evans/repository-dispatch@v2
         with:
           token: ${{ secrets.SPINNAKER_GITHUB_TOKEN }}
           event-type: bump-dependencies
