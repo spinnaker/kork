@@ -22,6 +22,10 @@ import okhttp3.Interceptor;
 import okhttp3.Request;
 import okhttp3.Response;
 
+/**
+ * As {@link retrofit.RequestInterceptor} no longer present in retrofit2, we have to use {@link
+ * okhttp3.Interceptor} to add authenticated headers to requests.
+ */
 public class SpinnakerRequestHeaderInterceptor implements Interceptor {
 
   private final OkHttpClientConfigurationProperties okHttpClientConfigurationProperties;

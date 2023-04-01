@@ -23,10 +23,8 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.netflix.spinnaker.kork.retrofit.ErrorHandlingExecutorCallAdapterFactory;
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -48,8 +46,15 @@ public class SpinnakerRetrofit2ErrorHandleTest {
 
   private static final MockWebServer mockWebServer = new MockWebServer();
 
+  private static String responseBodyString;
+
   @BeforeAll
   public static void setupOnce() throws Exception {
+
+    Map<String, String> responseBodyMap = new HashMap<>();
+    responseBodyMap.put("timestamp", "123123123123");
+    responseBodyMap.put("message", "Something happened error message");
+    responseBodyString = new ObjectMapper().writeValueAsString(responseBodyMap);
 
     retrofit2Service =
         new Retrofit.Builder()
@@ -71,11 +76,7 @@ public class SpinnakerRetrofit2ErrorHandleTest {
   }
 
   @Test
-  public void testRetrofitNotFoundIsNotRetryable() throws IOException {
-    Map<String, String> responseBodyMap = new HashMap<>();
-    responseBodyMap.put("timestamp", "123123123123");
-    responseBodyMap.put("message", "Not Found error Message");
-    String responseBodyString = new ObjectMapper().writeValueAsString(responseBodyMap);
+  public void testRetrofitNotFoundIsNotRetryable() {
 
     mockWebServer.enqueue(
         new MockResponse()
@@ -88,11 +89,7 @@ public class SpinnakerRetrofit2ErrorHandleTest {
   }
 
   @Test
-  public void testRetrofitBadRequestIsNotRetryable() throws JsonProcessingException {
-    Map<String, String> responseBodyMap = new HashMap<>();
-    responseBodyMap.put("timestamp", "123123123123");
-    responseBodyMap.put("message", "Bad request");
-    String responseBodyString = new ObjectMapper().writeValueAsString(responseBodyMap);
+  public void testRetrofitBadRequestIsNotRetryable() {
 
     mockWebServer.enqueue(
         new MockResponse()
@@ -105,11 +102,7 @@ public class SpinnakerRetrofit2ErrorHandleTest {
   }
 
   @Test
-  public void testRetrofitOtherClientErrorHasNullRetryable() throws JsonProcessingException {
-    Map<String, String> responseBodyMap = new HashMap<>();
-    responseBodyMap.put("timestamp", "123123133123");
-    responseBodyMap.put("message", "Something happened");
-    String responseBodyString = new ObjectMapper().writeValueAsString(responseBodyMap);
+  public void testRetrofitOtherClientErrorHasNullRetryable() {
 
     mockWebServer.enqueue(
         new MockResponse().setResponseCode(HttpStatus.GONE.value()).setBody(responseBodyString));
@@ -122,26 +115,18 @@ public class SpinnakerRetrofit2ErrorHandleTest {
   public void testRetrofitSimpleSpinnakerNetworkException() {
     mockWebServer.enqueue(new MockResponse().setSocketPolicy(SocketPolicy.NO_RESPONSE));
 
-    SpinnakerNetworkException spinnakerNetworkException =
-        assertThrows(
-            SpinnakerNetworkException.class, () -> retrofit2Service.getRetrofit2().execute());
+    assertThrows(SpinnakerNetworkException.class, () -> retrofit2Service.getRetrofit2().execute());
   }
 
   @Test
   public void testRetrofitSimpleSpinnakerServerException() {
     mockWebServer.enqueue(new MockResponse().setSocketPolicy(SocketPolicy.DISCONNECT_AT_START));
-
-    SpinnakerServerException spinnakerNetworkException =
-        assertThrows(
-            SpinnakerServerException.class, () -> retrofit2Service.getRetrofit2().execute());
+    assertThrows(SpinnakerServerException.class, () -> retrofit2Service.getRetrofit2().execute());
   }
 
   @Test
-  public void testResponseHeadersInException() throws JsonProcessingException {
-    Map<String, String> responseBodyMap = new HashMap<>();
-    responseBodyMap.put("timestamp", "123123133123");
-    responseBodyMap.put("message", "Something happened");
-    String responseBodyString = new ObjectMapper().writeValueAsString(responseBodyMap);
+  public void testResponseHeadersInException() {
+
     // Check response headers are retrievable from a SpinnakerHttpException
     mockWebServer.enqueue(
         new MockResponse()
