@@ -49,8 +49,10 @@ class OkHttp3ClientConfiguration {
   private final OkHttpClientConfigurationProperties okHttpClientConfigurationProperties
   private final OkHttp3MetricsInterceptor okHttp3MetricsInterceptor
 
-  @Value("\${retrofit.log-level:BASIC}")
-  private final String retrofitLogLevel;
+  /**
+   * Logging level for retrofit2 client calls
+  */
+  private final HttpLoggingInterceptor.Level retrofit2LogLevel;
 
   /**
    *  {@link okhttp3.Interceptor} which adds spinnaker auth headers to requests when retrofit2 client used
@@ -58,11 +60,11 @@ class OkHttp3ClientConfiguration {
   private final SpinnakerRequestHeaderInterceptor spinnakerRequestHeaderInterceptor;
 
   @Autowired
-  public OkHttp3ClientConfiguration(OkHttpClientConfigurationProperties okHttpClientConfigurationProperties,
-                                    OkHttp3MetricsInterceptor okHttp3MetricsInterceptor,
-                                    SpinnakerRequestHeaderInterceptor spinnakerRequestHeaderInterceptor) {
+  OkHttp3ClientConfiguration(OkHttpClientConfigurationProperties okHttpClientConfigurationProperties, OkHttp3MetricsInterceptor okHttp3MetricsInterceptor,
+                             HttpLoggingInterceptor.Level retrofit2LogLevel, SpinnakerRequestHeaderInterceptor spinnakerRequestHeaderInterceptor) {
     this.okHttpClientConfigurationProperties = okHttpClientConfigurationProperties
     this.okHttp3MetricsInterceptor = okHttp3MetricsInterceptor
+    this.retrofit2LogLevel = retrofit2LogLevel
     this.spinnakerRequestHeaderInterceptor = spinnakerRequestHeaderInterceptor
   }
 
@@ -118,7 +120,7 @@ class OkHttp3ClientConfiguration {
      * Recommend to add logging as the last interceptor, because this will also log the information
      * which you added with previous interceptors to your request.
      */
-    okHttpClientBuilder.addInterceptor(new HttpLoggingInterceptor().setLevel(HttpLoggingInterceptor.Level.valueOf(retrofitLogLevel)))
+    okHttpClientBuilder.addInterceptor(new HttpLoggingInterceptor().setLevel(retrofit2LogLevel))
 
     if (!okHttpClientConfigurationProperties.keyStore && !okHttpClientConfigurationProperties.trustStore) {
       return okHttpClientBuilder
