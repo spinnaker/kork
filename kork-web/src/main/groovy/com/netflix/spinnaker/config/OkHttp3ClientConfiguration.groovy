@@ -116,7 +116,7 @@ class OkHttp3ClientConfiguration {
     /**
      * The logging functionality was removed in Retrofit2, since the required HTTP layer is now completely based on OkHttp.
      * Recommend to add logging as the last interceptor, because this will also log the information
-     * which you added with previous interceptors to your request.f
+     * which you added with previous interceptors to your request.
      */
     okHttpClientBuilder.addInterceptor(new HttpLoggingInterceptor().setLevel(HttpLoggingInterceptor.Level.valueOf(retrofitLogLevel)))
 
