@@ -18,6 +18,8 @@ package com.netflix.spinnaker.config
 
 import com.netflix.spinnaker.okhttp.SpinnakerRequestHeaderInterceptor
 import okhttp3.Dispatcher
+import okhttp3.logging.HttpLoggingInterceptor
+import org.springframework.beans.factory.annotation.Value
 
 import static com.google.common.base.Preconditions.checkState
 import com.netflix.spinnaker.okhttp.OkHttp3MetricsInterceptor
@@ -46,6 +48,9 @@ import java.util.concurrent.TimeUnit
 class OkHttp3ClientConfiguration {
   private final OkHttpClientConfigurationProperties okHttpClientConfigurationProperties
   private final OkHttp3MetricsInterceptor okHttp3MetricsInterceptor
+
+  @Value("\${retrofit.log-level:BASIC}")
+  private final String retrofitLogLevel;
 
   /**
    *  {@link okhttp3.Interceptor} which adds spinnaker auth headers to requests when retrofit2 client used
@@ -107,6 +112,13 @@ class OkHttp3ClientConfiguration {
     if (okHttp3MetricsInterceptor != null) {
       okHttpClientBuilder.addInterceptor(okHttp3MetricsInterceptor)
     }
+
+    /**
+     * The logging functionality was removed in Retrofit2, since the required HTTP layer is now completely based on OkHttp.
+     * Recommend to add logging as the last interceptor, because this will also log the information
+     * which you added with previous interceptors to your request.f
+     */
+    okHttpClientBuilder.addInterceptor(new HttpLoggingInterceptor().setLevel(HttpLoggingInterceptor.Level.valueOf(retrofitLogLevel)))
 
     if (!okHttpClientConfigurationProperties.keyStore && !okHttpClientConfigurationProperties.trustStore) {
       return okHttpClientBuilder
