@@ -23,7 +23,7 @@ import dev.minutest.rootContext
 import io.mockk.every
 import io.mockk.mockk
 import okhttp3.Call
-import okhttp3.MediaType
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.OkHttpClient
 import okhttp3.Protocol
 import okhttp3.Response
@@ -49,7 +49,7 @@ class Ok3HttpClientTest : JUnit5Minutests {
         .code(200)
         .message("OK")
         .header("Content-Type", "plain/text")
-        .body(ResponseBody.create(MediaType.parse("plain/text"), "hi"))
+        .body(ResponseBody.create(("plain/text").toMediaTypeOrNull(), "hi"))
         .build()
 
       every { okHttpClient.newCall(any()) } returns call
