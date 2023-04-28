@@ -37,11 +37,12 @@ public class SpinnakerServerException extends SpinnakerException {
    */
   private final String rawMessage;
 
-  /* RetrofitError's response body derived as map or null if response not provided in RetrofitError */
+  /* RetrofitError's response body derived as map or null if response not provided in RetrofitError or custom  message has been provided*/
   private final Map<String, Object> responseBody;
 
   /**
-   * Parses the message from the {@link RetrofitErrorResponseBody} of a {@link RetrofitError}.
+   * Parses the message from the {@link RetrofitErrorResponseBody} and parses response of a {@link
+   * RetrofitError} responseBody.
    *
    * @param e The {@link RetrofitError} thrown by an invocation of the {@link retrofit.RestAdapter}
    */
@@ -54,12 +55,19 @@ public class SpinnakerServerException extends SpinnakerException {
     this.responseBody = (Map<String, Object>) e.getBodyAs(HashMap.class);
   }
 
+  /**
+   * Parses the Error response body of {@link RetrofitException} as responseBody.
+   *
+   * @param e The {@link RetrofitException} thrown by an invocation of the {@link
+   *     retrofit2.Retrofit}
+   */
   public SpinnakerServerException(RetrofitException e) {
     super(e.getCause());
-    RetrofitErrorResponseBody body =
-        (RetrofitErrorResponseBody) e.getErrorBodyAs(RetrofitErrorResponseBody.class);
+    this.responseBody = e.getErrorBodyAs(HashMap.class);
     this.rawMessage =
-        Optional.ofNullable(body).map(RetrofitErrorResponseBody::getMessage).orElse(e.getMessage());
+        responseBody != null
+            ? (String) responseBody.getOrDefault("message", e.getMessage())
+            : e.getMessage();
   }
 
   /**
