@@ -69,8 +69,8 @@ public class RetrofitException extends RuntimeException {
    * @throws RuntimeException wrapping the underlying IOException if unable to convert the body to
    *     the specified {@code type}.
    */
-  public <T> T getErrorBodyAs(Class<T> type) {
-    if (response == null || response.errorBody() == null) {
+  public <T> T getBodyAs(Class<T> type) {
+    if (response == null) {
       return null;
     }
     Converter<ResponseBody, T> converter = retrofit.responseBodyConverter(type, new Annotation[0]);
