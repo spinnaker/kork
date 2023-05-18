@@ -73,6 +73,7 @@ public class RetrofitException extends RuntimeException {
     if (response == null) {
       return null;
     }
+
     Converter<ResponseBody, T> converter = retrofit.responseBodyConverter(type, new Annotation[0]);
     try {
       return converter.convert(response.errorBody());
