@@ -17,6 +17,7 @@
 package com.netflix.spinnaker.kork.retrofit.exceptions;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -78,6 +79,16 @@ public class RetrofitExceptionTest {
   @Test
   public void testResponseWithNullResponseBody() {
     assertThrows(NullPointerException.class, () -> Response.error(404, null));
+  }
+
+  @Test
+  public void testRetrofitExceptionWithSuccessfulResponse() {
+    Response<String> response = Response.success(responseBodyString);
+    RetrofitException retrofitException =
+        new RetrofitException("hello", response, null /* exception */, retrofit2Service);
+
+    Map<String, String> responseBody = retrofitException.getBodyAs(HashMap.class);
+    assertNull(responseBody);
   }
 
   @Test

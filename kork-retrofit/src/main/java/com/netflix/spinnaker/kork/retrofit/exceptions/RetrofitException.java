@@ -70,7 +70,7 @@ public class RetrofitException extends RuntimeException {
    *     the specified {@code type}.
    */
   public <T> T getBodyAs(Class<T> type) {
-    if (response == null) {
+    if (response == null || response.errorBody() == null) {
       return null;
     }
 
