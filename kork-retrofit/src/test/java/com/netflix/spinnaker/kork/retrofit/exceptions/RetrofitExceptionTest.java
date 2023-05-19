@@ -68,16 +68,6 @@ public class RetrofitExceptionTest {
   }
 
   @Test
-  public void testRetrofitExceptionWithSuccessfulResponse() {
-    Response<String> response = Response.success(responseBodyString);
-    RetrofitException retrofitException =
-        new RetrofitException("hello", response, null /* exception */, retrofit2Service);
-
-    Map<String, String> responseBody = retrofitException.getBodyAs(HashMap.class);
-    assertNull(responseBody);
-  }
-
-  @Test
   public void testHttpConversionFail() {
     RetrofitException retrofitException =
         RetrofitException.httpError(

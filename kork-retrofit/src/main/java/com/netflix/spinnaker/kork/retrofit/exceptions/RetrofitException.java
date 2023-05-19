@@ -18,6 +18,7 @@ package com.netflix.spinnaker.kork.retrofit.exceptions;
 
 import java.io.IOException;
 import java.lang.annotation.Annotation;
+import java.util.Objects;
 import okhttp3.ResponseBody;
 import retrofit2.Converter;
 import retrofit2.Response;
@@ -46,15 +47,25 @@ public class RetrofitException extends RuntimeException {
   /** Response from server, which contains causes for the failure */
   private final Response response;
 
-  /**
-   * Client used while the service creation, which has convertor logic to be used to parse the
-   * response
-   */
+  /** Client used to generate the response, which has converter logic to parse it. */
   private final Retrofit retrofit;
 
-  RetrofitException(String message, Response response, Throwable exception, Retrofit retrofit) {
+  /**
+   * Construct a RetrofitException.
+   *
+   * @param message a message for the exception
+   * @param response a failed response (i.e. one with an errorBody), or null if there's no response.
+   * @param exception the cause
+   * @param retrofit the client used to generate the response (if response isn't null)
+   */
+  private RetrofitException(
+      String message, Response response, Throwable exception, Retrofit retrofit) {
     super(message, exception);
     this.response = response;
+    if (response != null) {
+      // Fail fast instead of checking for null in e.g. getBodyAs.
+      Objects.requireNonNull(response.errorBody());
+    }
     this.retrofit = retrofit;
   }
 
@@ -70,7 +81,7 @@ public class RetrofitException extends RuntimeException {
    *     the specified {@code type}.
    */
   public <T> T getBodyAs(Class<T> type) {
-    if (response == null || response.errorBody() == null) {
+    if (response == null) {
       return null;
     }
 
