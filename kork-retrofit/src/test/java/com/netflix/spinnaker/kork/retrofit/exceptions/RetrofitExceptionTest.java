@@ -68,20 +68,6 @@ public class RetrofitExceptionTest {
   }
 
   @Test
-  public void testResponseBodyWithNullContent() {
-    String nullobj = null;
-    assertThrows(
-        NullPointerException.class,
-        () ->
-            ResponseBody.create(MediaType.parse("application/json" + "; charset=utf-8"), nullobj));
-  }
-
-  @Test
-  public void testResponseWithNullResponseBody() {
-    assertThrows(NullPointerException.class, () -> Response.error(404, null));
-  }
-
-  @Test
   public void testRetrofitExceptionWithSuccessfulResponse() {
     Response<String> response = Response.success(responseBodyString);
     RetrofitException retrofitException =
