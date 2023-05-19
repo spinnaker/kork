@@ -110,7 +110,7 @@ public class RetrofitExceptionTest {
     RetrofitException retrofitException =
         RetrofitException.networkError(new IOException("io exception occured"));
     Map<String, String> responseBody = retrofitException.getBodyAs(HashMap.class);
-    assertEquals(null, responseBody);
+    assertNull(responseBody);
   }
 
   @Test
@@ -119,6 +119,6 @@ public class RetrofitExceptionTest {
     RetrofitException retrofitException =
         RetrofitException.unexpectedError(new NullPointerException("np"));
     Map<String, String> responseBody = retrofitException.getBodyAs(HashMap.class);
-    assertEquals(null, responseBody);
+    assertNull(responseBody);
   }
 }
