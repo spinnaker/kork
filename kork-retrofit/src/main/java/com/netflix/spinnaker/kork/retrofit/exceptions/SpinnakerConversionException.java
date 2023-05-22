@@ -23,4 +23,18 @@ public class SpinnakerConversionException extends SpinnakerServerException {
   public SpinnakerConversionException(RetrofitError e) {
     super(e);
   }
+
+  public SpinnakerConversionException(String message, Throwable cause) {
+    super(message, cause);
+  }
+
+  @Override
+  public SpinnakerConversionException newInstance(String message) {
+    return new SpinnakerConversionException(message, this);
+  }
+
+  @Override
+  public Boolean getRetryable() {
+    return Boolean.FALSE;
+  }
 }
