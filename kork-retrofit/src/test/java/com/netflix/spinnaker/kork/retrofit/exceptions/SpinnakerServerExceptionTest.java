@@ -22,9 +22,14 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import com.netflix.spinnaker.kork.exceptions.SpinnakerException;
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
+import okhttp3.MediaType;
+import okhttp3.ResponseBody;
 import org.junit.jupiter.api.Test;
 import retrofit.RetrofitError;
 import retrofit.client.Response;
+import retrofit2.Retrofit;
+import retrofit2.converter.jackson.JacksonConverterFactory;
 
 public class SpinnakerServerExceptionTest {
   private static final String CUSTOM_MESSAGE = "custom message";
@@ -73,5 +78,52 @@ public class SpinnakerServerExceptionTest {
       assertEquals(CUSTOM_MESSAGE, newException.getMessage());
       assertEquals(e, newException.getCause());
     }
+  }
+
+  @Test
+  public void testSpinnakerServerException_responseBodyHttpException() {
+
+    Retrofit retrofit2Service =
+        new Retrofit.Builder()
+            .baseUrl("http://localhost:8987/")
+            .addConverterFactory(JacksonConverterFactory.create())
+            .build();
+
+    RetrofitException retrofitException =
+        RetrofitException.httpError(
+            retrofit2.Response.error(
+                404,
+                ResponseBody.create(
+                    MediaType.parse("application/json" + "; charset=utf-8"),
+                    "{\"name\":\"test\"}")),
+            retrofit2Service);
+
+    SpinnakerServerException serverException = new SpinnakerServerException(retrofitException);
+    Map<String, Object> responseBody = serverException.getResponseBody();
+
+    assertEquals(responseBody.size(), 1);
+    assertEquals(responseBody.get("name"), "test");
+  }
+
+  @Test
+  public void testSpinnakerServerException_responseBodyNetworkException() {
+
+    RetrofitException retrofitException =
+        RetrofitException.networkError(new IOException("Server not reachable"));
+    SpinnakerServerException serverException = new SpinnakerServerException(retrofitException);
+
+    Map<String, Object> responseBody = serverException.getResponseBody();
+    assertEquals(responseBody, null);
+  }
+
+  @Test
+  public void testSpinnakerServerException_responseBodyUnexpectedException() {
+
+    RetrofitException retrofitException =
+        RetrofitException.unexpectedError(new NullPointerException("npe"));
+    SpinnakerServerException serverException = new SpinnakerServerException(retrofitException);
+
+    Map<String, Object> responseBody = serverException.getResponseBody();
+    assertEquals(responseBody, null);
   }
 }
