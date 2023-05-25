@@ -25,4 +25,17 @@ public final class SpinnakerNetworkException extends SpinnakerServerException {
   public SpinnakerNetworkException(RetrofitError e) {
     super(e);
   }
+
+  public SpinnakerNetworkException(RetrofitException e) {
+    super(e);
+  }
+
+  public SpinnakerNetworkException(String message, Throwable cause) {
+    super(message, cause);
+  }
+
+  @Override
+  public SpinnakerNetworkException newInstance(String message) {
+    return new SpinnakerNetworkException(message, this);
+  }
 }
