@@ -24,4 +24,5 @@ dependencies {
   testImplementation "com.squareup.okhttp3:mockwebserver"
   testRuntimeOnly "cglib:cglib-nodep"
   testRuntimeOnly "org.objenesis:objenesis"
+  testImplementation "com.squareup.retrofit2:converter-gson:2.9.0"
 }
