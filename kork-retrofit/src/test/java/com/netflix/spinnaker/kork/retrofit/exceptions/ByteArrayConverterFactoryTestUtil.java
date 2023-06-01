@@ -19,19 +19,42 @@ package com.netflix.spinnaker.kork.retrofit.exceptions;
 import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
-import okhttp3.MediaType;
-import okhttp3.RequestBody;
 import okhttp3.ResponseBody;
 import retrofit2.Converter;
 import retrofit2.Retrofit;
 
+/**
+ * A {@link Converter.Factory converter} utility class in Retrofit2 which converts an HTTP response
+ * body to a byte array. It is used when the response from the server is expected to be a binary
+ * data such as an image or a file. It is added it to the Retrofit2 instance using the
+ * addConverterFactory method. It does not support request body conversion, only response body
+ * conversion.
+ */
 public class ByteArrayConverterFactoryTestUtil extends Converter.Factory {
+  /**
+   * ByteArrayConverterFactoryTestUtil class has a private constructor and a public `create()`
+   * method that returns a new instance of the class.
+   */
   private ByteArrayConverterFactoryTestUtil() {}
 
+  /**
+   * Create an instance of the {@link ByteArrayConverterFactoryTestUtil}.
+   *
+   * @return the new instance.
+   */
   public static ByteArrayConverterFactoryTestUtil create() {
     return new ByteArrayConverterFactoryTestUtil();
   }
 
+  /**
+   * The `responseBodyConverter()` method is overridden to return a `Converter` that converts a
+   * `ResponseBody` to a byte array. It checks if the `Type` is `byte[]` and
+   *
+   * @param type
+   * @param annotations
+   * @param retrofit
+   * @return
+   */
   @Override
   public Converter<ResponseBody, ?> responseBodyConverter(
       Type type, Annotation[] annotations, Retrofit retrofit) {
@@ -39,24 +62,11 @@ public class ByteArrayConverterFactoryTestUtil extends Converter.Factory {
       return new Converter<ResponseBody, byte[]>() {
         @Override
         public byte[] convert(ResponseBody value) throws IOException {
+          // server side returns 200 with empty body, then convert() would throw an Exception.
+          // Expect null or empty body from Retrofit, hence add null check for an empty pojo which
+          // is {} in JSON.
+          if (value.contentLength() == 0) return null;
           return value.bytes();
-        }
-      };
-    }
-    return null;
-  }
-
-  @Override
-  public Converter<?, RequestBody> requestBodyConverter(
-      Type type,
-      Annotation[] parameterAnnotations,
-      Annotation[] methodAnnotations,
-      Retrofit retrofit) {
-    if (type == byte[].class) {
-      return new Converter<byte[], RequestBody>() {
-        @Override
-        public RequestBody convert(byte[] value) throws IOException {
-          return RequestBody.create(MediaType.parse("application/octet-stream"), value);
         }
       };
     }

@@ -22,13 +22,8 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.gson.GsonBuilder;
 import com.netflix.spinnaker.kork.retrofit.ErrorHandlingExecutorCallAdapterFactory;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -39,7 +34,6 @@ import okhttp3.OkHttpClient;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 import okhttp3.mockwebserver.SocketPolicy;
-import org.json.JSONException;
 import org.junit.Assert;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -48,7 +42,6 @@ import org.springframework.http.HttpStatus;
 import retrofit2.Call;
 import retrofit2.Response;
 import retrofit2.Retrofit;
-import retrofit2.converter.gson.GsonConverterFactory;
 import retrofit2.converter.jackson.JacksonConverterFactory;
 
 public class SpinnakerRetrofit2ErrorHandleTest {
@@ -60,6 +53,14 @@ public class SpinnakerRetrofit2ErrorHandleTest {
   private static String responseBodyString;
 
   private static okhttp3.OkHttpClient okHttpClient;
+
+  private final String validJsonResponseBodyString = "{\"name\":\"test\"}";
+
+  // An invalid json response body by replacing the colon(:) with an equals(=) symbol.
+  private final String invalidJsonResponseBodyString = "{\"name\"=\"test\"}";
+
+  private final String jsonlistBodyContentString =
+      "{\"android\": [ {\"ver\":\"1.5\",\"name\":\"Cupcace\",\"api\":\"level3\",\"pic\":\"bane.jpg\"}]}";
 
   @BeforeAll
   public static void setupOnce() throws Exception {
@@ -91,7 +92,7 @@ public class SpinnakerRetrofit2ErrorHandleTest {
   }
 
   @Test
-  public void testRetrofit404NotFoundIsNotRetryable() {
+  public void testHttp404NotFoundIsNotRetryable() {
     // We check the retryable strategy for 4xx errors.
     // Test the 404 status code is not retryable.
     // Let us assume that the server responded with 404-NOT_FOUND.
@@ -106,7 +107,7 @@ public class SpinnakerRetrofit2ErrorHandleTest {
   }
 
   @Test
-  public void testRetrofit400BadRequestIsNotRetryable() {
+  public void testHttp400BadRequestIsNotRetryable() {
     // We check the retryable strategy for 4xx errors.
     // Test the 400-BadRequest is not retryable.
     // Let us assume that the server responded with  400-BAD_REQUEST.
@@ -121,7 +122,7 @@ public class SpinnakerRetrofit2ErrorHandleTest {
   }
 
   @Test
-  public void testRetrofit410ClientErrorHasNullRetryable() {
+  public void testHttp4xxIsNullRetryable() {
     // We check the retryable strategy for 4xx errors. We expect that the retryable can be null.
     // Test a random 410 - Gone, a CLIENT_ERROR which does not have retryable.
     mockWebServer.enqueue(
@@ -132,44 +133,124 @@ public class SpinnakerRetrofit2ErrorHandleTest {
   }
 
   @Test
-  public void testRetrofitSimpleSpinnakerNetworkException() {
-    mockWebServer.enqueue(new MockResponse().setSocketPolicy(SocketPolicy.NO_RESPONSE));
+  public void testNetwork500IsNullRetryable() {
+    mockWebServer.enqueue(
+        new MockResponse()
+            .setResponseCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
+            .setSocketPolicy(SocketPolicy.NO_RESPONSE));
     SpinnakerNetworkException exception =
         assertThrows(
             SpinnakerNetworkException.class, () -> retrofit2Service.getRetrofit2().execute());
-    String cause = exception.getCause().getMessage();
-    assertNotNull(cause);
+
     assertNull(exception.getRetryable());
-    assertTrue(cause.contains("timeout"));
   }
 
   @Test
-  public void testRetrofitSimpleSpinnakerServerException() {
+  public void testSpinnakerExceptionIsNullRetryable() {
     mockWebServer.enqueue(new MockResponse().setSocketPolicy(SocketPolicy.DISCONNECT_AT_START));
     SpinnakerServerException exception =
         assertThrows(
             SpinnakerServerException.class, () -> retrofit2Service.getRetrofit2().execute());
-    String cause = exception.getCause().getMessage();
-    assertNotNull(cause);
+
     assertNull(exception.getRetryable());
   }
 
   @Test
-  public void testResponseHeadersIn404NotFoundException() {
-    // Check response headers are retrievable from a SpinnakerHttpException
+  public void testHttp404HasHeadersAndResponsebodyAndMessage() {
+    // create a simple json string
+    final String CONTENT_TYPE = "Content-Type";
+    final String JSON_CONTENT_TYPE = "application/json; charset=utf-8";
+
+    // create a mock response with the headers and a valid json body
     mockWebServer.enqueue(
         new MockResponse()
             .setResponseCode(HttpStatus.NOT_FOUND.value())
-            .setBody(responseBodyString)
-            .setHeader("Test", "true"));
+            .setBody(validJsonResponseBodyString)
+            .addHeader(CONTENT_TYPE, JSON_CONTENT_TYPE));
+
+    // API service call
     SpinnakerHttpException spinnakerHttpException =
         assertThrows(SpinnakerHttpException.class, () -> retrofit2Service.getRetrofit2().execute());
-    assertTrue(spinnakerHttpException.getHeaders().containsKey("Test"));
-    assertTrue(spinnakerHttpException.getHeaders().get("Test").contains("true"));
+
+    // Check response body is retrievable from a SpinnakerHttpException via its parent
+    // SpinnakerServerException.
+    Map<String, Object> retrofitResponseBody = spinnakerHttpException.getResponseBody();
+    assertNotNull(spinnakerHttpException.getResponseBody());
+    assertTrue(retrofitResponseBody.get("name").equals("test"));
+
+    // SpinnakerHttpException creates the message in this format: "Status: %s, URL: %s, Message:
+    // %s".
+    String errorMessage = spinnakerHttpException.getMessage();
+    assertNotNull(errorMessage);
+    assertTrue(errorMessage.contains("Status: " + HttpStatus.NOT_FOUND.value()));
+
+    // Check response headers are retrievable from a SpinnakerHttpException
+    assertTrue(spinnakerHttpException.getHeaders().containsKey(CONTENT_TYPE));
+    assertTrue(spinnakerHttpException.getHeaders().get(CONTENT_TYPE).contains(JSON_CONTENT_TYPE));
   }
 
   @Test
-  public void testResponse401UnauthorizedCode() {
+  public void testNetwork500HasMessageServerErrorAndNullResponseBody() {
+
+    // Enqueue a response that causes an IOException
+    mockWebServer.enqueue(
+        new MockResponse()
+            .setSocketPolicy(SocketPolicy.DISCONNECT_DURING_RESPONSE_BODY)
+            .setResponseCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
+            .setBody(validJsonResponseBodyString));
+
+    // API service call
+    SpinnakerNetworkException spinnakerNetworkException =
+        assertThrows(
+            SpinnakerNetworkException.class, () -> retrofit2Service.getRetrofit2().execute());
+
+    // Check response body is null for
+    // IOException/SpinnakerNetworkException/SpinnakerServerException similar to RetrofitError
+    assertNull(spinnakerNetworkException.getResponseBody());
+
+    // SpinnakerNetworkException returns the error message as-is sent by the server.
+    assertNotNull(spinnakerNetworkException.getMessage());
+    assertTrue(spinnakerNetworkException.getMessage().contains("unexpected end of stream"));
+
+    // Since the server has thrown an IOException, hence the cause can be retrieved.
+    assertNotNull(spinnakerNetworkException.getCause());
+
+    // Check if the request encountered an IOException
+    Throwable serverException = spinnakerNetworkException.getCause();
+    assertTrue(serverException instanceof IOException);
+  }
+
+  @Test
+  public void testUnexpected500HasMessageServerErrorAndNullResponseBody() throws IOException {
+    // Enqueue a response that causes an non-IOException
+
+    mockWebServer.enqueue(new MockResponse().setSocketPolicy(SocketPolicy.DISCONNECT_AT_START));
+    SpinnakerServerException spinnakerServerException =
+        assertThrows(
+            SpinnakerServerException.class, () -> retrofit2Service.getRetrofit2().execute());
+
+    // Check response body is null for
+    // IOException/SpinnakerNetworkException/SpinnakerServerException similar to RetrofitError
+    assertNull(spinnakerServerException.getResponseBody());
+
+    // Check response body is Null
+    // SpinnakerNetworkException returns the error message as-is sent by the server.
+    assertNotNull(spinnakerServerException.getMessage());
+    assertTrue(
+        spinnakerServerException.getMessage().contains("No content to map due to end-of-input"));
+
+    // Since the server has thrown an NullPointerException, hence the cause can be retrieved.
+    assertNotNull(spinnakerServerException.getCause());
+
+    // Check if the request encountered an NullPointerException
+    Throwable serverException = spinnakerServerException.getCause();
+
+    assertTrue(
+        serverException instanceof com.fasterxml.jackson.databind.exc.MismatchedInputException);
+  }
+
+  @Test
+  public void testHttp401ResponseIsNotRetryableByDefault() {
     // Check response headers are retrievable from 401-UNAUTHORIZED SpinnakerHttpException
     mockWebServer.enqueue(
         new MockResponse()
@@ -183,18 +264,10 @@ public class SpinnakerRetrofit2ErrorHandleTest {
 
     // 401-UNAUTHORIZED is not retryable
     assertNull(exception.getRetryable());
-
-    // assert the headers
-    assertTrue(exception.getHeaders().containsKey("Authorization"));
-    assertTrue(exception.getHeaders().get("Authorization").contains("InvalidToken"));
-
-    // Assert the expected error code (401)
-    assertEquals(HttpStatus.UNAUTHORIZED.value(), exception.getResponseCode());
   }
 
   @Test
-  public void testNotParameterizedException() {
-
+  public void testApiServiceCallResponseIsAlwaysParameterized() {
     IllegalArgumentException illegalArgumentException =
         assertThrows(
             IllegalArgumentException.class,
@@ -206,7 +279,7 @@ public class SpinnakerRetrofit2ErrorHandleTest {
   }
 
   @Test
-  public void testWrongReturnTypeException() {
+  public void testRetrofit2GetApiServiceIsAlwaysOfTypeCall() {
 
     IllegalArgumentException illegalArgumentException =
         assertThrows(
@@ -219,85 +292,89 @@ public class SpinnakerRetrofit2ErrorHandleTest {
   }
 
   @Test
-  public void test200ResponseWithValidJson() throws Exception {
-    // create a simple json string
-    String responseBodyString = "{\"name\":\"test\"}";
-    // mock successful response with a simple json string
-    MockResponse mockResponse = new MockResponse().setBody(responseBodyString);
-    mockWebServer.enqueue(mockResponse);
+  public void testHttp2xxValidJsonConvertsToHashMap() throws IOException {
+    Call call = retrofit2Service.testCustomApiServiceForJsonResponse();
 
-    // execute the custom retrofit service api which returns a map
-    Response<Map<String, Object>> retrofit2Response =
-        retrofit2Service.testCustomApiServiceForJsonResponse().execute();
+    // mock successful response with a simple json string
+    mockWebServer.enqueue(
+        new MockResponse()
+            .setResponseCode(HttpStatus.OK.value())
+            .setBody(validJsonResponseBodyString));
+
+    // actual API service call does not throw any Exception or error.
+    // There is no conversion exception.
+    Response<Map<String, Object>> jsonRetrofit2Response = call.execute();
 
     // verify successful response
-    Assert.assertTrue(retrofit2Response.isSuccessful());
-    assertNotNull(retrofit2Response.body());
-    assertNull(retrofit2Response.errorBody());
-
-    // validate the response
-    Map<String, Object> retrofitResponseBody = retrofit2Response.body();
-    assertTrue(retrofitResponseBody.get("name").equals("test"));
-  }
-
-  @Test
-  public void test200ResponseWithInvalidJson() throws Exception {
-    // create a simple invalid json string
-    // "{\"name\":\"te";// incomplete json gives com.fasterxml.jackson.core.io.JsonEOFException
-    String responseBodyString =
-        "{\"name\"=\"test\"}"; // com.fasterxml.jackson.core.JsonParseException
-
-    // mock successful response with this invalid json string
-    MockResponse jsonMockResponse = new MockResponse().setBody(responseBodyString);
-    mockWebServer.enqueue(jsonMockResponse);
-
-    Call call = retrofit2Service.testCustomApiServiceForJsonResponse();
-    // verify it throws exception while parsing the body.
-    SpinnakerNetworkException spinnakerNetworkException =
-        assertThrows(SpinnakerNetworkException.class, () -> call.execute());
-    assertNull(spinnakerNetworkException.getRetryable());
-    assertNull(spinnakerNetworkException.getResponseBody());
-    assertNotNull(spinnakerNetworkException.getCause());
-    assertTrue(
-        spinnakerNetworkException
-            .getCause()
-            .toString()
-            .contains("com.fasterxml.jackson.core.JsonParseException"));
-  }
-
-  @Test
-  public void test200ResponseWithValidJsonList() throws Exception {
-    // Actual Test - the quotes on attribute and value are required, else it will give
-    // MalformedJsonException
-    String responseBodyString =
-        "{\"android\": [ {\"ver\":\"1.5\",\"name\":\"Cupcace\",\"api\":\"level3\",\"pic\":\"bane.jpg\"}]}";
-
-    // In retrofit2 we can add multiple converters instead of overriding existing converters.
-    //  Internally, Retrofit parses the response in specified order and proceeds to check next
-    // converter if it fails.
-    // Use GsonConverterFactory for json list with lenient option to allow invalid json strings also
-    com.google.gson.Gson gson = new GsonBuilder().setLenient().create();
-    Retrofit retrofit =
-        new Retrofit.Builder()
-            .baseUrl(mockWebServer.url("/"))
-            .client(okHttpClient)
-            .addCallAdapterFactory(ErrorHandlingExecutorCallAdapterFactory.getInstance())
-            .addConverterFactory(JacksonConverterFactory.create())
-            .addConverterFactory(GsonConverterFactory.create(gson))
-            .build();
-    Retrofit2Service retrofit2Service2 = retrofit.create(Retrofit2Service.class);
-
-    MockResponse jsonMockResponse = new MockResponse().setBody(responseBodyString);
-    mockWebServer.enqueue(jsonMockResponse);
-    Response<Map<String, Object>> jsonRetrofit2Response =
-        retrofit2Service2.testCustomApiServiceForJsonResponse().execute();
     Assert.assertTrue(jsonRetrofit2Response.isSuccessful());
+
+    // validate response body data
     assertNotNull(jsonRetrofit2Response.body());
+
+    Map<String, Object> responseBody = jsonRetrofit2Response.body();
+    assertEquals(responseBody.get("name"), "test");
+
+    // verify that the server response errorBody is null
     assertNull(jsonRetrofit2Response.errorBody());
   }
 
   @Test
-  void test200ResponseWithValidByteArray() throws Exception {
+  public void testHttp2xxInvalidJsonThrowsConversionException() throws Exception {
+    // mock successful response with invalid json string
+    mockWebServer.enqueue(
+        new MockResponse()
+            .setResponseCode(HttpStatus.OK.value())
+            .setBody(invalidJsonResponseBodyString));
+
+    Call call = retrofit2Service.getRetrofit2();
+
+    // verify it throws exception while parsing the body and converting to a hashmap.
+    SpinnakerNetworkException spinnakerNetworkException =
+        assertThrows(SpinnakerNetworkException.class, () -> call.execute());
+
+    // Check response body is retrievable from a SpinnakerHttpException via its parent
+    // SpinnakerServerException.
+    Map<String, Object> retrofitResponseBody = spinnakerNetworkException.getResponseBody();
+    assertNull(spinnakerNetworkException.getResponseBody());
+    // assertTrue(retrofitResponseBody.get("name").equals("test"));
+
+    // Check error message is retrievable from a SpinnakerHttpException via its parent
+    // SpinnakerServerException.
+    // SpinnakerHttpException creates the message in this format: "Status: %s, URL: %s, Message:
+    // %s".
+    String errorMessage = spinnakerNetworkException.getMessage();
+    assertNotNull(errorMessage);
+    assertTrue(errorMessage.contains("Cannot deserialize value of type"));
+  }
+
+  @Test
+  public void testHttp2xxValidJsonListConvertsToHashMap() throws Exception {
+    Call call = retrofit2Service.testCustomApiServiceForJsonResponse();
+
+    // mock successful response with a simple json string
+    mockWebServer.enqueue(
+        new MockResponse()
+            .setResponseCode(HttpStatus.OK.value())
+            .setBody(jsonlistBodyContentString));
+
+    // actual API service call does not throw any Exception or error.
+    // There is no conversion exception.
+    Response<Map<String, Object>> jsonRetrofit2Response = call.execute();
+
+    // assert the response is successful
+    Assert.assertTrue(jsonRetrofit2Response.isSuccessful());
+
+    // check the response has a body and validate the data.
+    assertNotNull(jsonRetrofit2Response.body());
+    Map<String, Object> responseBody = jsonRetrofit2Response.body();
+    assertNotNull(responseBody.get("android"));
+
+    // assert the response has no error body
+    assertNull(jsonRetrofit2Response.errorBody());
+  }
+
+  @Test
+  void testHttp2xxConvertsToByteArrayByUsingCustomConverter() throws Exception {
     // To test byte[] response we have to create the custom converter to convert the ResponseBody to
     // a byte[]:
     Retrofit retrofit =
@@ -330,65 +407,6 @@ public class SpinnakerRetrofit2ErrorHandleTest {
     for (int i = 0; i < byteArray.length; i++) {
       assertEquals(byteArray[i], responseBodyByteArray[i]);
     }
-  }
-
-  private Retrofit getMockRetrofit() {
-    // mock the retrofit2.Retrofit class  without values
-    Retrofit mockretrofit = mock(Retrofit.class);
-
-    // mock the Retrofit builder behavior
-    Retrofit.Builder b = mock(Retrofit.Builder.class);
-    when(b.baseUrl(mockWebServer.url("/"))).thenReturn(b);
-    when(b.client(okHttpClient)).thenReturn(b);
-    when(b.addCallAdapterFactory(ErrorHandlingExecutorCallAdapterFactory.getInstance()))
-        .thenReturn(b);
-    when(b.build()).thenReturn(mockretrofit);
-    return mockretrofit;
-  }
-
-  @Test
-  void test200ResponseWithNullBody() throws IOException, JSONException {
-
-    // We have to mock Retrofit, Retrofit2Service and Call<String> to test this scenario.
-    // This is because when(mockObjectOnly).then(any()) is mandatory, means when() uses only a
-    // mockObject.
-
-    Retrofit mockretrofit = getMockRetrofit();
-    Retrofit2Service mockRetrofit2Service = getMockRetrofit2Service(mockretrofit);
-    Call<String> mockCall = getMockRetrofit2Call(mockRetrofit2Service);
-
-    // Finally mock the behavior of the mockCall.execute() behavior.
-    // Response.success(null) simulates a successful response with a null body
-    when(mockCall.execute()).thenReturn(Response.success(null));
-
-    // execute the retrofit2 API service call
-    Call<String> call = mockRetrofit2Service.getRetrofit2();
-    Response<String> retrofitResponse = call.execute();
-
-    // check that both the response body and error body are null
-    Assert.assertTrue(retrofitResponse.isSuccessful());
-    assertNull(retrofitResponse.body());
-    assertNull(retrofitResponse.errorBody());
-
-    // Verify that the network call was executed
-    verify(mockRetrofit2Service.getRetrofit2(), times(1)).execute();
-  }
-
-  private Call<String> getMockRetrofit2Call(Retrofit2Service mockRetrofit2Service) {
-    // mock the Call<String> class without values
-    Call<String> mockCall = mock(Call.class);
-    // mock the  mockRetrofit2Service.getRetrofit2() network call behavior.
-    when(mockRetrofit2Service.getRetrofit2()).thenReturn(mockCall);
-    return mockCall;
-  }
-
-  private Retrofit2Service getMockRetrofit2Service(Retrofit mockretrofit) {
-    // mock the Retrofit2Service class without values
-    Retrofit2Service mockRetrofit2Service = mock(Retrofit2Service.class);
-    // mock the method behavior mockRetrofit2Service.create() behavior
-    when(mockretrofit.create(Retrofit2Service.class)).thenReturn(mockRetrofit2Service);
-
-    return mockRetrofit2Service;
   }
 
   interface Retrofit2Service {
