@@ -75,19 +75,12 @@ class OkHttp3ClientConfiguration {
 
   public OkHttp3ClientConfiguration(OkHttpClientConfigurationProperties okHttpClientConfigurationProperties,
                                     OkHttp3MetricsInterceptor okHttp3MetricsInterceptor) {
-    this.okHttpClientConfigurationProperties = okHttpClientConfigurationProperties
-    this.okHttp3MetricsInterceptor = okHttp3MetricsInterceptor
-    retrofit2LogLevel = null
-    spinnakerRequestHeaderInterceptor = null
-    httpClientBuilderFactory = { new OkHttpClient.Builder() }
+    this(okHttpClientConfigurationProperties, okHttp3MetricsInterceptor, null, null,
+      { new OkHttpClient.Builder() })
   }
 
   public OkHttp3ClientConfiguration(OkHttpClientConfigurationProperties okHttpClientConfigurationProperties) {
-    this.okHttpClientConfigurationProperties = okHttpClientConfigurationProperties
-    okHttp3MetricsInterceptor = null
-    retrofit2LogLevel = null
-    spinnakerRequestHeaderInterceptor = null
-    httpClientBuilderFactory = { new OkHttpClient.Builder() }
+    this(okHttpClientConfigurationProperties, null)
   }
 
   /**
