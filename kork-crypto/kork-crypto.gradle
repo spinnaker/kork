@@ -22,7 +22,7 @@ dependencies {
 
   api project(":kork-annotations")
 
-  implementation "org.bouncycastle:bcpkix-jdk18on"
+  implementation "org.bouncycastle:bcpkix-jdk15on"
   implementation "org.springframework:spring-aop"
 
   testImplementation "org.springframework.boot:spring-boot-starter-test"

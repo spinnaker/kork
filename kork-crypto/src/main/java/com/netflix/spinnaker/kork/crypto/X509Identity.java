@@ -28,7 +28,6 @@ import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
 import javax.security.auth.Destroyable;
 import javax.security.auth.x500.X500PrivateCredential;
-import org.bouncycastle.crypto.CryptoServicePurpose;
 import org.bouncycastle.crypto.digests.SHAKEDigest;
 
 /** Represents a cryptographic identity using a private key and certificate. */
@@ -101,7 +100,7 @@ public interface X509Identity extends Destroyable {
     var encodedPublicKey = certificate.getPublicKey().getEncoded();
     // SHAKE is an extensible output function variant of SHA-3; this particular version is SHAKE-128
     // https://crypto.stackexchange.com/a/54249
-    var digest = new SHAKEDigest(CryptoServicePurpose.VERIFYING);
+    var digest = new SHAKEDigest();
     digest.update(encodedPublicKey, 0, encodedPublicKey.length);
     // use a size divisible by 3 for nicer base64 encoded output (20 chars for 15 bytes)
     var hash = new byte[15];
