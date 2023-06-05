@@ -22,6 +22,7 @@ import com.sun.net.httpserver.HttpsConfigurator;
 import com.sun.net.httpserver.HttpsServer;
 import java.math.BigInteger;
 import java.net.InetSocketAddress;
+import java.net.ServerSocket;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
@@ -41,7 +42,6 @@ import org.bouncycastle.asn1.x509.KeyUsage;
 import org.bouncycastle.cert.jcajce.JcaX509v3CertificateBuilder;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.util.SocketUtils;
 
 class RefreshableIdentityTest {
   SSLContext serverContext;
@@ -151,7 +151,11 @@ class RefreshableIdentityTest {
           }
         });
     // set up a random server port to serve from
-    int port = SocketUtils.findAvailableTcpPort();
+    int port;
+    try (var socket = new ServerSocket(0)) {
+      socket.setReuseAddress(true);
+      port = socket.getLocalPort();
+    }
     var serverAddress = new InetSocketAddress("localhost", port);
     server.bind(serverAddress, 0);
     server.start();
