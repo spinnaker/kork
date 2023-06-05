@@ -99,6 +99,55 @@ class TransactionIsolationTest {
         });
   }
 
+  @Test
+  void testSetTransactionIsolationFalse() {
+    runner
+        .withPropertyValues("sql.setTransactionIsolation=false")
+        .run(
+            ctx -> {
+              DataSourceConnectionProvider dataSourceConnectionProvider =
+                  ctx.getBean(DataSourceConnectionProvider.class);
+              testTargetConnection(
+                  dataSourceConnectionProvider,
+                  (DatabaseMetaData metadata) -> {
+                    when(metadata.supportsTransactionIsolationLevel(anyInt())).thenReturn(true);
+                  },
+                  (Connection target) -> {
+                    // Verify that when setTransactionIsolation is false,
+                    // we never set the transaction isolation level.
+                    verify(target, never()).setTransactionIsolation(anyInt());
+                  });
+            });
+  }
+
+  @Test
+  void testSetTransactionIsolation() {
+    runner
+        .withPropertyValues(
+            "sql.setTransactionIsolation=true",
+            "sql.transactionIsolation=" + Connection.TRANSACTION_NONE) // arbitrary
+        .run(
+            ctx -> {
+              DataSourceConnectionProvider dataSourceConnectionProvider =
+                  ctx.getBean(DataSourceConnectionProvider.class);
+              testTargetConnection(
+                  dataSourceConnectionProvider,
+                  (DatabaseMetaData metadata) -> {
+                    when(metadata.supportsTransactionIsolationLevel(anyInt())).thenReturn(true);
+                  },
+                  (Connection target) -> {
+                    // Verify that we set the transaction isolation level to
+                    // sql.transactionIsolation
+                    ArgumentCaptor<Integer> transactionIsolationLevelCaptor =
+                        ArgumentCaptor.forClass(Integer.class);
+                    verify(target)
+                        .setTransactionIsolation(transactionIsolationLevelCaptor.capture());
+                    assertThat(transactionIsolationLevelCaptor.getValue())
+                        .isEqualTo(Connection.TRANSACTION_NONE);
+                  });
+            });
+  }
+
   /**
    * Acquire a connection from a DataSourceConnectionProvider using mock DatabaseMetaData, and then
    * invoke a lambda on the resulting target connection.
