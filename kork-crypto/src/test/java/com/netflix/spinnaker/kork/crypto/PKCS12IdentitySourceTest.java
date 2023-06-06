@@ -18,6 +18,8 @@ package com.netflix.spinnaker.kork.crypto;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+import com.netflix.spinnaker.kork.crypto.test.CertificateIdentity;
+import com.netflix.spinnaker.kork.crypto.test.TestCrypto;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import lombok.SneakyThrows;

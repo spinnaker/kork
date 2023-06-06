@@ -18,6 +18,7 @@ package com.netflix.spinnaker.kork.crypto;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.netflix.spinnaker.kork.crypto.test.CertificateIdentity;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.KeyStore;

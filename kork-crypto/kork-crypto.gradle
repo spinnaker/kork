@@ -15,6 +15,7 @@
  */
 
 apply plugin: "java-library"
+apply plugin: "java-test-fixtures"
 apply from: "$rootDir/gradle/lombok.gradle"
 
 dependencies {
@@ -26,4 +27,7 @@ dependencies {
   implementation "org.springframework:spring-aop"
 
   testImplementation "org.springframework.boot:spring-boot-starter-test"
+
+  testFixturesApi  "org.bouncycastle:bcpkix-jdk15on"
+  testFixturesApi  "org.springframework:spring-core"
 }

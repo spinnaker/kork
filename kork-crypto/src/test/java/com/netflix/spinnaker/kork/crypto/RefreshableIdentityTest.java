@@ -18,9 +18,10 @@ package com.netflix.spinnaker.kork.crypto;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+import com.netflix.spinnaker.kork.crypto.test.CertificateIdentity;
+import com.netflix.spinnaker.kork.crypto.test.TestCrypto;
 import com.sun.net.httpserver.HttpsConfigurator;
 import com.sun.net.httpserver.HttpsServer;
-import java.math.BigInteger;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.URI;
@@ -29,17 +30,17 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.file.Files;
 import java.time.Duration;
-import java.util.Date;
 import javax.net.ssl.SSLContext;
 import javax.security.auth.x500.X500Principal;
-import org.bouncycastle.asn1.ASN1Encodable;
 import org.bouncycastle.asn1.DERSequence;
+import org.bouncycastle.asn1.pkcs.PKCSObjectIdentifiers;
 import org.bouncycastle.asn1.x509.ExtendedKeyUsage;
 import org.bouncycastle.asn1.x509.Extension;
+import org.bouncycastle.asn1.x509.ExtensionsGenerator;
 import org.bouncycastle.asn1.x509.GeneralName;
 import org.bouncycastle.asn1.x509.KeyPurposeId;
 import org.bouncycastle.asn1.x509.KeyUsage;
-import org.bouncycastle.cert.jcajce.JcaX509v3CertificateBuilder;
+import org.bouncycastle.pkcs.jcajce.JcaPKCS10CertificationRequestBuilder;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -57,8 +58,6 @@ class RefreshableIdentityTest {
     var trustManager = TrustStores.loadTrustManager(TrustStores.loadPEM(caCertFile));
 
     // common cert attributes
-    var notBefore = new Date();
-    var notAfter = new Date(notBefore.toInstant().plus(Duration.ofHours(1)).toEpochMilli());
     var tlsKeyUsage = new KeyUsage(KeyUsage.digitalSignature | KeyUsage.keyAgreement);
 
     // generate server keypair
@@ -68,28 +67,22 @@ class RefreshableIdentityTest {
     // traditionally, a TLS server certificate relied on the common name in the subject for the
     // hostname, but these days, we specify the hostname in the subject alternative names extension
     var serverName = new X500Principal("CN=localhost");
-    var serverBuilder =
-        new JcaX509v3CertificateBuilder(
-                ca.getCertificate(),
-                BigInteger.valueOf(System.currentTimeMillis()),
-                notBefore,
-                notAfter,
-                serverName,
-                serverPublicKey)
-            .addExtension(Extension.keyUsage, true, tlsKeyUsage)
-            .addExtension(
-                Extension.extendedKeyUsage,
-                false,
-                new ExtendedKeyUsage(KeyPurposeId.id_kp_serverAuth))
-            .addExtension(
-                Extension.subjectAlternativeName,
-                false,
-                new DERSequence(
-                    new ASN1Encodable[] {new GeneralName(GeneralName.dNSName, "localhost")}));
+    var serverAlternativeName = new DERSequence(new GeneralName(GeneralName.dNSName, "localhost"));
+    var serverExtensions = new ExtensionsGenerator();
+    serverExtensions.addExtension(Extension.keyUsage, true, tlsKeyUsage);
+    serverExtensions.addExtension(
+        Extension.extendedKeyUsage, false, new ExtendedKeyUsage(KeyPurposeId.id_kp_serverAuth));
+    serverExtensions.addExtension(Extension.subjectAlternativeName, false, serverAlternativeName);
 
     // request CA signature and store as PEM files
+    var serverCertificationRequest =
+        new JcaPKCS10CertificationRequestBuilder(serverName, serverPublicKey)
+            .addAttribute(
+                PKCSObjectIdentifiers.pkcs_9_at_extensionRequest, serverExtensions.generate())
+            .build(CertificateIdentity.signerFrom(serverPrivateKey));
     var serverIdentity =
-        CertificateIdentity.fromCredentials(serverPrivateKey, ca.signCertificate(serverBuilder));
+        CertificateIdentity.fromCredentials(
+            serverPrivateKey, ca.signCertificationRequest(serverCertificationRequest));
     var serverKeyFile = Files.createTempFile("server", ".key");
     var serverCertFile = Files.createTempFile("server", ".crt");
     serverIdentity.saveAsPEM(serverKeyFile, serverCertFile);
@@ -102,30 +95,23 @@ class RefreshableIdentityTest {
     var clientPublicKey = clientKeyPair.getPublic();
     var clientPrivateKey = clientKeyPair.getPrivate();
     var clientName = new X500Principal("CN=spinnaker, O=spinnaker");
-    var clientBuilder =
-        new JcaX509v3CertificateBuilder(
-                ca.getCertificate(),
-                BigInteger.valueOf(System.currentTimeMillis()),
-                notBefore,
-                notAfter,
-                clientName,
-                clientPublicKey)
-            .addExtension(Extension.keyUsage, true, tlsKeyUsage)
-            .addExtension(
-                Extension.extendedKeyUsage,
-                false,
-                new ExtendedKeyUsage(KeyPurposeId.id_kp_clientAuth))
-            .addExtension(
-                Extension.subjectAlternativeName,
-                false,
-                new DERSequence(
-                    new ASN1Encodable[] {
-                      new GeneralName(GeneralName.rfc822Name, "spinnaker@localhost")
-                    }));
+    var clientAlternativeName =
+        new DERSequence(new GeneralName(GeneralName.rfc822Name, "spinnaker@localhost"));
+    var clientExtensions = new ExtensionsGenerator();
+    clientExtensions.addExtension(Extension.keyUsage, true, tlsKeyUsage);
+    clientExtensions.addExtension(
+        Extension.extendedKeyUsage, false, new ExtendedKeyUsage(KeyPurposeId.id_kp_clientAuth));
+    clientExtensions.addExtension(Extension.subjectAlternativeName, false, clientAlternativeName);
 
     // request CA signature and store as PEM files
+    var clientCertificationRequest =
+        new JcaPKCS10CertificationRequestBuilder(clientName, clientPublicKey)
+            .addAttribute(
+                PKCSObjectIdentifiers.pkcs_9_at_extensionRequest, clientExtensions.generate())
+            .build(CertificateIdentity.signerFrom(clientPrivateKey));
     var clientIdentity =
-        CertificateIdentity.fromCredentials(clientPrivateKey, ca.signCertificate(clientBuilder));
+        CertificateIdentity.fromCredentials(
+            clientPrivateKey, ca.signCertificationRequest(clientCertificationRequest));
     var clientKeyFile = Files.createTempFile("client", ".key");
     var clientCertFile = Files.createTempFile("client", ".crt");
     clientIdentity.saveAsPEM(clientKeyFile, clientCertFile);

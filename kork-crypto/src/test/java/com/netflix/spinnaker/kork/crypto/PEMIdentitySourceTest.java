@@ -18,6 +18,7 @@ package com.netflix.spinnaker.kork.crypto;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+import com.netflix.spinnaker.kork.crypto.test.CertificateIdentity;
 import java.nio.file.Files;
 import org.junit.jupiter.api.Test;
 
