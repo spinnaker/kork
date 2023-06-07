@@ -84,7 +84,9 @@ public class RetrofitExceptionTest {
 
     RetrofitException retrofitException = RetrofitException.httpError(response, retrofit2Service);
     assertNotNull(retrofitException.getResponse());
-    assertEquals(retrofitException.getResponse().raw().message(), response.raw().message());
+    //This is the default error message set in retrofit2.Response.error(int code, ResponseBody body) method.
+    //if the message is not set in the raw response.
+    assertEquals(retrofitException.getResponse().raw().message(), "Response.error()");
 
     Map<String, String> responseBodyMap = retrofitException.getBodyAs(HashMap.class);
     assertNotNull(responseBodyMap);
@@ -109,7 +111,9 @@ public class RetrofitExceptionTest {
 
     // invalid json from server response can be accessed from raw message.
     assertNotNull(retrofitException.getResponse());
-    assertEquals(retrofitException.getResponse().raw().message(), response.raw().message());
+     //This is the default error message set in retrofit2.Response.error(int code, ResponseBody body) method.
+    //if the message is not set in the raw response.
+    assertEquals(retrofitException.getResponse().raw().message(), "Response.error()");
   }
 
   @Test
