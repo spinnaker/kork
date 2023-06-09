@@ -43,14 +43,8 @@ public class RetrofitExceptionTest {
             .build();
   }
 
-  /**
-   * Test to check that RetrofitException does not allow a null error body in the response. This is
-   * due to the fail fast requireNonNull check added in the Retrofit constructor
-   * {@link RetrofitException#RetrofitException}, instead of
-   * checking for null in {@link RetrofitException#getErrorBodyAs}.
-   */
   @Test
-  public void testAnyRetrofitExceptionRequiresErrorBody() {
+  public void testRetrofitExceptionRequiresErrorBody() {
     ResponseBody responseBody =
         ResponseBody.create(
             MediaType.parse("application/json" + "; charset=utf-8"), validJsonResponseBodyString);
@@ -60,7 +54,6 @@ public class RetrofitExceptionTest {
     Response response = Response.success(HttpStatus.OK.value(), responseBody);
     assertNull(response.errorBody());
 
-    // Gives the NullPointerException from assert in the private constructor
     assertThrows(
         NullPointerException.class, () -> RetrofitException.httpError(response, retrofit2Service));
   }
