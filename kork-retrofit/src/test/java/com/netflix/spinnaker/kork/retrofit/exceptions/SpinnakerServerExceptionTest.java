@@ -16,18 +16,26 @@
 
 package com.netflix.spinnaker.kork.retrofit.exceptions;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-
 import com.netflix.spinnaker.kork.exceptions.SpinnakerException;
 import java.io.IOException;
 import java.util.List;
+
+import okhttp3.Headers;
+import okhttp3.MediaType;
+import okhttp3.ResponseBody;
+import org.apache.groovy.json.internal.CharBuf;
 import org.junit.jupiter.api.Test;
+import org.springframework.http.HttpStatus;
 import retrofit.RetrofitError;
 import retrofit.client.Response;
+import retrofit2.Retrofit;
+import retrofit2.converter.jackson.JacksonConverterFactory;
+
+import static org.junit.jupiter.api.Assertions.*;
 
 public class SpinnakerServerExceptionTest {
   private static final String CUSTOM_MESSAGE = "custom message";
+  private final String validJsonResponseBodyString = "{\"name\":\"test\"}";
 
   @Test
   public void testSpinnakerHttpException_NewInstance() {
@@ -74,4 +82,67 @@ public class SpinnakerServerExceptionTest {
       assertEquals(e, newException.getCause());
     }
   }
+
+
+  @Test
+  public void testSpinnakerHttpExceptionNewInstanceFromRetrofitException() {
+    retrofit2.Response response = retrofit2.Response.error(
+      HttpStatus.NOT_FOUND.value(),
+      ResponseBody.create(
+        MediaType.parse("application/json" + "; charset=utf-8"),
+        validJsonResponseBodyString));
+    Retrofit retrofit2Service =
+      new Retrofit.Builder()
+        .baseUrl("http://localhost:8987/")
+        .addConverterFactory(JacksonConverterFactory.create())
+        .build();
+
+    try {
+      RetrofitException retrofitException = RetrofitException.httpError( response, retrofit2Service);
+      throw new SpinnakerHttpException(retrofitException);
+    } catch (SpinnakerException e) {
+      SpinnakerException newException = e.newInstance(CUSTOM_MESSAGE);
+
+      assertTrue(newException instanceof SpinnakerHttpException);
+      assertEquals(CUSTOM_MESSAGE, newException.getMessage());
+      assertEquals(e, newException.getCause());
+      assertEquals(HttpStatus.NOT_FOUND.value(), ((SpinnakerHttpException) newException).getResponseCode());
+    }
+  }
+
+
+  @Test
+  public void testSpinnakerNetworkExceptionNewInstanceFromRetrofitException() {
+    IOException initialException = new IOException("Server not reachable");
+    try {
+      RetrofitException retrofitException = RetrofitException.networkError(initialException);
+      throw new SpinnakerNetworkException(retrofitException);
+    } catch (SpinnakerException e) {
+      SpinnakerException newException = e.newInstance(CUSTOM_MESSAGE);
+
+      assertTrue(newException instanceof SpinnakerNetworkException);
+      assertEquals(CUSTOM_MESSAGE, newException.getMessage());
+      assertEquals(e, newException.getCause());
+      assertNull(((SpinnakerNetworkException) newException).getRawMessage());
+    }
+  }
+
+
+  @Test
+  public void testSpinnakerServerExceptionNewInstanceFromRetrofitException() {
+    Throwable cause = new Throwable("message");
+    try {
+      RetrofitException retrofitException = RetrofitException.unexpectedError(cause);
+      throw new SpinnakerServerException(retrofitException);
+
+    } catch (SpinnakerException e) {
+      SpinnakerException newException = e.newInstance(CUSTOM_MESSAGE);
+
+      assertTrue(newException instanceof SpinnakerServerException);
+      assertEquals(CUSTOM_MESSAGE, newException.getMessage());
+      assertEquals(e, newException.getCause());
+      assertNull(((SpinnakerServerException) newException).getRawMessage());
+    }
+  }
+
 }
