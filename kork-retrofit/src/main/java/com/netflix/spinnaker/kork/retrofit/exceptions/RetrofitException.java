@@ -19,7 +19,6 @@ package com.netflix.spinnaker.kork.retrofit.exceptions;
 import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.util.Objects;
-
 import okhttp3.ResponseBody;
 import retrofit2.Converter;
 import retrofit2.Response;
