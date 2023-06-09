@@ -33,7 +33,7 @@ import kotlin.reflect.KClass
  * @param secondaryMigration Migration configuration for the secondary database, if one is available
  * @param connectionPools All non-migration connection pools for the application
  * @param retries Default, global retry configuration across connection pools
- * @param setTransactionIsolation if true, set the transaction isolation level on each database connection
+ * @param setTransactionIsolation if true, set the transaction isolation level on each database connection.  Note that the the jdbc driver may have a setting (e.g. mysql-connector-java has alwaysSendSetIsolation, see https://dev.mysql.com/doc/connector-j/8.0/en/connector-j-reference-configuration-properties.html) that influences behavior here.
  * @param transactionIsolation the transaction isolation level to set, required if setTransactionIsolation is true.
  *   See e.g. https://docs.oracle.com/en/java/javase/11/docs/api/constant-values.html#java.sql.Connection.TRANSACTION_NONE.
  * @param connectionPool Deprecated. Use [connectionPools] instead.
