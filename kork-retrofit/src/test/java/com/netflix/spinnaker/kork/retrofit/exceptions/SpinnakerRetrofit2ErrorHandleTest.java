@@ -165,6 +165,19 @@ public class SpinnakerRetrofit2ErrorHandleTest {
         illegalArgumentException.getMessage());
   }
 
+  @Test
+  public void testSpinnakerHttpExceptionResponseCodeAndMessage() {
+    mockWebServer.enqueue(
+        new MockResponse()
+            .setResponseCode(HttpStatus.NOT_FOUND.value())
+            .setBody(responseBodyString));
+    SpinnakerHttpException notFoundException =
+        assertThrows(SpinnakerHttpException.class, () -> retrofit2Service.getRetrofit2().execute());
+    assertEquals(HttpStatus.NOT_FOUND.value(), notFoundException.getResponseCode());
+    assertTrue(
+        notFoundException.getMessage().contains(String.valueOf(HttpStatus.NOT_FOUND.value())));
+  }
+
   interface Retrofit2Service {
     @retrofit2.http.GET("/retrofit2")
     Call<String> getRetrofit2();
