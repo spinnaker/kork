@@ -35,6 +35,8 @@ public class RetrofitExceptionTest {
 
   private final String validJsonResponseBodyString = "{\"name\":\"test\"}";
 
+  private final String invalidJsonResponseBodyString = "{\"name\":\"test\""; // missing "}" at end.
+
   @BeforeAll
   public static void setupOnce() {
     retrofit2Service =
@@ -63,6 +65,23 @@ public class RetrofitExceptionTest {
   public void testUnexpectedErrorHasNoResponseErrorBody() {
     Throwable cause = new Throwable("custom message");
     RetrofitException retrofitException = RetrofitException.unexpectedError(cause);
-    assertNull(retrofitException.getErrorBodyAs(HashMap.class));
+    assertNull(retrofitException.getBodyAs(HashMap.class));
+  }
+
+  @Test
+  public void testSpinnakerHttpExceptionExpectsValidJsonErrorBody() {
+    ResponseBody responseBody =
+        ResponseBody.create(
+            MediaType.parse("application/json" + "; charset=utf-8"), invalidJsonResponseBodyString);
+    Response response = Response.error(HttpStatus.NOT_FOUND.value(), responseBody);
+
+    RetrofitException retrofitException = RetrofitException.httpError(response, retrofit2Service);
+    /*
+    TODO :
+     handling of below RuntimeException:
+    assertThrows(RuntimeException.class, () -> retrofitException.getBodyAs(HashMap.class));
+    assertThrows(RuntimeException.class, () -> new SpinnakerHttpException(RetrofitException));
+    */
+    assertThrows(RuntimeException.class, () -> retrofitException.getBodyAs(HashMap.class));
   }
 }
