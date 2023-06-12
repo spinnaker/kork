@@ -81,7 +81,7 @@ public class SpinnakerServerExceptionTest {
   }
 
   @Test
-  public void testSpinnakerHttpExceptionResponseCodeAndMessage() {
+  public void testSpinnakerHttpExceptionFromRetrofitException() {
     final String validJsonResponseBodyString = "{\"name\":\"test\"}";
     ResponseBody responseBody =
         ResponseBody.create(
