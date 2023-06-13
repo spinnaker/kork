@@ -26,6 +26,7 @@ import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.OkHttpClient
 import okhttp3.RequestBody
+import okhttp3.RequestBody.Companion.toRequestBody
 import org.slf4j.LoggerFactory
 
 /**
@@ -108,7 +109,9 @@ class Ok3HttpClient(
   }
 
   private fun Request.okHttpRequestBody(): RequestBody =
-    RequestBody.create(contentType.toMediaTypeOrNull(), objectMapper.writeValueAsString(body))
+    objectMapper.writeValueAsString(body).toRequestBody(
+      contentType.toMediaTypeOrNull()
+    )
 
   private fun okhttp3.Response.toGenericResponse(): Response {
     return Ok3Response(
