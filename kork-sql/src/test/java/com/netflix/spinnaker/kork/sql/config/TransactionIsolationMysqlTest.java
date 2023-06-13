@@ -61,7 +61,7 @@ class TransactionIsolationMysqlTest {
   // Use both values to verify that it doesn't affect the behavior, only the performance.
   @ParameterizedTest(name = "testSetTransactionIsolationFalse alwaysSendSetIsolation = {0}")
   @ValueSource(booleans = {true, false})
-  void testSetTransactionIsolationFalse(boolean alwaysSendSetIsolation) {
+  void testSetTransactionIsolationFalseGlobal(boolean alwaysSendSetIsolation) {
     runner
         .withPropertyValues(
             "sql.setTransactionIsolation=false",
@@ -69,7 +69,10 @@ class TransactionIsolationMysqlTest {
             "sql.connectionPools.default.jdbcUrl="
                 + SqlTestUtil.tcJdbcUrl
                 + "?user=root&alwaysSendSetIsolation="
-                + alwaysSendSetIsolation)
+                + alwaysSendSetIsolation
+                // See
+                // https://java.testcontainers.org/modules/databases/jdbc/#using-a-classpath-init-script
+                + "&TC_INITSCRIPT=mysql-set-global-transaction-isolation.sql")
         .run(
             ctx -> {
               DataSourceConnectionProvider dataSourceConnectionProvider =
@@ -82,35 +85,37 @@ class TransactionIsolationMysqlTest {
                 // isolation, the jdbc driver still does.  Even if we set the
                 // alwaysSendSetIsolation to false in the driver (see
                 // https://dev.mysql.com/doc/connector-j/8.0/en/connector-j-connp-props-performance-extensions.html),
-                // it still sends it if it's transaction isolation level is
-                // different than the databases.
+                // it still sends it if its transaction isolation level is
+                // different than the database's.
                 //
-                // It happens that they're both REPEATABLE READ.  See
+                // It happens that the default transaction isolation value in
+                // both mysql and the jdbc driver is REPEATABLE READ.  See
                 // https://dev.mysql.com/doc/refman/5.7/en/innodb-consistent-read.html
-                // and the default value from the jdbc connection (i.e. the
-                // default value of com.mysql.cj.jdbc.ConnectionImpl's
-                // isolationLevel member).
+                // and the the default value of
+                // com.mysql.cj.jdbc.ConnectionImpl's isolationLevel member.
+                //
+                // That's why we set (via
+                // mysql-set-global-transaction-isolation.sql) the default value
+                // from the mysql side to something different than REPEATABLE
+                // READ.
 
-                // This demonstrates the default value from mysql
-                verifyGlobalTransactionIsolationLevel(stmt, "REPEATABLE-READ");
+                // This demonstrates the value we set in mysql
+                verifyGlobalTransactionIsolationLevel(stmt, "READ-UNCOMMITTED");
 
-                // This demonstrates the default value from the jdbc driver, but
-                // this makes an assumption that the jdbc driver takes
-                // precedence.
+                // This demonstrates that the default value from the jdbc driver takes
+                // precedence over the value set in mysql.
                 verifySessionTransactionIsolationLevel(stmt, "REPEATABLE-READ");
 
-                // To distinguish between the two, change a value on the
-                // database side and watch the jdbc value take precedence.
+                // To further explore, change a value on the database side.
                 // Let's start with changing the global setting.
 
                 // See https://dev.mysql.com/doc/refman/5.7/en/set-transaction.html.
                 assertThat(
-                        stmt.executeUpdate(
-                            "SET GLOBAL TRANSACTION ISOLATION LEVEL READ UNCOMMITTED"))
+                        stmt.executeUpdate("SET GLOBAL TRANSACTION ISOLATION LEVEL SERIALIZABLE"))
                     .isEqualTo(0);
 
                 // Verify that the global transaction isolation level has changed
-                verifyGlobalTransactionIsolationLevel(stmt, "READ-UNCOMMITTED");
+                verifyGlobalTransactionIsolationLevel(stmt, "SERIALIZABLE");
 
                 // Verify that the session transaction isolation level hasn't
                 // changed (yet).  From
@@ -125,12 +130,13 @@ class TransactionIsolationMysqlTest {
                 verifySessionTransactionIsolationLevel(stmt, "REPEATABLE-READ");
               }
 
-              // Create a new connection to see what the transaction isolation levels are.
+              // Create a new connection to see what the transaction isolation
+              // levels are.
               try (Connection connection = dataSourceConnectionProvider.acquire();
                   Connection target = getTargetConnection(connection);
                   Statement stmt = target.createStatement()) {
                 // Expect the global value we set in the previous session to persist
-                verifyGlobalTransactionIsolationLevel(stmt, "READ-UNCOMMITTED");
+                verifyGlobalTransactionIsolationLevel(stmt, "SERIALIZABLE");
 
                 // Expect the jdbc driver's default for the session since kork
                 // isn't setting it.  Happily the jdbc driver's default
@@ -142,14 +148,15 @@ class TransactionIsolationMysqlTest {
                 // Now, let's change the session transaction isolation level and
                 // see what happens.
                 assertThat(
-                        stmt.executeUpdate("SET SESSION TRANSACTION ISOLATION LEVEL SERIALIZABLE"))
+                        stmt.executeUpdate(
+                            "SET SESSION TRANSACTION ISOLATION LEVEL READ COMMITTED"))
                     .isEqualTo(0);
 
                 // Verify that the global transaction isolation level hasn't changed
-                verifyGlobalTransactionIsolationLevel(stmt, "READ-UNCOMMITTED");
+                verifyGlobalTransactionIsolationLevel(stmt, "SERIALIZABLE");
 
                 // Verify that the session transaction isolation level has changed
-                verifySessionTransactionIsolationLevel(stmt, "SERIALIZABLE");
+                verifySessionTransactionIsolationLevel(stmt, "READ-COMMITTED");
               }
 
               // Create another new connection to see what the transaction isolation levels are.
@@ -157,11 +164,58 @@ class TransactionIsolationMysqlTest {
                   Connection target = getTargetConnection(connection);
                   Statement stmt = target.createStatement()) {
                 // Expect the global value we set in the first session to persist
-                verifyGlobalTransactionIsolationLevel(stmt, "READ-UNCOMMITTED");
+                verifyGlobalTransactionIsolationLevel(stmt, "SERIALIZABLE");
 
                 // Note that jdbc driver's default is no longer relevant now
                 // that we've set something in the database.
-                verifySessionTransactionIsolationLevel(stmt, "SERIALIZABLE");
+                verifySessionTransactionIsolationLevel(stmt, "READ-COMMITTED");
+              }
+            });
+  }
+
+  @Test
+  void testSetTransactionIsolationFalseSession() {
+    runner
+        .withPropertyValues(
+            "sql.setTransactionIsolation=false",
+            "sql.connectionPools.default.jdbcUrl="
+                + SqlTestUtil.tcJdbcUrl
+                // See
+                // https://java.testcontainers.org/modules/databases/jdbc/#using-a-classpath-init-script
+                + "&TC_INITSCRIPT=mysql-set-session-transaction-isolation.sql")
+        .run(
+            ctx -> {
+              DataSourceConnectionProvider dataSourceConnectionProvider =
+                  ctx.getBean(DataSourceConnectionProvider.class);
+              try (Connection connection = dataSourceConnectionProvider.acquire();
+                  Connection target = getTargetConnection(connection);
+                  Statement stmt = target.createStatement()) {
+
+                // Even though we configure kork to not set transaction
+                // isolation, the jdbc driver still does.  Even if we set the
+                // alwaysSendSetIsolation to false in the driver (see
+                // https://dev.mysql.com/doc/connector-j/8.0/en/connector-j-connp-props-performance-extensions.html),
+                // it still sends it if its transaction isolation level is
+                // different than the database's.
+                //
+                // It happens that the default transaction isolation value in
+                // both mysql and the jdbc driver is REPEATABLE READ.  See
+                // https://dev.mysql.com/doc/refman/5.7/en/innodb-consistent-read.html
+                // and the default value from the jdbc connection (i.e. the
+                // default value of com.mysql.cj.jdbc.ConnectionImpl's
+                // isolationLevel member).
+                //
+                // This test sets (via
+                // mysql-set-session-transaction-isolation.sql) the default value
+                // from the mysql side to something different than REPEATABLE
+                // READ.
+
+                // This demonstrates the default value in mysql
+                verifyGlobalTransactionIsolationLevel(stmt, "REPEATABLE-READ");
+
+                // This demonstrates the setting in the jdbc driver takes
+                // precedence over the value we set in mysql.
+                verifySessionTransactionIsolationLevel(stmt, "REPEATABLE-READ");
               }
             });
   }
