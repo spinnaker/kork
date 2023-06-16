@@ -35,6 +35,8 @@ public class SpinnakerServerException extends SpinnakerException {
    */
   private final String rawMessage;
 
+  private final RetrofitErrorResponseBody errorResponseBody;
+
   /**
    * Parses the message from the {@link RetrofitErrorResponseBody} of a {@link RetrofitError}.
    *
@@ -42,18 +44,21 @@ public class SpinnakerServerException extends SpinnakerException {
    */
   public SpinnakerServerException(RetrofitError e) {
     super(e.getCause());
-    RetrofitErrorResponseBody body =
-        (RetrofitErrorResponseBody) e.getBodyAs(RetrofitErrorResponseBody.class);
+    errorResponseBody = (RetrofitErrorResponseBody) e.getBodyAs(RetrofitErrorResponseBody.class);
     this.rawMessage =
-        Optional.ofNullable(body).map(RetrofitErrorResponseBody::getMessage).orElse(e.getMessage());
+        Optional.ofNullable(errorResponseBody)
+            .map(RetrofitErrorResponseBody::getMessage)
+            .orElse(e.getMessage());
   }
 
   public SpinnakerServerException(RetrofitException e) {
     super(e.getCause());
-    RetrofitErrorResponseBody body =
+    this.errorResponseBody =
         (RetrofitErrorResponseBody) e.getErrorBodyAs(RetrofitErrorResponseBody.class);
     this.rawMessage =
-        Optional.ofNullable(body).map(RetrofitErrorResponseBody::getMessage).orElse(e.getMessage());
+        Optional.ofNullable(errorResponseBody)
+            .map(RetrofitErrorResponseBody::getMessage)
+            .orElse(e.getMessage());
   }
 
   /**
@@ -68,6 +73,7 @@ public class SpinnakerServerException extends SpinnakerException {
   public SpinnakerServerException(String message, Throwable cause) {
     super(message, cause);
     rawMessage = null;
+    errorResponseBody = null;
   }
 
   @Override
@@ -78,8 +84,22 @@ public class SpinnakerServerException extends SpinnakerException {
     return rawMessage;
   }
 
-  final String getRawMessage() {
+  protected String getRawMessage() {
+    /*
+    TODO : Recheck method access specifier after http response error message retrieval changes are completed.
+     */
     return rawMessage;
+  }
+
+  public String getErrorResponseMessage() {
+    /*
+    TODO : Remove this method if not needed. Added for now to set the SpinnakerHttpException::rawMessage.
+     If need to keep the method, need to find possible values instead of orElse(null).
+     Also need to recheck method access specifier.
+     */
+    return Optional.ofNullable(this.errorResponseBody)
+        .map(RetrofitErrorResponseBody::getMessage)
+        .orElse(null);
   }
 
   @Getter

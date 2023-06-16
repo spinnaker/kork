@@ -32,16 +32,15 @@ import retrofit2.Retrofit;
  */
 public class RetrofitException extends RuntimeException {
   public static RetrofitException httpError(Response response, Retrofit retrofit) {
-    String message = response.code() + " " + response.message();
-    return new RetrofitException(message, response, null, retrofit);
+    return new RetrofitException(response, null, retrofit);
   }
 
   public static RetrofitException networkError(IOException exception) {
-    return new RetrofitException(exception.getMessage(), null, exception, null);
+    return new RetrofitException(null, exception, null);
   }
 
   public static RetrofitException unexpectedError(Throwable exception) {
-    return new RetrofitException(exception.getMessage(), null, exception, null);
+    return new RetrofitException(null, exception, null);
   }
 
   /** Response from server, which contains causes for the failure */
@@ -53,8 +52,18 @@ public class RetrofitException extends RuntimeException {
    */
   private final Retrofit retrofit;
 
-  RetrofitException(String message, Response response, Throwable exception, Retrofit retrofit) {
-    super(message, exception);
+  RetrofitException(Response response, Throwable exception, Retrofit retrofit) {
+    // The rawMessage in SpinnakerServerException class which must be exactly same as the custom
+    // message
+    // for a networkError or unexpectedError.
+    // The rawMessage for httpError is handled separately in SpinnakerHttpException class.
+    super(exception != null ? exception.getMessage() : null, exception);
+
+    if (response == null && exception == null) {
+      // Requires to have either a response or cause, similar to RetrofitError.
+      throw new NullPointerException();
+    }
+
     this.response = response;
     if (response != null) {
       // Fail fast instead of checking for null in e.g. getErrorBodyAs.

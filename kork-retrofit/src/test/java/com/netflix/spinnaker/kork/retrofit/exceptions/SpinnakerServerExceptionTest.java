@@ -98,8 +98,17 @@ public class SpinnakerServerExceptionTest {
     RetrofitException retrofitException = RetrofitException.httpError(response, retrofit2Service);
     SpinnakerHttpException notFoundException = new SpinnakerHttpException(retrofitException);
     assertEquals(HttpStatus.NOT_FOUND.value(), notFoundException.getResponseCode());
-    assertTrue(
-        notFoundException.getMessage().contains(String.valueOf(HttpStatus.NOT_FOUND.value())));
+
+    // custom message can be set instead of the default "Response.error()"
+    // by building a raw okhttp3.Response using okhttp3.Response.Builder
+    // and then creating a retrofit2.Response by retrofit2.Response.error(responseBody, rawResponse)
+    String expectedMessage =
+        String.format(
+            "Status: %s, URL: %s, Message: %s",
+            HttpStatus.NOT_FOUND.value(),
+            "http://localhost/",
+            HttpStatus.NOT_FOUND.value() + " " + "Response.error()");
+    assertEquals(expectedMessage, notFoundException.getMessage());
   }
 
   @Test

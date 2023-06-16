@@ -18,6 +18,7 @@ package com.netflix.spinnaker.kork.retrofit.exceptions;
 
 import com.google.common.base.Preconditions;
 import com.netflix.spinnaker.kork.annotations.NonnullByDefault;
+import java.util.Optional;
 import org.springframework.http.HttpHeaders;
 import retrofit.RetrofitError;
 import retrofit.client.Response;
@@ -35,16 +36,36 @@ public class SpinnakerHttpException extends SpinnakerServerException {
 
   private final retrofit2.Response retrofit2Response;
 
+  private final String rawMessage;
+
   public SpinnakerHttpException(RetrofitError e) {
     super(e);
     this.response = e.getResponse();
     this.retrofit2Response = null;
+
+    /*
+    TODO:
+     Remove super.getErrorResponseMessage() later if not needed.
+     Added for now as super.getRawMessage() call returns .orElse(e.getMessage()) instead of .orElse(this.getMessage())
+     when errorResponseBody is null.
+     */
+    this.rawMessage =
+        Optional.ofNullable(super.getErrorResponseMessage()).orElse(this.getMessage());
   }
 
   public SpinnakerHttpException(RetrofitException e) {
     super(e);
     this.response = null;
     this.retrofit2Response = e.getResponse();
+
+    /*
+    TODO:
+     Remove super.getErrorResponseMessage() later if not needed.
+     Added for now as super.getRawMessage() call returns .orElse(e.getMessage()) instead of .orElse(this.getMessage())
+     when errorResponseBody is null.
+     */
+    this.rawMessage =
+        Optional.ofNullable(super.getErrorResponseMessage()).orElse(this.getMessage());
   }
 
   /**
@@ -71,6 +92,7 @@ public class SpinnakerHttpException extends SpinnakerServerException {
 
     this.response = cause.response;
     this.retrofit2Response = cause.retrofit2Response;
+    this.rawMessage = null;
   }
 
   public int getResponseCode() {
@@ -79,6 +101,11 @@ public class SpinnakerHttpException extends SpinnakerServerException {
     } else {
       return retrofit2Response.code();
     }
+  }
+
+  @Override
+  protected String getRawMessage() {
+    return rawMessage;
   }
 
   public HttpHeaders getHeaders() {
@@ -106,6 +133,9 @@ public class SpinnakerHttpException extends SpinnakerServerException {
     // always returns something whether there's a specified message or not, so
     // look at getRawMessage instead.
     if (getRawMessage() == null) {
+      if (super.getMessage() == null) {
+        return retrofit2Response.code() + " " + retrofit2Response.message();
+      }
       return super.getMessage();
     }
 
