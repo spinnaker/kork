@@ -17,6 +17,7 @@
 package com.netflix.spinnaker.kork.retrofit.exceptions;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.netflix.spinnaker.kork.exceptions.SpinnakerException;
@@ -99,5 +100,28 @@ public class SpinnakerServerExceptionTest {
     assertEquals(HttpStatus.NOT_FOUND.value(), notFoundException.getResponseCode());
     assertTrue(
         notFoundException.getMessage().contains(String.valueOf(HttpStatus.NOT_FOUND.value())));
+  }
+
+  @Test
+  public void testSpinnakerHttpExceptionExpectsValidJsonErrorBody() {
+    final String invalidJsonResponseBodyString = "{\"name\":\"test\""; // missing "}" at end.
+
+    ResponseBody responseBody =
+        ResponseBody.create(
+            MediaType.parse("application/json" + "; charset=utf-8"), invalidJsonResponseBodyString);
+    retrofit2.Response response =
+        retrofit2.Response.error(HttpStatus.NOT_FOUND.value(), responseBody);
+
+    Retrofit retrofit2Service =
+        new Retrofit.Builder()
+            .baseUrl("http://localhost")
+            .addConverterFactory(JacksonConverterFactory.create())
+            .build();
+    RetrofitException retrofitException = RetrofitException.httpError(response, retrofit2Service);
+    /*
+    TODO :
+     handle below RuntimeException and give a valid message.
+    */
+    assertThrows(RuntimeException.class, () -> new SpinnakerHttpException(retrofitException));
   }
 }
