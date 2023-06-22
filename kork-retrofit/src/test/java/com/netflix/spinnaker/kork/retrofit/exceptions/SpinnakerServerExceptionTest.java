@@ -97,7 +97,41 @@ public class SpinnakerServerExceptionTest {
     RetrofitException retrofitException = RetrofitException.httpError(response, retrofit2Service);
     SpinnakerHttpException notFoundException = new SpinnakerHttpException(retrofitException);
     assertEquals(HttpStatus.NOT_FOUND.value(), notFoundException.getResponseCode());
-    assertTrue(
-        notFoundException.getMessage().contains(String.valueOf(HttpStatus.NOT_FOUND.value())));
+
+    // To set a custom message create a retrofit2 response using an okhttp3 raw response.
+    String expectedMessage =
+        String.format(
+            "Status: %s, URL: %s, Message: %s",
+            HttpStatus.NOT_FOUND.value(),
+            "http://localhost/",
+            HttpStatus.NOT_FOUND.value() + " " + "Response.error()");
+    assertEquals(expectedMessage, notFoundException.getMessage());
+  }
+
+  @Test
+  public void testSpinnakerHttpExceptionExpectsValidJsonErrorBody() {
+    final String invalidJsonResponseBodyString = "{\"name\":\"test\""; // missing "}" at end.
+
+    ResponseBody responseBody =
+        ResponseBody.create(
+            MediaType.parse("application/json" + "; charset=utf-8"), invalidJsonResponseBodyString);
+    retrofit2.Response response =
+        retrofit2.Response.error(HttpStatus.NOT_FOUND.value(), responseBody);
+
+    Retrofit retrofit2Service =
+        new Retrofit.Builder()
+            .baseUrl("http://localhost")
+            .addConverterFactory(JacksonConverterFactory.create())
+            .build();
+    RetrofitException retrofitException = RetrofitException.httpError(response, retrofit2Service);
+
+    SpinnakerHttpException spinnakerHttpException = new SpinnakerHttpException(retrofitException);
+    String expectedMessage =
+        String.format(
+            "Status: %s, URL: %s, Message: %s",
+            HttpStatus.NOT_FOUND.value(),
+            "http://localhost/",
+            HttpStatus.NOT_FOUND.value() + " " + "Failed to parse response");
+    assertEquals(expectedMessage, spinnakerHttpException.getMessage());
   }
 }

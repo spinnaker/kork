@@ -18,6 +18,8 @@ package com.netflix.spinnaker.kork.retrofit.exceptions;
 
 import com.google.common.base.Preconditions;
 import com.netflix.spinnaker.kork.annotations.NonnullByDefault;
+import java.util.HashMap;
+import java.util.Map;
 import org.springframework.http.HttpHeaders;
 import retrofit.RetrofitError;
 import retrofit.client.Response;
@@ -33,18 +35,38 @@ public class SpinnakerHttpException extends SpinnakerServerException {
   private final Response response;
   private HttpHeaders headers;
 
+  /**
+   * A message derived from a RetrofitError's response body, or null if a custom message has been
+   * provided.
+   */
+  private final String rawMessage;
+
+  private final Map<String, Object> responseBody;
+
   private final retrofit2.Response retrofit2Response;
 
   public SpinnakerHttpException(RetrofitError e) {
     super(e);
     this.response = e.getResponse();
     this.retrofit2Response = null;
+
+    this.responseBody = (Map<String, Object>) e.getBodyAs(HashMap.class);
+    this.rawMessage =
+        responseBody != null
+            ? (String) responseBody.getOrDefault("message", e.getMessage())
+            : e.getMessage();
   }
 
   public SpinnakerHttpException(RetrofitException e) {
     super(e);
     this.response = null;
     this.retrofit2Response = e.getResponse();
+
+    this.responseBody = (Map<String, Object>) e.getErrorBodyAs(HashMap.class);
+    this.rawMessage =
+        responseBody != null
+            ? (String) responseBody.getOrDefault("message", e.getMessage())
+            : e.getMessage();
   }
 
   /**
@@ -71,6 +93,9 @@ public class SpinnakerHttpException extends SpinnakerServerException {
 
     this.response = cause.response;
     this.retrofit2Response = cause.retrofit2Response;
+
+    rawMessage = null;
+    responseBody = null;
   }
 
   public int getResponseCode() {
@@ -97,6 +122,10 @@ public class SpinnakerHttpException extends SpinnakerServerException {
       }
     }
     return headers;
+  }
+
+  final String getRawMessage() {
+    return rawMessage;
   }
 
   @Override
