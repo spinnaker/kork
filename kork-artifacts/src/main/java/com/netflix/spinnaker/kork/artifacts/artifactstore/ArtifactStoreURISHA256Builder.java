@@ -22,12 +22,14 @@ import com.netflix.spinnaker.kork.artifacts.model.Artifact;
  * Helper class to abstract away the need for other classes to know the {@link * #uriPrefix} format.
  */
 public class ArtifactStoreURISHA256Builder extends ArtifactStoreURIBuilder {
+  @Override
   public String buildArtifactURI(String context, Artifact artifact) {
     return String.format(
         "%s://%s/%s",
         uriScheme, context, Hashing.sha256().hashBytes(artifact.getReference().getBytes()));
   }
 
+  @Override
   public String buildRawURI(String context, String raw) {
     return String.format("%s://%s/%s", uriScheme, context, raw);
   }

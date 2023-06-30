@@ -57,7 +57,7 @@ public class EmbeddedArtifactSerializer extends StdSerializer<Artifact> {
    */
   private static boolean shouldStoreArtifact(Artifact artifact) {
     String ref = artifact.getReference();
-    return artifact.getType().equals(ArtifactTypes.EMBEDDED_BASE64.getMimeType())
+    return ArtifactTypes.EMBEDDED_BASE64.getMimeType().equals(artifact.getType())
         && !(ref == null || ref.isEmpty());
   }
 }

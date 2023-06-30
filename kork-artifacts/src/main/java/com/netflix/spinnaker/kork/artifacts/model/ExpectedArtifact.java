@@ -22,7 +22,6 @@ import com.google.common.base.Strings;
 import com.netflix.spinnaker.kork.annotations.NonnullByDefault;
 import com.netflix.spinnaker.kork.artifacts.ArtifactTypes;
 import com.netflix.spinnaker.kork.artifacts.artifactstore.ArtifactStore;
-import java.io.UncheckedIOException;
 import java.util.Optional;
 import java.util.regex.Pattern;
 import javax.annotation.Nullable;
@@ -50,8 +49,7 @@ public final class ExpectedArtifact {
       boolean useDefaultArtifact,
       Artifact defaultArtifact,
       String id,
-      Artifact boundArtifact)
-      throws UncheckedIOException {
+      Artifact boundArtifact) {
 
     defaultArtifact = store(defaultArtifact);
     boundArtifact = store(boundArtifact);
@@ -104,8 +102,14 @@ public final class ExpectedArtifact {
   }
 
   /**
-   * matchTypes will check to see if embedded types are used and if they are, see if they have been
-   * stored. If the type is embedded and stored, they are a valid match.
+   * Checks to see if artifact types are compatible/matchable. This handles the four known cases of:
+   *
+   * <pre>
+   * type_a matches type_b
+   * type_a is embedded/base and type_b is remote/base64
+   * type_b is embedded/base and type_a is remote/base64
+   * and false otherwise
+   * </pre>
    */
   private boolean matchTypes(String us, String other) {
     if (matches(us, other)) {

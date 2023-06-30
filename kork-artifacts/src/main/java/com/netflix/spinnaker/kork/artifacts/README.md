@@ -1,14 +1,14 @@
 # Artifact Storage
 
-Artifact Storage is a feature that allows for embedded aritfacts to be
+Artifact Storage is a feature that allows for embedded artifacts to be
 persisted to some storage, eg the S3ArtifactStore. Spinnaker keeps a history,
 which is called the pipeline context, that contains everything that an
 execution had done. Pipeline contexts can be very large, especially with
-complicated pipeines, and size can be further increased when users have large
+complicated pipelines, and size can be further increased when users have large
 artifacts. Spinnaker will duplicate
 these artifacts whenever any stage uses any of those artifacts. Using an
 artifact store reduces this overhead by providing a reference link of,
-`ref://<spinnaker-application/<content-hash>`. This reduces the context size
+`ref://<spinnaker-application>/<content-hash>`. This reduces the context size
 tremendously, but will vary depending on the size of the pipeline, as well as
 how that artifact is used, but we've seen improvements of 80% for some
 pipelines.
@@ -81,7 +81,7 @@ check if some `String` is a remote base64 URI, and if it is, retrieve it.
 To enable artifact storage, simple add this to your `spinnaker-local.yml` file
 
 ```yaml
-artifactStore:
+artifact-store:
   enabled: true
   s3:
     enabled: true
@@ -93,11 +93,11 @@ artifactStore:
 ### S3
 
 [S3](https://aws.amazon.com/s3/) is an object store provided by AWS. The
-currently S3ArtifactStore implementation provides various ways to authenticate
+current S3ArtifactStore implementation provides various ways to authenticate
 against AWS.
 
 ```yaml
-artifactStore:
+artifact-store:
   enabled: true
   s3:
     enabled: true
@@ -108,7 +108,7 @@ artifactStore:
 
 While the implementation is S3 specific, this does not limit usages of other S3
 compatible storage engines. For example, something like
-[SeaweedFS](https://github.com/seaweedfs/seaweedfs) can be used to test locally
+[SeaweedFS](https://github.com/seaweedfs/seaweedfs) can be used to test locally.
 with
 
 ## Local Testing
@@ -119,7 +119,7 @@ To test the artifact store locally, we will use SeaweedFS. To start the storage 
 Next enable the configuration
 
 ```yaml
-artifactStore:
+artifact-store:
   enabled: true
   s3:
     enabled: true

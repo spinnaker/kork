@@ -22,6 +22,7 @@ import com.netflix.spinnaker.kork.artifacts.artifactstore.ArtifactStoreURIBuilde
 import com.netflix.spinnaker.kork.artifacts.model.Artifact;
 import com.netflix.spinnaker.security.AuthenticatedRequest;
 import java.util.Base64;
+import java.util.NoSuchElementException;
 import java.util.regex.Pattern;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.security.access.PermissionEvaluator;
@@ -80,6 +81,7 @@ public class S3ArtifactStore extends ArtifactStore {
   public Artifact store(Artifact artifact) {
     String application = AuthenticatedRequest.getSpinnakerApplication().orElse(null);
     if (application == null) {
+      log.warn("failed to retrieve application from request artifact={}", artifact.getName());
       return artifact;
     }
 
@@ -88,11 +90,11 @@ public class S3ArtifactStore extends ArtifactStore {
     }
 
     String ref = uriBuilder.buildArtifactURI(application, artifact);
+    Artifact remoteArtifact =
+        artifact.toBuilder().type(ArtifactTypes.REMOTE_BASE64.getMimeType()).reference(ref).build();
+
     if (objectExists(ref)) {
-      return artifact.toBuilder()
-          .type(ArtifactTypes.REMOTE_BASE64.getMimeType())
-          .reference(ref)
-          .build();
+      return remoteArtifact;
     }
 
     // purpose of tagging is to ensure some sort of identity is persisted to
@@ -107,20 +109,17 @@ public class S3ArtifactStore extends ArtifactStore {
             .build();
 
     s3Client.putObject(request, RequestBody.fromBytes(getReferenceAsBytes(artifact)));
-    return artifact.toBuilder()
-        .type(ArtifactTypes.REMOTE_BASE64.getMimeType())
-        .reference(ref)
-        .build();
+    return remoteArtifact;
   }
 
-  public byte[] getReferenceAsBytes(Artifact artifact) {
+  private byte[] getReferenceAsBytes(Artifact artifact) {
     String reference = artifact.getReference();
     if (reference == null) {
-      return null;
+      throw new IllegalArgumentException("reference cannot be null");
     }
 
     String type = artifact.getType();
-    if (type.endsWith("/base64")) {
+    if (type != null && type.endsWith("/base64")) {
       return Base64.getDecoder().decode(reference);
     }
 
@@ -133,7 +132,11 @@ public class S3ArtifactStore extends ArtifactStore {
    */
   @Override
   public Artifact get(String id, ArtifactDecorator... decorators) {
-    hasAuthorization(id, AuthenticatedRequest.getSpinnakerUser().orElse(null));
+    hasAuthorization(
+        id,
+        AuthenticatedRequest.getSpinnakerUser()
+            .orElseThrow(
+                () -> new NoSuchElementException("Could not authenticate due to missing user id")));
 
     GetObjectRequest request = GetObjectRequest.builder().bucket(bucket).key(id).build();
 
@@ -157,6 +160,8 @@ public class S3ArtifactStore extends ArtifactStore {
   /**
    * hasAuthorization will ensure that the user has proper permissions for retrieving the stored
    * artifact
+   *
+   * @throws AuthenticationServiceException when user does not have correct permissions
    */
   private void hasAuthorization(String id, String userId) {
     GetObjectTaggingRequest request =
