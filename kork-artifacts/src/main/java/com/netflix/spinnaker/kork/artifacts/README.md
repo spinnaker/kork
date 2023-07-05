@@ -36,7 +36,7 @@ pipelines.
 
 
 Artifact storage is divided into two operations of get and store, and there are
-primarily two services that utilizes each of these operations. Further the
+primarily two services that utilize each of these operations. Further the
 artifact storage system relies on Spring's (de)serializing to call these
 operations to limit the amount of code changes needed within these services.
 
@@ -44,10 +44,9 @@ When bootstrapping Spring we add in custom bean serializers and deserializers to
 handle storage or retrieval of an artifact.
 
 Rosco is primarily used for baking artifacts which will generate something
-deployable. When Spring sends a request back to Orca for a bake request, the
-custom serializer injected at Orca startup, will use the artifact storage and
-store the artifact, and instead return a `remote/base64` artifact instead of the
-usual `embedded/base64`.
+deployable.  When Rosco responds to a bake request, the custom serializer
+injected in Rosco at startup stores the artifact and returns a `remote/base64`
+artifact instead of the usual `embedded/base64`.
 
 Clouddriver, for this document, handles mostly deployment and has some endpoints
 regarding artifacts. It does do a little more than this, but we only care about
