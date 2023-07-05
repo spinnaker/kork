@@ -35,7 +35,7 @@ public abstract class ArtifactStoreURIBuilder {
   public abstract String buildArtifactURI(String context, Artifact artifact);
 
   /**
-   * buildRawURI is used when you have the raw path and context. This method just simply return the
+   * buildRawURI is used when you have the raw path and context. This method just simply returns the
    * properly formatted URI using the URI builder that extends this class.
    *
    * <p>This function is primarily used in clouddriver when deck is asking for the raw artifact to
