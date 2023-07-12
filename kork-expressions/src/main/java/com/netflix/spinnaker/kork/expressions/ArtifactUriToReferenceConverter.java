@@ -37,13 +37,14 @@ public class ArtifactUriToReferenceConverter implements TypeConverter {
 
   @Override
   public boolean canConvert(TypeDescriptor sourceType, @NotNull TypeDescriptor targetType) {
-    return isArtifactUriType(sourceType, targetType) || defaultTypeConverter.canConvert(sourceType, targetType);
+    return isArtifactUriType(sourceType, targetType)
+        || defaultTypeConverter.canConvert(sourceType, targetType);
   }
 
   private boolean isArtifactUriType(TypeDescriptor sourceType, @NotNull TypeDescriptor targetType) {
-    return sourceType != null &&
-      sourceType.getObjectType() == String.class &&
-      targetType.getObjectType() == String.class;
+    return sourceType != null
+        && sourceType.getObjectType() == String.class
+        && targetType.getObjectType() == String.class;
   }
 
   @Override
