@@ -102,7 +102,17 @@ public class SpinnakerServerExceptionTest {
     Map<String, Object> errorResponseBody = notFoundException.getResponseBody();
     assertEquals(errorResponseBody.get("name"), "test");
     assertEquals(HttpStatus.NOT_FOUND.value(), notFoundException.getResponseCode());
-    assertTrue(
-        notFoundException.getMessage().contains(String.valueOf(HttpStatus.NOT_FOUND.value())));
+
+    // Note: Expect custom "Failed to parse response" message,
+    // instead of a RuntimeException when the converter fails to convert the response body. eg:
+    // JacksonResponseBodyConverter returns JsonParseException/JsonEOFException which are type of
+    // RuntimeException.
+    String expectedMessage =
+        String.format(
+            "Status: %s, URL: %s, Message: %s",
+            HttpStatus.NOT_FOUND.value(),
+            "http://localhost/",
+            HttpStatus.NOT_FOUND.value() + " " + "Response.error()");
+    assertEquals(expectedMessage, notFoundException.getMessage());
   }
 }

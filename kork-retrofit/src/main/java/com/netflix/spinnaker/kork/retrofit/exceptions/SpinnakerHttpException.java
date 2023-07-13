@@ -61,7 +61,7 @@ public class SpinnakerHttpException extends SpinnakerServerException {
     super(e);
     this.response = null;
     this.retrofit2Response = e.getResponse();
-    responseBody = (Map<String, Object>) e.getErrorBodyAs(HashMap.class);
+    responseBody = (Map<String, Object>) e.getErrorBodyAs();
     this.rawMessage =
         responseBody != null
             ? (String) responseBody.getOrDefault("message", e.getMessage())

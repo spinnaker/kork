@@ -18,6 +18,7 @@ package com.netflix.spinnaker.kork.retrofit.exceptions;
 
 import java.io.IOException;
 import java.lang.annotation.Annotation;
+import java.util.Map;
 import java.util.Objects;
 import okhttp3.ResponseBody;
 import retrofit2.Converter;
@@ -45,6 +46,9 @@ public class RetrofitException extends RuntimeException {
    */
   private final Retrofit retrofit;
 
+  private static Map<String, Object> jsonErrorResponseBody =
+      Map.of("message", "failed to parse response");
+
   RetrofitException(String message, Response response, Retrofit retrofit) {
     super(message);
 
@@ -67,16 +71,17 @@ public class RetrofitException extends RuntimeException {
    * @throws RuntimeException wrapping the underlying IOException if unable to convert the body to
    *     the specified {@code type}.
    */
-  public <T> T getErrorBodyAs(Class<T> type) {
+  public Map<String, Object> getErrorBodyAs() {
     if (response == null) {
       return null;
     }
 
-    Converter<ResponseBody, T> converter = retrofit.responseBodyConverter(type, new Annotation[0]);
+    Converter<ResponseBody, Map> converter =
+        retrofit.responseBodyConverter(Map.class, new Annotation[0]);
     try {
       return converter.convert(response.errorBody());
     } catch (IOException e) {
-      throw new RuntimeException(e);
+      return jsonErrorResponseBody;
     }
   }
 }
