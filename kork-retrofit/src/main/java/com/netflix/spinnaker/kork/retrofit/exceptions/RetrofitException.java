@@ -32,8 +32,7 @@ import retrofit2.Retrofit;
  */
 public class RetrofitException extends RuntimeException {
   public static RetrofitException httpError(Response response, Retrofit retrofit) {
-    String message = response.code() + " " + response.message();
-    return new RetrofitException(message, response, retrofit);
+    return new RetrofitException(response, retrofit);
   }
 
   /** Response from server, which contains causes for the failure */
@@ -45,8 +44,8 @@ public class RetrofitException extends RuntimeException {
    */
   private final Retrofit retrofit;
 
-  RetrofitException(String message, Response response, Retrofit retrofit) {
-    super(message);
+  RetrofitException(Response response, Retrofit retrofit) {
+    super(response.code() + " " + response.message());
 
     this.response = response;
     if (response != null) {
