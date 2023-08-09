@@ -21,29 +21,11 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.netflix.spinnaker.kork.exceptions.SpinnakerException;
 import java.io.IOException;
-import java.util.List;
 import org.junit.jupiter.api.Test;
 import retrofit.RetrofitError;
-import retrofit.client.Response;
 
 public class SpinnakerServerExceptionTest {
   private static final String CUSTOM_MESSAGE = "custom message";
-
-  @Test
-  public void testSpinnakerHttpException_NewInstance() {
-    Response response = new Response("http://localhost", 200, "reason", List.of(), null);
-    try {
-      RetrofitError error = RetrofitError.httpError("http://localhost", response, null, null);
-      throw new SpinnakerHttpException(error);
-    } catch (SpinnakerException e) {
-      SpinnakerException newException = e.newInstance(CUSTOM_MESSAGE);
-
-      assertTrue(newException instanceof SpinnakerHttpException);
-      assertEquals(CUSTOM_MESSAGE, newException.getMessage());
-      assertEquals(e, newException.getCause());
-      assertEquals(response.getStatus(), ((SpinnakerHttpException) newException).getResponseCode());
-    }
-  }
 
   @Test
   public void testSpinnakerNetworkException_NewInstance() {
