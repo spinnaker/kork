@@ -62,6 +62,7 @@ public class SpinnakerHttpExceptionTest {
     assertThat(spinnakerHttpException.getResponseCode()).isEqualTo(statusCode);
     assertThat(spinnakerHttpException.getMessage())
         .isEqualTo("Status: " + statusCode + ", URL: " + url + ", Message: " + message);
+    assertThat(spinnakerHttpException.getUrl()).isEqualTo(url);
   }
 
   @Test
@@ -83,6 +84,7 @@ public class SpinnakerHttpExceptionTest {
     SpinnakerHttpException notFoundException =
         new SpinnakerHttpException(response, retrofit2Service);
     assertNotNull(notFoundException.getResponseBody());
+    assertThat(notFoundException.getUrl()).isEqualTo(url);
     Map<String, Object> errorResponseBody = notFoundException.getResponseBody();
     assertEquals(errorResponseBody.get("name"), "test");
     assertEquals(HttpStatus.NOT_FOUND.value(), notFoundException.getResponseCode());
@@ -104,6 +106,8 @@ public class SpinnakerHttpExceptionTest {
       assertEquals(CUSTOM_MESSAGE, newException.getMessage());
       assertEquals(e, newException.getCause());
       assertEquals(response.getStatus(), ((SpinnakerHttpException) newException).getResponseCode());
+      SpinnakerHttpException spinnakerHttpException = (SpinnakerHttpException) newException;
+      assertThat(spinnakerHttpException.getUrl()).isEqualTo(url);
     }
   }
 

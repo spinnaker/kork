@@ -55,6 +55,8 @@ public class SpinnakerHttpException extends SpinnakerServerException {
 
   private final Map<String, Object> responseBody;
 
+  private final String url;
+
   public SpinnakerHttpException(RetrofitError e) {
     super(e);
 
@@ -66,6 +68,7 @@ public class SpinnakerHttpException extends SpinnakerServerException {
     this.response = e.getResponse();
     this.retrofit2Response = null;
     responseBody = (Map<String, Object>) e.getBodyAs(HashMap.class);
+    url = e.getUrl();
 
     this.rawMessage =
         responseBody != null
@@ -86,6 +89,7 @@ public class SpinnakerHttpException extends SpinnakerServerException {
       setRetryable(false);
     }
     responseBody = this.getErrorBodyAs(retrofit);
+    url = retrofit2Response.raw().request().url().toString();
     this.rawMessage =
         responseBody != null
             ? (String) responseBody.getOrDefault("message", retrofit2Response.message())
@@ -122,6 +126,7 @@ public class SpinnakerHttpException extends SpinnakerServerException {
     this.retrofit2Response = cause.retrofit2Response;
     rawMessage = null;
     this.responseBody = cause.responseBody;
+    this.url = cause.url;
   }
 
   public int getResponseCode() {
@@ -163,14 +168,10 @@ public class SpinnakerHttpException extends SpinnakerServerException {
 
     if (retrofit2Response != null) {
       return String.format(
-          "Status: %s, URL: %s, Message: %s",
-          retrofit2Response.code(),
-          retrofit2Response.raw().request().url().toString(),
-          getRawMessage());
+          "Status: %s, URL: %s, Message: %s", retrofit2Response.code(), url, getRawMessage());
     } else {
       return String.format(
-          "Status: %s, URL: %s, Message: %s",
-          response.getStatus(), response.getUrl(), getRawMessage());
+          "Status: %s, URL: %s, Message: %s", response.getStatus(), url, getRawMessage());
     }
   }
 
@@ -181,6 +182,10 @@ public class SpinnakerHttpException extends SpinnakerServerException {
 
   public Map<String, Object> getResponseBody() {
     return this.responseBody;
+  }
+
+  public String getUrl() {
+    return this.url;
   }
 
   /**
