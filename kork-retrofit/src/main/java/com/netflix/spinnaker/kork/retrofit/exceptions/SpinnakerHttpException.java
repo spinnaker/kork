@@ -59,6 +59,12 @@ public class SpinnakerHttpException extends SpinnakerServerException {
 
   private final int responseCode;
 
+  /**
+   * The reason from the http response. See
+   * https://datatracker.ietf.org/doc/html/rfc2616#section-6.1
+   */
+  private final String reason;
+
   public SpinnakerHttpException(RetrofitError e) {
     super(e);
 
@@ -72,7 +78,7 @@ public class SpinnakerHttpException extends SpinnakerServerException {
     responseBody = (Map<String, Object>) e.getBodyAs(HashMap.class);
     url = e.getUrl();
     responseCode = response.getStatus();
-
+    reason = response.getReason();
     this.rawMessage =
         responseBody != null
             ? (String) responseBody.getOrDefault("message", e.getMessage())
@@ -94,6 +100,7 @@ public class SpinnakerHttpException extends SpinnakerServerException {
     responseBody = this.getErrorBodyAs(retrofit);
     url = retrofit2Response.raw().request().url().toString();
     responseCode = retrofit2Response.code();
+    reason = retrofit2Response.message();
     this.rawMessage =
         responseBody != null
             ? (String) responseBody.getOrDefault("message", retrofit2Response.message())
@@ -132,6 +139,7 @@ public class SpinnakerHttpException extends SpinnakerServerException {
     this.responseBody = cause.responseBody;
     this.url = cause.url;
     this.responseCode = cause.responseCode;
+    this.reason = cause.reason;
   }
 
   public int getResponseCode() {
@@ -181,6 +189,10 @@ public class SpinnakerHttpException extends SpinnakerServerException {
 
   public String getUrl() {
     return this.url;
+  }
+
+  public String getReason() {
+    return this.reason;
   }
 
   /**
