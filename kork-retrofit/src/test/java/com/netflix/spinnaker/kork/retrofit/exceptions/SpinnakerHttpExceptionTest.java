@@ -73,12 +73,13 @@ public class SpinnakerHttpExceptionTest {
     retrofit2.Response response =
         retrofit2.Response.error(HttpStatus.NOT_FOUND.value(), responseBody);
 
-    String url = "http://localhost";
+    String url = "http://localhost/";
     Retrofit retrofit2Service =
         new Retrofit.Builder()
             .baseUrl(url)
             .addConverterFactory(JacksonConverterFactory.create())
             .build();
+    assertThat(retrofit2Service.baseUrl().toString()).isEqualTo(url);
     SpinnakerHttpException notFoundException =
         new SpinnakerHttpException(response, retrofit2Service);
     assertNotNull(notFoundException.getResponseBody());
