@@ -191,6 +191,15 @@ dependencies {
     api('org.apache.ant:ant-launcher:1.10.12'){
       because "1.9.15 is resolved transitively through Groovy, removes CVE-2021-36374, CVE-2021-36373, CVE-2020-11979, CVE-2020-15250"
     }
+    api('org.springframework:spring-core:5.3.18') {
+      because "spring-boot-dependencies:2.4.13 brings 5.3.13 and it has CVE-2022-22965, 5.3.18 removes it"
+    }
+    api('org.springframework:spring-beans:5.3.18') {
+      because "spring-boot-dependencies:2.4.13 brings 5.3.13 and it has CVE-2022-22965, 5.3.18 removes it"
+    }
+    api('org.springframework:spring-webmvc:5.3.18') {
+      because "spring-boot-dependencies:2.4.13 brings 5.3.13 and it has CVE-2022-22965, 5.3.18 removes it"
+    }
 
   }
 }
