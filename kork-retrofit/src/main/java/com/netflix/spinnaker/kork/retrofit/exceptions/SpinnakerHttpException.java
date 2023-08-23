@@ -67,7 +67,7 @@ public class SpinnakerHttpException extends SpinnakerServerException {
     this.response = null;
     this.retrofit2Response = e.getResponse();
     this.retrofit = e.getRetrofit();
-    responseBody = this.getErrorBodyAs(HashMap.class);
+    responseBody = this.getErrorBodyAs();
     this.rawMessage =
         responseBody != null
             ? (String) responseBody.getOrDefault("message", e.getMessage())
@@ -170,7 +170,7 @@ public class SpinnakerHttpException extends SpinnakerServerException {
    * @throws RuntimeException wrapping the underlying IOException if unable to convert the body to
    *     the specified {@code type}.
    */
-  public Map<String, Object> getErrorBodyAs(Class<HashMap> type) {
+  public Map<String, Object> getErrorBodyAs() {
     if (retrofit2Response == null) {
       return null;
     }
