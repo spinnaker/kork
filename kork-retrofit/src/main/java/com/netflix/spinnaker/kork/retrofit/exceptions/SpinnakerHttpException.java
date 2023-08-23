@@ -33,7 +33,7 @@ import retrofit2.Converter;
  * An exception that exposes the {@link Response} of a given HTTP {@link RetrofitError} or {@link
  * okhttp3.Response} if retrofit 2.x used and a detail message that extracts useful information from
  * the {@link Response} or {@link okhttp3.Response}. Both {@link Response} and {@link
- * okhttp3.Response} can't be set together..
+ * okhttp3.Response} can't be set together.
  */
 @NonnullByDefault
 public class SpinnakerHttpException extends SpinnakerServerException {
@@ -49,12 +49,13 @@ public class SpinnakerHttpException extends SpinnakerServerException {
   private final String rawMessage;
 
   private final Map<String, Object> responseBody;
-  private retrofit2.Retrofit retrofit;
+  private final retrofit2.Retrofit retrofit;
 
   public SpinnakerHttpException(RetrofitError e) {
     super(e);
     this.response = e.getResponse();
     this.retrofit2Response = null;
+    this.retrofit = null;
     responseBody = (Map<String, Object>) e.getBodyAs(HashMap.class);
 
     this.rawMessage =
@@ -111,6 +112,7 @@ public class SpinnakerHttpException extends SpinnakerServerException {
 
     this.response = cause.response;
     this.retrofit2Response = cause.retrofit2Response;
+    this.retrofit = null;
     rawMessage = null;
     this.responseBody = cause.responseBody;
   }
