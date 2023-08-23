@@ -17,11 +17,12 @@
 package com.netflix.spinnaker.kork.retrofit.exceptions;
 
 import com.google.common.base.Preconditions;
-import com.netflix.spinnaker.kork.annotations.NonnullByDefault;
+import com.netflix.spinnaker.kork.annotations.NullableByDefault;
 import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.util.HashMap;
 import java.util.Map;
+import javax.annotation.Nonnull;
 import okhttp3.ResponseBody;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -36,9 +37,11 @@ import retrofit2.Retrofit;
  * the {@link Response} or {@link okhttp3.Response}. Both {@link Response} and {@link
  * okhttp3.Response} can't be set together.
  */
-@NonnullByDefault
+@NullableByDefault
 public class SpinnakerHttpException extends SpinnakerServerException {
+
   private final Response response;
+
   private HttpHeaders headers;
 
   private final retrofit2.Response<?> retrofit2Response;
@@ -122,6 +125,7 @@ public class SpinnakerHttpException extends SpinnakerServerException {
     }
   }
 
+  @Nonnull
   public HttpHeaders getHeaders() {
     if (headers == null) {
       headers = new HttpHeaders();
