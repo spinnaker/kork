@@ -18,11 +18,15 @@ package com.netflix.spinnaker.kork.retrofit.exceptions;
 
 import com.google.common.base.Preconditions;
 import com.netflix.spinnaker.kork.annotations.NonnullByDefault;
+import java.io.IOException;
+import java.lang.annotation.Annotation;
 import java.util.HashMap;
 import java.util.Map;
+import okhttp3.ResponseBody;
 import org.springframework.http.HttpHeaders;
 import retrofit.RetrofitError;
 import retrofit.client.Response;
+import retrofit2.Converter;
 
 /**
  * An exception that exposes the {@link Response} of a given HTTP {@link RetrofitError} or {@link
@@ -44,6 +48,7 @@ public class SpinnakerHttpException extends SpinnakerServerException {
   private final String rawMessage;
 
   private final Map<String, Object> responseBody;
+  private retrofit2.Retrofit retrofit;
 
   public SpinnakerHttpException(RetrofitError e) {
     super(e);
@@ -61,7 +66,8 @@ public class SpinnakerHttpException extends SpinnakerServerException {
     super(e);
     this.response = null;
     this.retrofit2Response = e.getResponse();
-    responseBody = e.getErrorBodyAs(HashMap.class);
+    this.retrofit = e.getRetrofit();
+    responseBody = this.getErrorBodyAs(HashMap.class);
     this.rawMessage =
         responseBody != null
             ? (String) responseBody.getOrDefault("message", e.getMessage())
@@ -156,5 +162,25 @@ public class SpinnakerHttpException extends SpinnakerServerException {
 
   public Map<String, Object> getResponseBody() {
     return this.responseBody;
+  }
+
+  /**
+   * HTTP response body converted to specified {@code type}. {@code null} if there is no response.
+   *
+   * @throws RuntimeException wrapping the underlying IOException if unable to convert the body to
+   *     the specified {@code type}.
+   */
+  public Map<String, Object> getErrorBodyAs(Class<HashMap> type) {
+    if (retrofit2Response == null) {
+      return null;
+    }
+
+    Converter<ResponseBody, Map> converter =
+        retrofit.responseBodyConverter(Map.class, new Annotation[0]);
+    try {
+      return converter.convert(retrofit2Response.errorBody());
+    } catch (IOException e) {
+      throw new RuntimeException(e);
+    }
   }
 }

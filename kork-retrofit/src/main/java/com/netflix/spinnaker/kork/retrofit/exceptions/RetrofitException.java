@@ -16,13 +16,7 @@
 
 package com.netflix.spinnaker.kork.retrofit.exceptions;
 
-import java.io.IOException;
-import java.lang.annotation.Annotation;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Objects;
-import okhttp3.ResponseBody;
-import retrofit2.Converter;
 import retrofit2.Response;
 import retrofit2.Retrofit;
 
@@ -64,23 +58,7 @@ public class RetrofitException extends RuntimeException {
     return response;
   }
 
-  /**
-   * HTTP response body converted to specified {@code type}. {@code null} if there is no response.
-   *
-   * @throws RuntimeException wrapping the underlying IOException if unable to convert the body to
-   *     the specified {@code type}.
-   */
-  public Map<String, Object> getErrorBodyAs(Class<HashMap> type) {
-    if (response == null) {
-      return null;
-    }
-
-    Converter<ResponseBody, Map> converter =
-        retrofit.responseBodyConverter(Map.class, new Annotation[0]);
-    try {
-      return converter.convert(response.errorBody());
-    } catch (IOException e) {
-      throw new RuntimeException(e);
-    }
+  public Retrofit getRetrofit() {
+    return retrofit;
   }
 }
