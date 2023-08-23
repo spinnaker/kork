@@ -85,7 +85,7 @@ public class SpinnakerHttpException extends SpinnakerServerException {
             : retrofit2Response.message();
   }
 
-  private final String getRawMessage() {
+  private String getRawMessage() {
     return rawMessage;
   }
 
