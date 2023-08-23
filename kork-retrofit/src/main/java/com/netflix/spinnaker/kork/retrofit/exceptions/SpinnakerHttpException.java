@@ -40,7 +40,7 @@ public class SpinnakerHttpException extends SpinnakerServerException {
   private final Response response;
   private HttpHeaders headers;
 
-  private final retrofit2.Response retrofit2Response;
+  private final retrofit2.Response<?> retrofit2Response;
 
   /**
    * A message derived from a RetrofitError's response body, or null if a custom message has been
@@ -68,8 +68,8 @@ public class SpinnakerHttpException extends SpinnakerServerException {
    * The constructor handles the HTTP retrofit2 exception, similar to retrofit logic. It is used
    * with {@link com.netflix.spinnaker.kork.retrofit.ErrorHandlingExecutorCallAdapterFactory}.
    */
-  public <T> SpinnakerHttpException(
-      retrofit2.Response<T> retrofit2Response, retrofit2.Retrofit retrofit) {
+  public SpinnakerHttpException(
+      retrofit2.Response<?> retrofit2Response, retrofit2.Retrofit retrofit) {
     this.response = null;
     this.retrofit2Response = retrofit2Response;
     this.retrofit = retrofit;
