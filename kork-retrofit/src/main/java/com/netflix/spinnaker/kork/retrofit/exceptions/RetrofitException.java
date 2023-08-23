@@ -18,6 +18,8 @@ package com.netflix.spinnaker.kork.retrofit.exceptions;
 
 import java.io.IOException;
 import java.lang.annotation.Annotation;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Objects;
 import okhttp3.ResponseBody;
 import retrofit2.Converter;
@@ -31,6 +33,7 @@ import retrofit2.Retrofit;
  * com.netflix.spinnaker.kork.retrofit.ErrorHandlingExecutorCallAdapterFactory}.
  */
 public class RetrofitException extends RuntimeException {
+
   public static RetrofitException httpError(Response response, Retrofit retrofit) {
     String message = response.code() + " " + response.message();
     return new RetrofitException(message, response, retrofit);
@@ -67,12 +70,13 @@ public class RetrofitException extends RuntimeException {
    * @throws RuntimeException wrapping the underlying IOException if unable to convert the body to
    *     the specified {@code type}.
    */
-  public <T> T getErrorBodyAs(Class<T> type) {
+  public Map<String, Object> getErrorBodyAs(Class<HashMap> type) {
     if (response == null) {
       return null;
     }
 
-    Converter<ResponseBody, T> converter = retrofit.responseBodyConverter(type, new Annotation[0]);
+    Converter<ResponseBody, Map> converter =
+        retrofit.responseBodyConverter(Map.class, new Annotation[0]);
     try {
       return converter.convert(response.errorBody());
     } catch (IOException e) {
