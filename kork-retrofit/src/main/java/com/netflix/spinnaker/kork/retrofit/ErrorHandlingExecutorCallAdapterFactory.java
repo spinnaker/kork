@@ -26,7 +26,6 @@ import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.Objects;
 import java.util.concurrent.Executor;
-import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import okhttp3.Request;
 import okio.Timeout;
@@ -156,15 +155,7 @@ public class ErrorHandlingExecutorCallAdapterFactory extends CallAdapter.Factory
       } catch (Exception e) {
         throw new SpinnakerServerException(e);
       }
-      throw createSpinnakerHttpException(syncResp);
-    }
-
-    @Nonnull
-    private SpinnakerHttpException createSpinnakerHttpException(Response<T> response) {
-      SpinnakerHttpException retval =
-          new SpinnakerHttpException(RetrofitException.httpError(response, retrofit));
-
-      return retval;
+      throw new SpinnakerHttpException(RetrofitException.httpError(syncResp, retrofit));
     }
 
     /**
@@ -245,7 +236,8 @@ public class ErrorHandlingExecutorCallAdapterFactory extends CallAdapter.Factory
               public void run() {
                 callback.onFailure(
                     executorCallbackCall,
-                    executorCallbackCall.createSpinnakerHttpException(response));
+                    new SpinnakerHttpException(
+                        RetrofitException.httpError(response, executorCallbackCall.retrofit)));
               }
             });
       }
