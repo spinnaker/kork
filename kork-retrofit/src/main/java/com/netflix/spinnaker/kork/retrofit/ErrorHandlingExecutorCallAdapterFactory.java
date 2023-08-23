@@ -16,7 +16,6 @@
 
 package com.netflix.spinnaker.kork.retrofit;
 
-import com.netflix.spinnaker.kork.retrofit.exceptions.RetrofitException;
 import com.netflix.spinnaker.kork.retrofit.exceptions.SpinnakerHttpException;
 import com.netflix.spinnaker.kork.retrofit.exceptions.SpinnakerNetworkException;
 import com.netflix.spinnaker.kork.retrofit.exceptions.SpinnakerServerException;
@@ -155,7 +154,7 @@ public class ErrorHandlingExecutorCallAdapterFactory extends CallAdapter.Factory
       } catch (Exception e) {
         throw new SpinnakerServerException(e);
       }
-      throw new SpinnakerHttpException(RetrofitException.httpError(syncResp, retrofit));
+      throw new SpinnakerHttpException(syncResp, retrofit);
     }
 
     /**
@@ -236,8 +235,7 @@ public class ErrorHandlingExecutorCallAdapterFactory extends CallAdapter.Factory
               public void run() {
                 callback.onFailure(
                     executorCallbackCall,
-                    new SpinnakerHttpException(
-                        RetrofitException.httpError(response, executorCallbackCall.retrofit)));
+                    new SpinnakerHttpException(response, executorCallbackCall.retrofit));
               }
             });
       }

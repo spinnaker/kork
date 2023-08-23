@@ -31,9 +31,9 @@ import retrofit2.Converter;
 
 /**
  * An exception that exposes the {@link Response} of a given HTTP {@link RetrofitError} or {@link
- * okhttp3.Response} of a {@link RetrofitException} if retrofit 2.x used and a detail message that
- * extracts useful information from the {@link Response} or {@link okhttp3.Response}. Both {@link
- * Response} and {@link okhttp3.Response} can't be set together..
+ * okhttp3.Response} if retrofit 2.x used and a detail message that extracts useful information from
+ * the {@link Response} or {@link okhttp3.Response}. Both {@link Response} and {@link
+ * okhttp3.Response} can't be set together..
  */
 @NonnullByDefault
 public class SpinnakerHttpException extends SpinnakerServerException {
@@ -63,11 +63,15 @@ public class SpinnakerHttpException extends SpinnakerServerException {
             : e.getMessage();
   }
 
-  public SpinnakerHttpException(RetrofitException e) {
-    super(e);
+  /**
+   * The constructor handles the HTTP retrofit2 exception, similar to retrofit logic. It is used
+   * with {@link com.netflix.spinnaker.kork.retrofit.ErrorHandlingExecutorCallAdapterFactory}.
+   */
+  public <T> SpinnakerHttpException(
+      retrofit2.Response<T> retrofit2Response, retrofit2.Retrofit retrofit) {
     this.response = null;
-    this.retrofit2Response = e.getResponse();
-    this.retrofit = e.getRetrofit();
+    this.retrofit2Response = retrofit2Response;
+    this.retrofit = retrofit;
     if ((retrofit2Response.code() == HttpStatus.NOT_FOUND.value())
         || (retrofit2Response.code() == HttpStatus.BAD_REQUEST.value())) {
       setRetryable(false);
@@ -75,8 +79,8 @@ public class SpinnakerHttpException extends SpinnakerServerException {
     responseBody = this.getErrorBodyAs();
     this.rawMessage =
         responseBody != null
-            ? (String) responseBody.getOrDefault("message", e.getMessage())
-            : e.getMessage();
+            ? (String) responseBody.getOrDefault("message", retrofit2Response.message())
+            : retrofit2Response.message();
   }
 
   private final String getRawMessage() {

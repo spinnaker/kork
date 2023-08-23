@@ -76,8 +76,8 @@ public class SpinnakerHttpExceptionTest {
             .baseUrl("http://localhost")
             .addConverterFactory(JacksonConverterFactory.create())
             .build();
-    RetrofitException retrofitException = RetrofitException.httpError(response, retrofit2Service);
-    SpinnakerHttpException notFoundException = new SpinnakerHttpException(retrofitException);
+    SpinnakerHttpException notFoundException =
+        new SpinnakerHttpException(response, retrofit2Service);
     assertNotNull(notFoundException.getResponseBody());
     Map<String, Object> errorResponseBody = notFoundException.getResponseBody();
     assertEquals(errorResponseBody.get("name"), "test");
