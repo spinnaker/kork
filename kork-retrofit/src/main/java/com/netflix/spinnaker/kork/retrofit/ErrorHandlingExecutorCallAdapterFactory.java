@@ -30,7 +30,6 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import okhttp3.Request;
 import okio.Timeout;
-import org.springframework.http.HttpStatus;
 import retrofit2.Call;
 import retrofit2.CallAdapter;
 import retrofit2.Callback;
@@ -164,10 +163,7 @@ public class ErrorHandlingExecutorCallAdapterFactory extends CallAdapter.Factory
     private SpinnakerHttpException createSpinnakerHttpException(Response<T> response) {
       SpinnakerHttpException retval =
           new SpinnakerHttpException(RetrofitException.httpError(response, retrofit));
-      if ((response.code() == HttpStatus.NOT_FOUND.value())
-          || (response.code() == HttpStatus.BAD_REQUEST.value())) {
-        retval.setRetryable(false);
-      }
+
       return retval;
     }
 

@@ -24,6 +24,7 @@ import java.util.HashMap;
 import java.util.Map;
 import okhttp3.ResponseBody;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import retrofit.RetrofitError;
 import retrofit.client.Response;
 import retrofit2.Converter;
@@ -67,6 +68,10 @@ public class SpinnakerHttpException extends SpinnakerServerException {
     this.response = null;
     this.retrofit2Response = e.getResponse();
     this.retrofit = e.getRetrofit();
+    if ((retrofit2Response.code() == HttpStatus.NOT_FOUND.value())
+        || (retrofit2Response.code() == HttpStatus.BAD_REQUEST.value())) {
+      setRetryable(false);
+    }
     responseBody = this.getErrorBodyAs();
     this.rawMessage =
         responseBody != null
