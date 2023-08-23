@@ -28,6 +28,7 @@ import org.springframework.http.HttpStatus;
 import retrofit.RetrofitError;
 import retrofit.client.Response;
 import retrofit2.Converter;
+import retrofit2.Retrofit;
 
 /**
  * An exception that exposes the {@link Response} of a given HTTP {@link RetrofitError} or {@link
@@ -49,13 +50,11 @@ public class SpinnakerHttpException extends SpinnakerServerException {
   private final String rawMessage;
 
   private final Map<String, Object> responseBody;
-  private final retrofit2.Retrofit retrofit;
 
   public SpinnakerHttpException(RetrofitError e) {
     super(e);
     this.response = e.getResponse();
     this.retrofit2Response = null;
-    this.retrofit = null;
     responseBody = (Map<String, Object>) e.getBodyAs(HashMap.class);
 
     this.rawMessage =
@@ -72,12 +71,11 @@ public class SpinnakerHttpException extends SpinnakerServerException {
       retrofit2.Response<?> retrofit2Response, retrofit2.Retrofit retrofit) {
     this.response = null;
     this.retrofit2Response = retrofit2Response;
-    this.retrofit = retrofit;
     if ((retrofit2Response.code() == HttpStatus.NOT_FOUND.value())
         || (retrofit2Response.code() == HttpStatus.BAD_REQUEST.value())) {
       setRetryable(false);
     }
-    responseBody = this.getErrorBodyAs();
+    responseBody = this.getErrorBodyAs(retrofit);
     this.rawMessage =
         responseBody != null
             ? (String) responseBody.getOrDefault("message", retrofit2Response.message())
@@ -112,7 +110,6 @@ public class SpinnakerHttpException extends SpinnakerServerException {
 
     this.response = cause.response;
     this.retrofit2Response = cause.retrofit2Response;
-    this.retrofit = null;
     rawMessage = null;
     this.responseBody = cause.responseBody;
   }
@@ -181,7 +178,7 @@ public class SpinnakerHttpException extends SpinnakerServerException {
    * @throws RuntimeException wrapping the underlying IOException if unable to convert the body to
    *     the specified {@code type}.
    */
-  public Map<String, Object> getErrorBodyAs() {
+  private Map<String, Object> getErrorBodyAs(Retrofit retrofit) {
     if (retrofit2Response == null) {
       return null;
     }
