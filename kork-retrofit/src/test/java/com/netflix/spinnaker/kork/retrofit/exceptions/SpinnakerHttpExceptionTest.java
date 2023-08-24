@@ -18,12 +18,14 @@
 package com.netflix.spinnaker.kork.retrofit.exceptions;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.catchThrowable;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.google.gson.Gson;
 import com.netflix.spinnaker.kork.exceptions.SpinnakerException;
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import okhttp3.MediaType;
@@ -100,5 +102,17 @@ public class SpinnakerHttpExceptionTest {
       assertEquals(e, newException.getCause());
       assertEquals(response.getStatus(), ((SpinnakerHttpException) newException).getResponseCode());
     }
+  }
+
+  @Test
+  void testNullResponse() {
+    RetrofitError retrofitError =
+        RetrofitError.networkError("http://some-url", new IOException("arbitrary exception"));
+    assertThat(retrofitError.getResponse()).isNull();
+
+    Throwable thrown = catchThrowable(() -> new SpinnakerHttpException(retrofitError));
+
+    assertThat(thrown).isInstanceOf(NullPointerException.class);
+    assertThat(thrown.getMessage()).isNotNull();
   }
 }

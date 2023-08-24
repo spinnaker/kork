@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import javax.annotation.Nonnull;
 import okhttp3.ResponseBody;
 import org.springframework.http.HttpHeaders;
@@ -56,6 +57,12 @@ public class SpinnakerHttpException extends SpinnakerServerException {
 
   public SpinnakerHttpException(RetrofitError e) {
     super(e);
+
+    // Arbitrary RetrofitErrors can have a null Response object (e.g. see
+    // RetrofitError.networkError).  But, given that RetrofitError.httpError
+    // assumes a non-null Response, let's do the same in SpinnakerHttpException.
+    Objects.requireNonNull(e.getResponse(), "SpinnakerHttpException requires a Response object");
+
     this.response = e.getResponse();
     this.retrofit2Response = null;
     responseBody = (Map<String, Object>) e.getBodyAs(HashMap.class);
