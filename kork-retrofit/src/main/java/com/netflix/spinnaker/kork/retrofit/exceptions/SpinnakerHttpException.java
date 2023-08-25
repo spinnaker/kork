@@ -24,6 +24,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import javax.annotation.Nonnull;
+import lombok.extern.slf4j.Slf4j;
 import okhttp3.ResponseBody;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -39,6 +40,7 @@ import retrofit2.Retrofit;
  * okhttp3.Response} can't be set together.
  */
 @NullableByDefault
+@Slf4j
 public class SpinnakerHttpException extends SpinnakerServerException {
 
   private final Response response;
@@ -75,22 +77,31 @@ public class SpinnakerHttpException extends SpinnakerServerException {
 
     this.response = e.getResponse();
     this.retrofit2Response = null;
-    responseBody = (Map<String, Object>) e.getBodyAs(HashMap.class);
+
+    String tmpMessage = null;
+    Map<String, Object> body = null;
+    try {
+      body = (Map<String, Object>) e.getBodyAs(HashMap.class);
+    } catch (RuntimeException exception) {
+      // handle non-json(for eg html) mime types
+      // eg: unable to convert response to map(200 reason)
+      log.debug("unable to convert response to map({})", e.getMessage(), response);
+    }
+    responseBody = body;
+    if (responseBody != null) {
+      tmpMessage = (String) responseBody.get("message");
+    }
     url = e.getUrl();
     responseCode = response.getStatus();
     reason = response.getReason();
-    this.rawMessage =
-        responseBody != null
-            ? (String) responseBody.getOrDefault("message", e.getMessage())
-            : e.getMessage();
+    rawMessage = tmpMessage != null ? tmpMessage : e.getMessage();
   }
 
   /**
    * The constructor handles the HTTP retrofit2 exception, similar to retrofit logic. It is used
    * with {@link com.netflix.spinnaker.kork.retrofit.ErrorHandlingExecutorCallAdapterFactory}.
    */
-  public SpinnakerHttpException(
-      retrofit2.Response<?> retrofit2Response, retrofit2.Retrofit retrofit) {
+  public SpinnakerHttpException(retrofit2.Response<?> retrofit2Response, Retrofit retrofit) {
     this.response = null;
     this.retrofit2Response = retrofit2Response;
     if ((retrofit2Response.code() == HttpStatus.NOT_FOUND.value())
