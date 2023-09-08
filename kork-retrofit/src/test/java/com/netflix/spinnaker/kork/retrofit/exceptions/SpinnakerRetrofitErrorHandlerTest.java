@@ -39,6 +39,7 @@ import org.springframework.http.HttpStatus;
 import retrofit.RestAdapter;
 import retrofit.RetrofitError;
 import retrofit.client.Response;
+import retrofit.converter.ConversionException;
 import retrofit.converter.JacksonConverter;
 import retrofit.http.GET;
 
@@ -51,6 +52,7 @@ public class SpinnakerRetrofitErrorHandlerTest {
   @BeforeAll
   public static void setupOnce() throws Exception {
     mockWebServer.start();
+
     retrofitService =
         new RestAdapter.Builder()
             .setEndpoint(mockWebServer.url("/").toString())
@@ -172,6 +174,19 @@ public class SpinnakerRetrofitErrorHandlerTest {
     RetrofitError retrofitError = RetrofitError.networkError("http://localhost", e);
     SpinnakerRetrofitErrorHandler handler = SpinnakerRetrofitErrorHandler.getInstance();
     Throwable throwable = handler.handleError(retrofitError);
+    assertEquals(message, throwable.getMessage());
+  }
+
+  @Test
+  public void testSimpleSpinnakerConversionException() {
+    String message = "Invalid JSON response";
+    ConversionException conversionException =
+        new ConversionException(message, new Throwable("reason"));
+    RetrofitError retrofitError =
+        RetrofitError.conversionError("http://localhost", null, null, null, conversionException);
+    SpinnakerRetrofitErrorHandler handler = SpinnakerRetrofitErrorHandler.getInstance();
+    Throwable throwable = handler.handleError(retrofitError);
+    assertTrue(throwable instanceof SpinnakerConversionException);
     assertEquals(message, throwable.getMessage());
   }
 
