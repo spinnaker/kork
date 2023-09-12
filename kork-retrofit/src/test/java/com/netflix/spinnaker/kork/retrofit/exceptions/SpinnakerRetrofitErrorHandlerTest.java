@@ -39,9 +39,9 @@ import org.springframework.http.HttpStatus;
 import retrofit.RestAdapter;
 import retrofit.RetrofitError;
 import retrofit.client.Response;
-import retrofit.converter.ConversionException;
 import retrofit.converter.JacksonConverter;
 import retrofit.http.GET;
+import retrofit2.Call;
 
 public class SpinnakerRetrofitErrorHandlerTest {
 
@@ -178,16 +178,33 @@ public class SpinnakerRetrofitErrorHandlerTest {
   }
 
   @Test
-  public void testSimpleSpinnakerConversionException() {
+  public void testSpinnakerConversionException() {
     String message = "Invalid JSON response";
-    ConversionException conversionException =
-        new ConversionException(message, new Throwable("reason"));
-    RetrofitError retrofitError =
-        RetrofitError.conversionError("http://localhost", null, null, null, conversionException);
-    SpinnakerRetrofitErrorHandler handler = SpinnakerRetrofitErrorHandler.getInstance();
-    Throwable throwable = handler.handleError(retrofitError);
-    assertTrue(throwable instanceof SpinnakerConversionException);
-    assertEquals(message, throwable.getMessage());
+
+    RestAdapter restAdapter =
+        new RestAdapter.Builder()
+            .setEndpoint(mockWebServer.url("/").toString())
+            .setErrorHandler(SpinnakerRetrofitErrorHandler.getInstance())
+            .setConverter(new JacksonConverter())
+            .build();
+
+    RetrofitService retrofitServiceTestConverter = restAdapter.create(RetrofitService.class);
+
+    mockWebServer.enqueue(
+        new MockResponse().setBody(message).setResponseCode(HttpStatus.OK.value()));
+
+    //  For eg: in retrofit1, JacksonConverter.fromBody() throws Retrofit.ConversionException
+    //  for json/IOException reading and parsing errors(eg JsonParseException).
+    //  SpinnakerRetrofitErrorHandler wraps RetrofitError.conversionError of
+    //  Kind.CONVERSION into SpinnakerConversionException.
+    SpinnakerConversionException spinnakerConversionException =
+        assertThrows(
+            SpinnakerConversionException.class, () -> retrofitServiceTestConverter.getData());
+    assertTrue(
+        spinnakerConversionException
+            .getMessage()
+            .contains(
+                "Unrecognized token 'Invalid': was expecting (JSON String, Number, Array, Object or token 'null', 'true' or 'false')"));
   }
 
   @Test
@@ -213,5 +230,8 @@ public class SpinnakerRetrofitErrorHandlerTest {
   interface RetrofitService {
     @GET("/foo")
     Response getFoo();
+
+    @GET("/data")
+    Call<Response> getData();
   }
 }
