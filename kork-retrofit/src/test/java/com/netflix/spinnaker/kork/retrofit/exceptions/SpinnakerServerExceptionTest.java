@@ -82,7 +82,7 @@ public class SpinnakerServerExceptionTest {
       RetrofitError retrofitError =
           RetrofitError.conversionError(
               url, response, new GsonConverter(new Gson()), null, conversionException);
-      throw new SpinnakerConversionException(retrofitError);
+      throw new SpinnakerConversionException(retrofitError.getMessage(), retrofitError.getCause());
     } catch (SpinnakerException e) {
       SpinnakerException newException = e.newInstance(CUSTOM_MESSAGE);
 

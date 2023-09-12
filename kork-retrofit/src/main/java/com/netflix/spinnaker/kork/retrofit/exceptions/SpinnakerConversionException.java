@@ -21,10 +21,6 @@ import retrofit.RetrofitError;
 /** Wraps an exception of kind {@link RetrofitError.Kind} CONVERSION. */
 public class SpinnakerConversionException extends SpinnakerServerException {
 
-  public SpinnakerConversionException(Throwable cause) {
-    super(cause);
-  }
-
   public SpinnakerConversionException(String message, Throwable cause) {
     super(message, cause);
   }
