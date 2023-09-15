@@ -41,7 +41,6 @@ import retrofit.RetrofitError;
 import retrofit.client.Response;
 import retrofit.converter.JacksonConverter;
 import retrofit.http.GET;
-import retrofit2.Call;
 
 public class SpinnakerRetrofitErrorHandlerTest {
 
@@ -226,6 +225,6 @@ public class SpinnakerRetrofitErrorHandlerTest {
     Response getFoo();
 
     @GET("/data")
-    Call<Response> getData();
+    Map<String, String> getData();
   }
 }
