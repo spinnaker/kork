@@ -179,8 +179,6 @@ public class SpinnakerRetrofitErrorHandlerTest {
 
   @Test
   public void testSpinnakerConversionException() {
-    String message = "Invalid JSON response";
-
     RestAdapter restAdapter =
         new RestAdapter.Builder()
             .setEndpoint(mockWebServer.url("/").toString())
@@ -191,12 +189,8 @@ public class SpinnakerRetrofitErrorHandlerTest {
     RetrofitService retrofitServiceTestConverter = restAdapter.create(RetrofitService.class);
 
     mockWebServer.enqueue(
-        new MockResponse().setBody(message).setResponseCode(HttpStatus.OK.value()));
+        new MockResponse().setBody("Invalid JSON response").setResponseCode(HttpStatus.OK.value()));
 
-    //  For eg: in retrofit1, JacksonConverter.fromBody() throws Retrofit.ConversionException
-    //  for json/IOException reading and parsing errors(eg JsonParseException).
-    //  SpinnakerRetrofitErrorHandler wraps RetrofitError.conversionError of
-    //  Kind.CONVERSION into SpinnakerConversionException.
     SpinnakerConversionException spinnakerConversionException =
         assertThrows(
             SpinnakerConversionException.class, () -> retrofitServiceTestConverter.getData());
