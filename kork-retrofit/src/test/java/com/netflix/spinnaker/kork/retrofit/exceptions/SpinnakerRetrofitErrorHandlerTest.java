@@ -178,26 +178,15 @@ public class SpinnakerRetrofitErrorHandlerTest {
 
   @Test
   public void testSpinnakerConversionException() {
-    RestAdapter restAdapter =
-        new RestAdapter.Builder()
-            .setEndpoint(mockWebServer.url("/").toString())
-            .setErrorHandler(SpinnakerRetrofitErrorHandler.getInstance())
-            .setConverter(new JacksonConverter())
-            .build();
-
-    RetrofitService retrofitServiceTestConverter = restAdapter.create(RetrofitService.class);
-
     mockWebServer.enqueue(
         new MockResponse().setBody("Invalid JSON response").setResponseCode(HttpStatus.OK.value()));
 
     SpinnakerConversionException spinnakerConversionException =
-        assertThrows(
-            SpinnakerConversionException.class, () -> retrofitServiceTestConverter.getData());
+        assertThrows(SpinnakerConversionException.class, () -> retrofitService.getData());
     assertTrue(
         spinnakerConversionException
             .getMessage()
-            .contains(
-                "Unrecognized token 'Invalid': was expecting (JSON String, Number, Array, Object or token 'null', 'true' or 'false')"));
+            .contains("Expected BEGIN_OBJECT but was STRING at line 1 column 1 path $"));
   }
 
   @Test
