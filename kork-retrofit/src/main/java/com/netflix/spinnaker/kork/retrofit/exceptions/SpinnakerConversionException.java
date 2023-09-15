@@ -16,9 +16,7 @@
 
 package com.netflix.spinnaker.kork.retrofit.exceptions;
 
-import retrofit.RetrofitError;
-
-/** Wraps an exception of kind {@link RetrofitError.Kind} CONVERSION. */
+/** Wraps an exception converting a successful retrofit http response body to its indicated type */
 public class SpinnakerConversionException extends SpinnakerServerException {
 
   public SpinnakerConversionException(String message, Throwable cause) {
