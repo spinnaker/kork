@@ -21,15 +21,11 @@ public class SpinnakerConversionException extends SpinnakerServerException {
 
   public SpinnakerConversionException(String message, Throwable cause) {
     super(message, cause);
+    setRetryable(false);
   }
 
   @Override
   public SpinnakerConversionException newInstance(String message) {
     return new SpinnakerConversionException(message, this);
-  }
-
-  @Override
-  public Boolean getRetryable() {
-    return Boolean.FALSE;
   }
 }
