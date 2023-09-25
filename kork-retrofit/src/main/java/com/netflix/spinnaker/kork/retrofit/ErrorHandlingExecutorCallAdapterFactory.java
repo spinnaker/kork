@@ -152,7 +152,7 @@ public class ErrorHandlingExecutorCallAdapterFactory extends CallAdapter.Factory
           return syncResp;
         }
       } catch (JsonProcessingException jpe) {
-        throw new SpinnakerConversionException("Failed to process response body : {}", jpe);
+        throw new SpinnakerConversionException("Failed to process response body", jpe);
       } catch (IOException e) {
         throw new SpinnakerNetworkException(e);
       } catch (Exception e) {
