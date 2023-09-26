@@ -201,12 +201,12 @@ public class S3ArtifactStore extends ArtifactStore {
     HeadObjectRequest request = HeadObjectRequest.builder().bucket(bucket).key(uri.paths()).build();
     try {
       s3Client.headObject(request);
-      log.info("Artifact exists. No need to store. reference={}", uri.uri());
+      log.debug("Artifact exists. No need to store. reference={}", uri.uri());
       return true;
     } catch (NoSuchKeyException e) {
       // pretty gross that we need to use exceptions as control flow, but the
       // java SDK doesn't have any other way of check if an object exists in s3
-      log.warn("Artifact does not exist reference={}", uri.uri());
+      log.info("Artifact does not exist reference={}", uri.uri());
       return false;
     }
   }
