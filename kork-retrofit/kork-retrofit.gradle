@@ -15,7 +15,6 @@ dependencies {
   implementation "com.squareup.retrofit2:converter-jackson"
   implementation "com.squareup.okhttp3:logging-interceptor"
   implementation "com.google.guava:guava"
-
   implementation 'com.squareup.retrofit2:converter-gson'
 
   testImplementation project(":kork-test")
