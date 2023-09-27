@@ -153,6 +153,7 @@ dependencies {
     api("com.squareup.okhttp:okhttp-urlconnection:${versions.okhttp}")
     api("com.squareup.okhttp:okhttp:${versions.okhttp}")
     api("com.squareup.retrofit2:converter-jackson:${versions.retrofit2}")
+    api("com.squareup.retrofit2:converter-gson:${versions.retrofit2}")
     api("com.squareup.retrofit2:retrofit-mock:${versions.retrofit2}")
     api("com.squareup.retrofit2:retrofit:${versions.retrofit2}")
     api("com.squareup.retrofit:converter-jackson:${versions.retrofit}")
