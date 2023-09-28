@@ -38,6 +38,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpStatus;
 import retrofit2.Call;
 import retrofit2.Retrofit;
+import retrofit2.converter.gson.GsonConverterFactory;
 import retrofit2.converter.jackson.JacksonConverterFactory;
 
 public class SpinnakerRetrofit2ErrorHandleTest {
@@ -178,6 +179,36 @@ public class SpinnakerRetrofit2ErrorHandleTest {
 
   @Test
   void testSpinnakerConversionException() {
+
+    String invalidJsonTypeResponseBody = "{'testcasename': 'testSpinnakerConversionException'";
+
+    mockWebServer.enqueue(
+        new MockResponse()
+            .setResponseCode(HttpStatus.OK.value())
+            .setBody(invalidJsonTypeResponseBody));
+
+    SpinnakerConversionException spinnakerConversionException =
+        assertThrows(
+            SpinnakerConversionException.class, () -> retrofit2Service.getRetrofit2().execute());
+
+    assertEquals("Failed to process response body", spinnakerConversionException.getMessage());
+  }
+
+  @Test
+  void testSpinnakerConversionExceptionWithGsonConverterFactory() {
+
+    Retrofit2Service retrofit2Service =
+        new Retrofit.Builder()
+            .baseUrl(mockWebServer.url("/").toString())
+            .client(
+                new OkHttpClient.Builder()
+                    .callTimeout(1, TimeUnit.SECONDS)
+                    .connectTimeout(1, TimeUnit.SECONDS)
+                    .build())
+            .addCallAdapterFactory(ErrorHandlingExecutorCallAdapterFactory.getInstance())
+            .addConverterFactory(GsonConverterFactory.create())
+            .build()
+            .create(Retrofit2Service.class);
 
     String invalidJsonTypeResponseBody = "{'testcasename': 'testSpinnakerConversionException'";
 
