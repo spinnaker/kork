@@ -27,6 +27,7 @@ import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
+import java.util.Arrays;
 import java.util.Objects;
 import java.util.concurrent.Executor;
 import javax.annotation.Nullable;
@@ -147,7 +148,7 @@ public class ErrorHandlingExecutorCallAdapterFactory extends CallAdapter.Factory
      */
     @Override
     public Response<T> execute() {
-      Response<T> syncResp;
+      Response<T> syncResp = null;
       try {
         syncResp = delegate.execute();
         if (syncResp.isSuccessful()) {
@@ -157,6 +158,13 @@ public class ErrorHandlingExecutorCallAdapterFactory extends CallAdapter.Factory
           | JsonParseException
           | MalformedJsonException jsonException) {
         throw new SpinnakerConversionException("Failed to process response body", jsonException);
+      } catch (RuntimeException re) {
+        if (Arrays.stream(re.getStackTrace())
+            .anyMatch(
+                stackTraceElement ->
+                    stackTraceElement.getClassName().contains("com.google.gson"))) {
+          throw new SpinnakerConversionException("Failed to process response body", re);
+        }
       } catch (IOException e) {
         throw new SpinnakerNetworkException(e);
       } catch (Exception e) {
