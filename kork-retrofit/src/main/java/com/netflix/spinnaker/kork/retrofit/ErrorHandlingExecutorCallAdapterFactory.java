@@ -17,6 +17,8 @@
 package com.netflix.spinnaker.kork.retrofit;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.google.gson.JsonParseException;
+import com.google.gson.stream.MalformedJsonException;
 import com.netflix.spinnaker.kork.retrofit.exceptions.SpinnakerConversionException;
 import com.netflix.spinnaker.kork.retrofit.exceptions.SpinnakerHttpException;
 import com.netflix.spinnaker.kork.retrofit.exceptions.SpinnakerNetworkException;
@@ -151,8 +153,10 @@ public class ErrorHandlingExecutorCallAdapterFactory extends CallAdapter.Factory
         if (syncResp.isSuccessful()) {
           return syncResp;
         }
-      } catch (JsonProcessingException jpe) {
-        throw new SpinnakerConversionException("Failed to process response body", jpe);
+      } catch (JsonProcessingException
+          | JsonParseException
+          | MalformedJsonException jsonException) {
+        throw new SpinnakerConversionException("Failed to process response body", jsonException);
       } catch (IOException e) {
         throw new SpinnakerNetworkException(e);
       } catch (Exception e) {
