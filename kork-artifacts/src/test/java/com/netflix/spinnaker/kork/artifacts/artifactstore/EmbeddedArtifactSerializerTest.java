@@ -84,7 +84,7 @@ class EmbeddedArtifactSerializerTest {
                   new ByteArrayOutputStream(),
                   Artifact.builder()
                       .type(ArtifactTypes.EMBEDDED_BASE64.getMimeType())
-                      .reference("aGVsbG8gd29ybGQK")
+                      .reference("aGVsbG8gd29ybGQK") // arbitrary
                       .build());
             });
 
