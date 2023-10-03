@@ -17,8 +17,6 @@
 package com.netflix.spinnaker.kork.retrofit;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.google.gson.JsonParseException;
-import com.google.gson.stream.MalformedJsonException;
 import com.netflix.spinnaker.kork.retrofit.exceptions.SpinnakerConversionException;
 import com.netflix.spinnaker.kork.retrofit.exceptions.SpinnakerHttpException;
 import com.netflix.spinnaker.kork.retrofit.exceptions.SpinnakerNetworkException;
@@ -27,7 +25,6 @@ import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
-import java.util.Arrays;
 import java.util.Objects;
 import java.util.concurrent.Executor;
 import javax.annotation.Nullable;
@@ -154,17 +151,8 @@ public class ErrorHandlingExecutorCallAdapterFactory extends CallAdapter.Factory
         if (syncResp.isSuccessful()) {
           return syncResp;
         }
-      } catch (JsonProcessingException
-          | JsonParseException
-          | MalformedJsonException jsonException) {
-        throw new SpinnakerConversionException("Failed to process response body", jsonException);
-      } catch (RuntimeException re) {
-        if (Arrays.stream(re.getStackTrace())
-            .anyMatch(
-                stackTraceElement ->
-                    stackTraceElement.getClassName().contains("com.google.gson"))) {
-          throw new SpinnakerConversionException("Failed to process response body", re);
-        }
+      } catch (JsonProcessingException jpe) {
+        throw new SpinnakerConversionException("Failed to process response body", jpe);
       } catch (IOException e) {
         throw new SpinnakerNetworkException(e);
       } catch (Exception e) {
