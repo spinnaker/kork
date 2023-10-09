@@ -193,6 +193,24 @@ public class SpinnakerRetrofit2ErrorHandleTest {
     assertEquals("Failed to process response body", spinnakerConversionException.getMessage());
   }
 
+  @Test
+  public void testNonJsonRetrofitErrorResponse() {
+
+    String invalidJsonTypeResponseBody = "{'errorResponse': 'Failure'";
+
+    mockWebServer.enqueue(
+        new MockResponse()
+            .setResponseCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
+            .setBody(invalidJsonTypeResponseBody));
+    SpinnakerHttpException spinnakerHttpException =
+        assertThrows(SpinnakerHttpException.class, () -> retrofit2Service.getRetrofit2().execute());
+    assertNotNull(spinnakerHttpException.getResponseBody());
+    assertEquals(
+        "com.fasterxml.jackson.core.JsonParseException: Unexpected character (''' (code 39)): was expecting double-quote to start field name\n"
+            + " at [Source: (okhttp3.ResponseBody$BomAwareReader); line: 1, column: 3]",
+        spinnakerHttpException.getResponseBody().get("message"));
+  }
+
   interface DummyWithExecute {
     void execute();
   }
