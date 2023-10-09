@@ -18,7 +18,6 @@ package com.netflix.spinnaker.kork.retrofit.exceptions;
 
 import com.google.common.base.Preconditions;
 import com.netflix.spinnaker.kork.annotations.NullableByDefault;
-import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.util.HashMap;
 import java.util.Map;
@@ -233,8 +232,10 @@ public class SpinnakerHttpException extends SpinnakerServerException {
         retrofit.responseBodyConverter(Map.class, new Annotation[0]);
     try {
       return converter.convert(retrofit2Response.errorBody());
-    } catch (IOException e) {
-      throw new RuntimeException(e);
+    } catch (Exception e) {
+      Map<String, Object> errorBody = new HashMap<>();
+      errorBody.put("message", e.toString());
+      return errorBody;
     }
   }
 }
