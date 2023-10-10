@@ -218,10 +218,11 @@ public class SpinnakerHttpException extends SpinnakerServerException {
   }
 
   /**
-   * HTTP response body converted to specified {@code type}. {@code null} if there is no response.
+   * HTTP error response body converted to specified {@code type}. {@code null} if there is no
+   * response.
    *
-   * @throws RuntimeException wrapping the underlying IOException if unable to convert the body to
-   *     the specified {@code type}.
+   * @return null wrapping the underlying Exception if unable to convert the body to the specified
+   *     {@code type}.
    */
   private Map<String, Object> getErrorBodyAs(Retrofit retrofit) {
     if (retrofit2Response == null) {
@@ -233,9 +234,8 @@ public class SpinnakerHttpException extends SpinnakerServerException {
     try {
       return converter.convert(retrofit2Response.errorBody());
     } catch (Exception e) {
-      Map<String, Object> errorBody = new HashMap<>();
-      errorBody.put("message", e.toString());
-      return errorBody;
+      log.debug("Exception occurred while parsing the HTTP error response body : {}", e);
+      return null;
     }
   }
 }
