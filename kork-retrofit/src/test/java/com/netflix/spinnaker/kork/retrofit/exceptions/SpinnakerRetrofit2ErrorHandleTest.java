@@ -194,7 +194,7 @@ public class SpinnakerRetrofit2ErrorHandleTest {
   }
 
   @Test
-  public void testNonJsonRetrofitErrorResponse() {
+  public void testNonJsonHttpErrorResponse() {
 
     String invalidJsonTypeResponseBody = "{'errorResponse': 'Failure'";
 
@@ -204,11 +204,7 @@ public class SpinnakerRetrofit2ErrorHandleTest {
             .setBody(invalidJsonTypeResponseBody));
     SpinnakerHttpException spinnakerHttpException =
         assertThrows(SpinnakerHttpException.class, () -> retrofit2Service.getRetrofit2().execute());
-    assertNotNull(spinnakerHttpException.getResponseBody());
-    assertEquals(
-        "com.fasterxml.jackson.core.JsonParseException: Unexpected character (''' (code 39)): was expecting double-quote to start field name\n"
-            + " at [Source: (okhttp3.ResponseBody$BomAwareReader); line: 1, column: 3]",
-        spinnakerHttpException.getResponseBody().get("message"));
+    assertNull(spinnakerHttpException.getResponseBody());
   }
 
   interface DummyWithExecute {
