@@ -19,7 +19,10 @@ package com.netflix.spinnaker.kork.retrofit.exceptions;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 import com.google.gson.Gson;
 import com.netflix.spinnaker.kork.exceptions.SpinnakerException;
