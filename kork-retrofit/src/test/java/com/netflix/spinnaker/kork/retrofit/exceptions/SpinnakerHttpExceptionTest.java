@@ -158,7 +158,7 @@ public class SpinnakerHttpExceptionTest {
   }
 
   @Test
-  void testNonJsonHttpErrorResponse(){
+  void testSpinnakerHttpExceptionRetrofit2NonJsonHttpErrorResponse(){
 
     String invalidJsonTypeResponseBody = "{'errorResponse': 'Failure'";
     retrofit2.Response response = buildRetrofit2ErrorResponse(invalidJsonTypeResponseBody);
