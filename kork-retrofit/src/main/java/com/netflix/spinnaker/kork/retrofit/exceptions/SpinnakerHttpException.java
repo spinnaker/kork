@@ -234,10 +234,11 @@ public class SpinnakerHttpException extends SpinnakerServerException {
       return converter.convert(retrofit2Response.errorBody());
     } catch (Exception e) {
       log.debug(
-          "Exception occurred while parsing the HTTP error response body. Status code : {}, URL : {}, stack trace : ",
-          retrofit2Response.code(),
-          retrofit2Response.raw().request().url(),
-          e);
+        "unable to convert response to map ({} {}, {})",
+        retrofit2Response.raw().request().method(),
+        retrofit2Response.code(),
+        retrofit2Response.raw().request().url(),
+        e);
       return null;
     }
   }
