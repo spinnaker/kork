@@ -19,17 +19,23 @@ package com.netflix.spinnaker.kork.retrofit.exceptions;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 import com.google.gson.Gson;
 import com.netflix.spinnaker.kork.exceptions.SpinnakerException;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
+
+import com.netflix.spinnaker.kork.retrofit.ErrorHandlingExecutorCallAdapterFactory;
 import okhttp3.MediaType;
+import okhttp3.OkHttpClient;
 import okhttp3.ResponseBody;
+import okio.Buffer;
+import okio.BufferedSource;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpStatus;
 import retrofit.RetrofitError;
@@ -146,5 +152,52 @@ public class SpinnakerHttpExceptionTest {
         .isEqualTo("Status: " + statusCode + ", URL: " + url + ", Message: " + reason);
     assertThat(spinnakerHttpException.getUrl()).isEqualTo(url);
     assertThat(spinnakerHttpException.getReason()).isEqualTo(reason);
+  }
+
+  @Test
+  void testNonJsonHttpErrorResponse(){
+
+    String invalidJsonTypeResponseBody = "{'errorResponse': 'Failure'";
+    retrofit2.Response response = buildRetrofit2ErrorResponse(invalidJsonTypeResponseBody);
+    Retrofit retrofit = configureRetrofit2();
+    SpinnakerHttpException spinnakerHttpException = new SpinnakerHttpException(response, retrofit);
+    assertNull(spinnakerHttpException.getResponseBody());
+
+  }
+
+  @NotNull
+  private Retrofit configureRetrofit2() {
+    return new Retrofit.Builder()
+      .baseUrl("http://localhost:8080/endpoint1/")
+      .client(
+        new OkHttpClient.Builder()
+          .callTimeout(1, TimeUnit.SECONDS)
+          .connectTimeout(1, TimeUnit.SECONDS)
+          .build())
+      .addCallAdapterFactory(ErrorHandlingExecutorCallAdapterFactory.getInstance())
+      .addConverterFactory(JacksonConverterFactory.create())
+      .build();
+  }
+
+  @NotNull
+  private retrofit2.Response<Object> buildRetrofit2ErrorResponse(String invalidJsonTypeResponseBody) {
+    return retrofit2.Response.error(500, new ResponseBody() {
+      @Nullable
+      @Override
+      public MediaType contentType() {
+        return MediaType.get(org.springframework.http.MediaType.APPLICATION_JSON_VALUE);
+      }
+
+      @Override
+      public long contentLength() {
+        return Integer.valueOf(invalidJsonTypeResponseBody.length()).longValue();
+      }
+
+      @NotNull
+      @Override
+      public BufferedSource source() {
+        return new Buffer().write(invalidJsonTypeResponseBody.getBytes());
+      }
+    });
   }
 }
