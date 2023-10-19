@@ -25,9 +25,11 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.google.gson.Gson;
 import com.netflix.spinnaker.kork.exceptions.SpinnakerException;
+import com.netflix.spinnaker.kork.retrofit.ErrorHandlingExecutorCallAdapterFactory;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+
 import okhttp3.MediaType;
 import okhttp3.ResponseBody;
 import org.junit.jupiter.api.Test;
