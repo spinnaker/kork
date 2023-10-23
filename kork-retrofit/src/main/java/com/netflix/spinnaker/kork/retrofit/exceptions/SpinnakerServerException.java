@@ -18,17 +18,29 @@ package com.netflix.spinnaker.kork.retrofit.exceptions;
 
 import com.netflix.spinnaker.kork.annotations.NonnullByDefault;
 import com.netflix.spinnaker.kork.exceptions.SpinnakerException;
+import java.io.Serializable;
+import lombok.Getter;
+import retrofit.RetrofitError;
 
 /** Represents an error while attempting to execute a retrofit http client request. */
 @NonnullByDefault
 public class SpinnakerServerException extends SpinnakerException {
+  @Getter private transient RetrofitError retrofitError = null;
 
   public SpinnakerServerException(String message, Throwable cause) {
-    super(message, cause);
+    super(message, makeSerializable(cause));
+
+    if (cause instanceof RetrofitError) {
+      this.retrofitError = (RetrofitError) cause;
+    }
   }
 
   public SpinnakerServerException(Throwable cause) {
-    super(cause);
+    super(makeSerializable(cause));
+
+    if (cause instanceof RetrofitError) {
+      this.retrofitError = (RetrofitError) cause;
+    }
   }
 
   public SpinnakerServerException() {}
@@ -36,5 +48,18 @@ public class SpinnakerServerException extends SpinnakerException {
   @Override
   public SpinnakerServerException newInstance(String message) {
     return new SpinnakerServerException(message, this);
+  }
+
+  /**
+   * RetrofitErrors are not serializable which causes issues with anything that utilizes the {@link
+   * Serializable}, e.g. session storage in Spring.
+   */
+  private static Throwable makeSerializable(Throwable cause) {
+    if (!(cause instanceof RetrofitError)) {
+      return cause;
+    }
+
+    // here we convert the retrofit error to something serializable.
+    return new UpstreamBadRequest((RetrofitError) cause);
   }
 }
