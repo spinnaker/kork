@@ -42,11 +42,11 @@ import retrofit2.Retrofit;
 @Slf4j
 public class SpinnakerHttpException extends SpinnakerServerException {
 
-  private final Response response;
+  private final transient Response response;
 
   private HttpHeaders headers;
 
-  private final retrofit2.Response<?> retrofit2Response;
+  private final transient retrofit2.Response<?> retrofit2Response;
 
   /**
    * A message derived from a RetrofitError's response body, or null if a custom message has been
