@@ -33,10 +33,19 @@ class SpinnakerServerExceptionTest {
   private static final String CUSTOM_MESSAGE = "custom message";
 
   @Test
+  void testSpinnakerNetworkExceptionWithUrl() {
+    Throwable cause = new Throwable("arbitrary message");
+    String url = "some-url";
+    SpinnakerNetworkException spinnakerNetworkException = new SpinnakerNetworkException(cause, url);
+    assertThat(spinnakerNetworkException.getUrl()).isEqualTo(url);
+  }
+
+  @Test
   void testSpinnakerNetworkException_NewInstance() {
     IOException initialException = new IOException("message");
+    String url = "http://localhost";
     try {
-      RetrofitError error = RetrofitError.networkError("http://localhost", initialException);
+      RetrofitError error = RetrofitError.networkError(url, initialException);
       throw new SpinnakerNetworkException(error);
     } catch (SpinnakerException e) {
       SpinnakerException newException = e.newInstance(CUSTOM_MESSAGE);
@@ -44,14 +53,26 @@ class SpinnakerServerExceptionTest {
       assertThat(newException).isInstanceOf(SpinnakerNetworkException.class);
       assertThat(newException).hasMessage(CUSTOM_MESSAGE);
       assertThat(newException).hasCause(e);
+      SpinnakerNetworkException spinnakerNetworkException =
+          (SpinnakerNetworkException) newException;
+      assertThat(spinnakerNetworkException.getUrl()).isEqualTo(url);
     }
+  }
+
+  @Test
+  void testSpinnakerServerExceptionWithUrl() {
+    Throwable cause = new Throwable("arbitrary message");
+    String url = "some-url";
+    SpinnakerServerException spinnakerServerException = new SpinnakerServerException(cause, url);
+    assertThat(spinnakerServerException.getUrl()).isEqualTo(url);
   }
 
   @Test
   void testSpinnakerServerException_NewInstance() {
     Throwable cause = new Throwable("message");
+    String url = "http://localhost";
     try {
-      RetrofitError error = RetrofitError.unexpectedError("http://localhost", cause);
+      RetrofitError error = RetrofitError.unexpectedError(url, cause);
       throw new SpinnakerServerException(error);
     } catch (SpinnakerException e) {
       SpinnakerException newException = e.newInstance(CUSTOM_MESSAGE);
@@ -59,6 +80,8 @@ class SpinnakerServerExceptionTest {
       assertThat(newException).isInstanceOf(SpinnakerServerException.class);
       assertThat(newException).hasMessage(CUSTOM_MESSAGE);
       assertThat(newException).hasCause(e);
+      SpinnakerServerException spinnakerServerException = (SpinnakerServerException) newException;
+      assertThat(spinnakerServerException.getUrl()).isEqualTo(url);
     }
   }
 
@@ -81,13 +104,16 @@ class SpinnakerServerExceptionTest {
       RetrofitError retrofitError =
           RetrofitError.conversionError(
               url, response, new GsonConverter(new Gson()), null, conversionException);
-      throw new SpinnakerConversionException(retrofitError.getMessage(), retrofitError.getCause());
+      throw new SpinnakerConversionException(retrofitError);
     } catch (SpinnakerException e) {
       SpinnakerException newException = e.newInstance(CUSTOM_MESSAGE);
 
       assertThat(newException).isInstanceOf(SpinnakerConversionException.class);
       assertThat(newException).hasMessage(CUSTOM_MESSAGE);
       assertThat(newException).hasCause(e);
+      SpinnakerConversionException spinnakerConversionException =
+          (SpinnakerConversionException) newException;
+      assertThat(spinnakerConversionException.getUrl()).isEqualTo(url);
     }
   }
 }

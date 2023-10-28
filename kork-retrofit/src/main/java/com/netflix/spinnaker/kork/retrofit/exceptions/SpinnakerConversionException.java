@@ -16,12 +16,22 @@
 
 package com.netflix.spinnaker.kork.retrofit.exceptions;
 
+import retrofit.RetrofitError;
+
 /** Wraps an exception converting a successful retrofit http response body to its indicated type */
 public class SpinnakerConversionException extends SpinnakerServerException {
 
-  public SpinnakerConversionException(String message, Throwable cause) {
-    super(message, cause);
+  public SpinnakerConversionException(String message, Throwable cause, String url) {
+    super(message, cause, url);
     setRetryable(false);
+  }
+
+  public SpinnakerConversionException(String message, SpinnakerConversionException cause) {
+    super(message, cause);
+  }
+
+  public SpinnakerConversionException(RetrofitError e) {
+    super(e);
   }
 
   @Override

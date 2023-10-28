@@ -23,6 +23,8 @@ import static org.mockito.Mockito.when;
 
 import com.netflix.spinnaker.kork.retrofit.Retrofit2SyncCall;
 import java.io.IOException;
+import okhttp3.HttpUrl;
+import okhttp3.Request;
 import org.junit.jupiter.api.Test;
 import retrofit2.Call;
 import retrofit2.Response;
@@ -43,9 +45,16 @@ class Retrofit2SyncCallTest {
     Call<String> mockCall = mock(Call.class);
     IOException ioException = new IOException("exception test");
     when(mockCall.execute()).thenThrow(ioException);
+
+    HttpUrl url = HttpUrl.parse("http://arbitrary-url");
+    Request mockRequest = mock(Request.class);
+    when(mockCall.request()).thenReturn(mockRequest);
+    when(mockRequest.url()).thenReturn(url);
+
     SpinnakerNetworkException thrown =
         catchThrowableOfType(
             () -> Retrofit2SyncCall.execute(mockCall), SpinnakerNetworkException.class);
     assertThat(thrown).hasCause(ioException);
+    assertThat(thrown.getUrl()).isEqualTo(url.toString());
   }
 }

@@ -180,10 +180,14 @@ class SpinnakerRetrofitErrorHandlerTest {
   void testSimpleSpinnakerNetworkException() {
     String message = "my custom message";
     IOException e = new IOException(message);
-    RetrofitError retrofitError = RetrofitError.networkError("http://localhost", e);
+    String url = "http://localhost";
+    RetrofitError retrofitError = RetrofitError.networkError(url, e);
     SpinnakerRetrofitErrorHandler handler = SpinnakerRetrofitErrorHandler.getInstance();
     Throwable throwable = handler.handleError(retrofitError);
     assertThat(throwable).hasMessage(message);
+    assertThat(throwable).isInstanceOf(SpinnakerNetworkException.class);
+    SpinnakerNetworkException spinnakerNetworkException = (SpinnakerNetworkException) throwable;
+    assertThat(spinnakerNetworkException.getUrl()).isEqualTo(url);
   }
 
   @Test
@@ -195,6 +199,8 @@ class SpinnakerRetrofitErrorHandlerTest {
         catchThrowableOfType(() -> retrofitService.getData(), SpinnakerConversionException.class);
     assertThat(spinnakerConversionException)
         .hasMessageContaining("Expected BEGIN_OBJECT but was STRING at line 1 column 1 path $");
+    assertThat(spinnakerConversionException.getUrl())
+        .isEqualTo(mockWebServer.url("/data").toString());
   }
 
   @Test
@@ -205,7 +211,9 @@ class SpinnakerRetrofitErrorHandlerTest {
     String newMessage = "new message";
 
     IOException originalException = new IOException(originalMessage);
-    RetrofitError retrofitError = RetrofitError.networkError("http://localhost", originalException);
+
+    String url = "http://localhost";
+    RetrofitError retrofitError = RetrofitError.networkError(url, originalException);
 
     Throwable newException =
         handler.handleError(
@@ -215,6 +223,8 @@ class SpinnakerRetrofitErrorHandlerTest {
     assertThat(newException).isInstanceOf(SpinnakerNetworkException.class);
     assertThat(newException).hasMessage("new message: original message");
     assertThat(newException.getCause()).hasMessage(originalMessage);
+    SpinnakerNetworkException spinnakerNetworkException = (SpinnakerNetworkException) newException;
+    assertThat(spinnakerNetworkException.getUrl()).isEqualTo(url);
   }
 
   interface RetrofitService {

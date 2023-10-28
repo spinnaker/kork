@@ -18,23 +18,46 @@ package com.netflix.spinnaker.kork.retrofit.exceptions;
 
 import com.netflix.spinnaker.kork.annotations.NonnullByDefault;
 import com.netflix.spinnaker.kork.exceptions.SpinnakerException;
+import retrofit.RetrofitError;
+import retrofit2.Response;
 
 /** Represents an error while attempting to execute a retrofit http client request. */
 @NonnullByDefault
 public class SpinnakerServerException extends SpinnakerException {
 
-  public SpinnakerServerException(String message, Throwable cause) {
-    super(message, cause);
+  private final String url;
+
+  public SpinnakerServerException(RetrofitError e) {
+    super(e.getMessage(), e.getCause());
+    url = e.getUrl();
   }
 
-  public SpinnakerServerException(Throwable cause) {
+  public SpinnakerServerException(Response retrofit2Response) {
+    super();
+    url = retrofit2Response.raw().request().url().toString();
+  }
+
+  public SpinnakerServerException(Throwable cause, String url) {
     super(cause);
+    this.url = url;
   }
 
-  public SpinnakerServerException() {}
+  public SpinnakerServerException(String message, Throwable cause, String url) {
+    super(message, cause);
+    this.url = url;
+  }
+
+  public SpinnakerServerException(String message, SpinnakerServerException cause) {
+    super(message, cause);
+    this.url = cause.getUrl();
+  }
 
   @Override
   public SpinnakerServerException newInstance(String message) {
     return new SpinnakerServerException(message, this);
+  }
+
+  public String getUrl() {
+    return this.url;
   }
 }

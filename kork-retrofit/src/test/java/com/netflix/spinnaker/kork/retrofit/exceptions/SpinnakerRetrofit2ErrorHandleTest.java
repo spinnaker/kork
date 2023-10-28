@@ -17,7 +17,6 @@
 package com.netflix.spinnaker.kork.retrofit.exceptions;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.assertj.core.api.Assertions.catchThrowableOfType;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -121,8 +120,11 @@ class SpinnakerRetrofit2ErrorHandleTest {
   @Test
   void testRetrofitSimpleSpinnakerNetworkException() {
     mockWebServer.enqueue(new MockResponse().setSocketPolicy(SocketPolicy.NO_RESPONSE));
-    assertThatExceptionOfType(SpinnakerNetworkException.class)
-        .isThrownBy(() -> retrofit2Service.getRetrofit2().execute());
+    SpinnakerNetworkException spinnakerNetworkException =
+        catchThrowableOfType(
+            () -> retrofit2Service.getRetrofit2().execute(), SpinnakerNetworkException.class);
+    assertThat(spinnakerNetworkException.getUrl())
+        .isEqualTo(mockWebServer.url("/retrofit2").toString());
   }
 
   @Test
@@ -191,6 +193,8 @@ class SpinnakerRetrofit2ErrorHandleTest {
         catchThrowableOfType(
             () -> retrofit2Service.getRetrofit2().execute(), SpinnakerConversionException.class);
     assertThat(spinnakerConversionException).hasMessage("Failed to process response body");
+    assertThat(spinnakerConversionException.getUrl())
+        .isEqualTo(mockWebServer.url("/retrofit2").toString());
   }
 
   @Test
