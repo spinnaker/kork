@@ -86,6 +86,7 @@ class SpinnakerRetrofit2ErrorHandleTest {
             () -> retrofit2Service.getRetrofit2().execute(), SpinnakerHttpException.class);
     assertThat(notFoundException.getRetryable()).isNotNull();
     assertThat(notFoundException.getRetryable()).isFalse();
+    assertThat(notFoundException.getUrl()).isEqualTo(mockWebServer.url("/retrofit2").toString());
   }
 
   @Test
@@ -100,6 +101,8 @@ class SpinnakerRetrofit2ErrorHandleTest {
             () -> retrofit2Service.getRetrofit2().execute(), SpinnakerHttpException.class);
     assertThat(spinnakerHttpException.getRetryable()).isNotNull();
     assertThat(spinnakerHttpException.getRetryable()).isFalse();
+    assertThat(spinnakerHttpException.getUrl())
+        .isEqualTo(mockWebServer.url("/retrofit2").toString());
   }
 
   @Test
@@ -111,6 +114,8 @@ class SpinnakerRetrofit2ErrorHandleTest {
         catchThrowableOfType(
             () -> retrofit2Service.getRetrofit2().execute(), SpinnakerHttpException.class);
     assertThat(spinnakerHttpException.getRetryable()).isNull();
+    assertThat(spinnakerHttpException.getUrl())
+        .isEqualTo(mockWebServer.url("/retrofit2").toString());
   }
 
   @Test
@@ -141,6 +146,8 @@ class SpinnakerRetrofit2ErrorHandleTest {
             () -> retrofit2Service.getRetrofit2().execute(), SpinnakerHttpException.class);
     assertThat(spinnakerHttpException.getHeaders().containsKey("Test")).isTrue();
     assertThat(spinnakerHttpException.getHeaders().get("Test").contains("true")).isTrue();
+    assertThat(spinnakerHttpException.getUrl())
+        .isEqualTo(mockWebServer.url("/retrofit2").toString());
   }
 
   @Test

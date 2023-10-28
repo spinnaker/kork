@@ -17,7 +17,6 @@
 package com.netflix.spinnaker.kork.retrofit.exceptions;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.assertj.core.api.Assertions.catchThrowableOfType;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
@@ -128,8 +127,9 @@ class SpinnakerRetrofitErrorHandlerTest {
     // "..."
     //
     // so make sure we get a SpinnakerHttpException from calling getFoo
-    assertThatExceptionOfType(SpinnakerHttpException.class)
-        .isThrownBy(retrofitServiceTestConverter::getFoo);
+    SpinnakerHttpException spinnakerHttpException =
+        catchThrowableOfType(retrofitServiceTestConverter::getFoo, SpinnakerHttpException.class);
+    assertThat(spinnakerHttpException.getUrl()).isEqualTo(mockWebServer.url("/foo").toString());
   }
 
   @Test
@@ -139,6 +139,7 @@ class SpinnakerRetrofitErrorHandlerTest {
         catchThrowableOfType(() -> retrofitService.getFoo(), SpinnakerHttpException.class);
     assertThat(spinnakerHttpException.getRetryable()).isNotNull();
     assertThat(spinnakerHttpException.getRetryable()).isFalse();
+    assertThat(spinnakerHttpException.getUrl()).isEqualTo(mockWebServer.url("/foo").toString());
   }
 
   @Test
@@ -149,6 +150,7 @@ class SpinnakerRetrofitErrorHandlerTest {
     SpinnakerHttpException spinnakerHttpException =
         catchThrowableOfType(() -> retrofitService.getFoo(), SpinnakerHttpException.class);
     assertThat(spinnakerHttpException.getRetryable()).isNull();
+    assertThat(spinnakerHttpException.getUrl()).isEqualTo(mockWebServer.url("/foo").toString());
   }
 
   @Test
@@ -162,6 +164,7 @@ class SpinnakerRetrofitErrorHandlerTest {
         catchThrowableOfType(() -> retrofitService.getFoo(), SpinnakerHttpException.class);
     assertThat(spinnakerHttpException.getHeaders().containsKey("Test")).isTrue();
     assertThat(spinnakerHttpException.getHeaders().get("Test").contains("true")).isTrue();
+    assertThat(spinnakerHttpException.getUrl()).isEqualTo(mockWebServer.url("/foo").toString());
   }
 
   @Test
