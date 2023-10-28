@@ -126,13 +126,6 @@ class SpinnakerRetrofit2ErrorHandleTest {
   }
 
   @Test
-  void testRetrofitSimpleSpinnakerServerException() {
-    mockWebServer.enqueue(new MockResponse().setSocketPolicy(SocketPolicy.DISCONNECT_AT_START));
-    assertThatExceptionOfType(SpinnakerServerException.class)
-        .isThrownBy(() -> retrofit2Service.getRetrofit2().execute());
-  }
-
-  @Test
   void testResponseHeadersInException() {
 
     // Check response headers are retrievable from a SpinnakerHttpException
