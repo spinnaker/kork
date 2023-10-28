@@ -17,6 +17,7 @@
 package com.netflix.spinnaker.kork.retrofit.exceptions;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.assertj.core.api.Assertions.catchThrowableOfType;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
@@ -26,6 +27,7 @@ import java.util.HashMap;
 import java.util.Map;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
+import okhttp3.mockwebserver.SocketPolicy;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -68,6 +70,13 @@ class SpinnakerRetrofitErrorHandlerTest {
         catchThrowableOfType(() -> retrofitService.getFoo(), SpinnakerHttpException.class);
     assertThat(notFoundException.getRetryable()).isNotNull();
     assertThat(notFoundException.getRetryable()).isFalse();
+  }
+
+  @Test
+  void testSpinnakerNetworkException() {
+    mockWebServer.enqueue(new MockResponse().setSocketPolicy(SocketPolicy.NO_RESPONSE));
+    assertThatExceptionOfType(SpinnakerNetworkException.class)
+        .isThrownBy(() -> retrofitService.getFoo());
   }
 
   @ParameterizedTest(name = "Deserialize response using {0}")
