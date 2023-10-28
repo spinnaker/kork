@@ -16,8 +16,7 @@
 
 package com.netflix.spinnaker.kork.retrofit.exceptions;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.gson.Gson;
 import com.netflix.spinnaker.kork.exceptions.SpinnakerException;
@@ -30,11 +29,11 @@ import retrofit.converter.ConversionException;
 import retrofit.converter.GsonConverter;
 import retrofit.mime.TypedByteArray;
 
-public class SpinnakerServerExceptionTest {
+class SpinnakerServerExceptionTest {
   private static final String CUSTOM_MESSAGE = "custom message";
 
   @Test
-  public void testSpinnakerNetworkException_NewInstance() {
+  void testSpinnakerNetworkException_NewInstance() {
     IOException initialException = new IOException("message");
     try {
       RetrofitError error = RetrofitError.networkError("http://localhost", initialException);
@@ -42,14 +41,14 @@ public class SpinnakerServerExceptionTest {
     } catch (SpinnakerException e) {
       SpinnakerException newException = e.newInstance(CUSTOM_MESSAGE);
 
-      assertTrue(newException instanceof SpinnakerNetworkException);
-      assertEquals(CUSTOM_MESSAGE, newException.getMessage());
-      assertEquals(e, newException.getCause());
+      assertThat(newException).isInstanceOf(SpinnakerNetworkException.class);
+      assertThat(newException).hasMessage(CUSTOM_MESSAGE);
+      assertThat(newException).hasCause(e);
     }
   }
 
   @Test
-  public void testSpinnakerServerException_NewInstance() {
+  void testSpinnakerServerException_NewInstance() {
     Throwable cause = new Throwable("message");
     try {
       RetrofitError error = RetrofitError.unexpectedError("http://localhost", cause);
@@ -57,14 +56,14 @@ public class SpinnakerServerExceptionTest {
     } catch (SpinnakerException e) {
       SpinnakerException newException = e.newInstance(CUSTOM_MESSAGE);
 
-      assertTrue(newException instanceof SpinnakerServerException);
-      assertEquals(CUSTOM_MESSAGE, newException.getMessage());
-      assertEquals(e, newException.getCause());
+      assertThat(newException).isInstanceOf(SpinnakerServerException.class);
+      assertThat(newException).hasMessage(CUSTOM_MESSAGE);
+      assertThat(newException).hasCause(e);
     }
   }
 
   @Test
-  public void testSpinnakerConversionException_NewInstance() {
+  void testSpinnakerConversionException_NewInstance() {
     String url = "http://localhost";
     String reason = "reason";
 
@@ -86,9 +85,9 @@ public class SpinnakerServerExceptionTest {
     } catch (SpinnakerException e) {
       SpinnakerException newException = e.newInstance(CUSTOM_MESSAGE);
 
-      assertTrue(newException instanceof SpinnakerConversionException);
-      assertEquals(CUSTOM_MESSAGE, newException.getMessage());
-      assertEquals(e, newException.getCause());
+      assertThat(newException).isInstanceOf(SpinnakerConversionException.class);
+      assertThat(newException).hasMessage(CUSTOM_MESSAGE);
+      assertThat(newException).hasCause(e);
     }
   }
 }
