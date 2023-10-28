@@ -18,7 +18,6 @@ package com.netflix.spinnaker.kork.retrofit.exceptions;
 
 import com.netflix.spinnaker.kork.annotations.NonnullByDefault;
 import com.netflix.spinnaker.kork.exceptions.SpinnakerException;
-
 import lombok.Getter;
 import retrofit.RetrofitError;
 
@@ -28,18 +27,18 @@ public class SpinnakerServerException extends SpinnakerException {
   @Getter @NonnullByDefault protected final String url;
 
   public SpinnakerServerException(String message, Throwable cause) {
-    super(message, cause);
+    super(message, getProperCause(cause));
     this.url = getUrl(cause);
   }
 
   public SpinnakerServerException(Throwable cause) {
-    super(cause);
+    super(cause.getMessage(), getProperCause(cause));
     this.url = getUrl(cause);
   }
 
-  public SpinnakerServerException(RetrofitError cause) {
-    super(cause);
-    this.url = cause.getUrl();
+  public SpinnakerServerException(RetrofitError re) {
+    super(re.getMessage(), re.getCause());
+    this.url = re.getUrl();
   }
 
   public SpinnakerServerException(retrofit2.Response<?> resp) {
@@ -53,14 +52,22 @@ public class SpinnakerServerException extends SpinnakerException {
   /** Helper method to ensure that the url gets populated appropriately */
   private static String getUrl(Throwable cause) {
     if (cause instanceof RetrofitError) {
-      return ((RetrofitError)cause).getUrl();
+      return ((RetrofitError) cause).getUrl();
     }
 
     if (cause instanceof SpinnakerServerException) {
-      return ((SpinnakerServerException)cause).getUrl();
+      return ((SpinnakerServerException) cause).getUrl();
     }
 
     return "";
+  }
+
+  private static Throwable getProperCause(Throwable cause) {
+    if (cause instanceof RetrofitError) {
+      return cause.getCause();
+    }
+
+    return cause;
   }
 
   @Override

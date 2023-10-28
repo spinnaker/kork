@@ -27,20 +27,25 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Stream;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.http.HttpStatus;
 import retrofit.RestAdapter;
 import retrofit.RetrofitError;
 import retrofit.client.Response;
+import retrofit.converter.ConversionException;
 import retrofit.converter.JacksonConverter;
 import retrofit.http.GET;
+import retrofit.mime.TypedString;
 
 public class SpinnakerRetrofitErrorHandlerTest {
 
@@ -207,6 +212,37 @@ public class SpinnakerRetrofitErrorHandlerTest {
     assertTrue(newException instanceof SpinnakerNetworkException);
     assertEquals("new message: original message", newException.getMessage());
     assertEquals(originalMessage, newException.getCause().getMessage());
+  }
+
+  @ParameterizedTest
+  @MethodSource("parameters")
+  public void testSpinnakerServerException_doesPopulateUrl(RetrofitError retrofitError) {
+    SpinnakerRetrofitErrorHandler handler = SpinnakerRetrofitErrorHandler.getInstance();
+
+    Throwable newException =
+        handler.handleError(
+            retrofitError, (exception) -> String.format("new message: %s", exception.getMessage()));
+
+    assertEquals("http://localhost", ((SpinnakerServerException) newException).getUrl());
+  }
+
+  private static Stream<RetrofitError> parameters() {
+    String url = "http://localhost";
+    String body = "{\"message\":\"custom failure message\"}";
+
+    IOException originalException = new IOException("original message");
+    Response response = new Response(url, 400, "failed", List.of(), new TypedString(body));
+    ;
+    return List.of(
+        RetrofitError.networkError("http://localhost", originalException),
+        RetrofitError.conversionError(
+            "http://localhost",
+            response,
+            new JacksonConverter(),
+            Map.class,
+            new ConversionException("failed conversion")),
+        RetrofitError.httpError(url, response, new JacksonConverter(), Map.class))
+        .stream();
   }
 
   interface RetrofitService {

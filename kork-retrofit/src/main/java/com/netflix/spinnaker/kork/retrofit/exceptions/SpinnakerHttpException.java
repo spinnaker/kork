@@ -90,10 +90,7 @@ public class SpinnakerHttpException extends SpinnakerServerException {
       // malformed json, and even for non-json responses (e.g. html).  So, don't
       // try to log anything from the response body itself.
       log.debug(
-          "unable to convert response to map ({}, {})",
-          url,
-          e.getMessage(),
-          responseBodyException);
+          "unable to convert response to map ({}, {})", url, e.getMessage(), responseBodyException);
     }
     responseBody = body;
     if (responseBody != null) {
