@@ -18,6 +18,7 @@ package com.netflix.spinnaker.kork.retrofit.exceptions;
 
 import com.netflix.spinnaker.kork.annotations.NonnullByDefault;
 import com.netflix.spinnaker.kork.exceptions.SpinnakerException;
+import lombok.Getter;
 import okhttp3.Request;
 import retrofit.RetrofitError;
 
@@ -25,7 +26,7 @@ import retrofit.RetrofitError;
 @NonnullByDefault
 public class SpinnakerServerException extends SpinnakerException {
 
-  private final String url;
+  @Getter private final String url;
 
   /** Construct a SpinnakerServerException corresponding to a RetrofitError. */
   public SpinnakerServerException(RetrofitError e) {
@@ -72,9 +73,5 @@ public class SpinnakerServerException extends SpinnakerException {
   @Override
   public SpinnakerServerException newInstance(String message) {
     return new SpinnakerServerException(message, this);
-  }
-
-  public String getUrl() {
-    return this.url;
   }
 }
