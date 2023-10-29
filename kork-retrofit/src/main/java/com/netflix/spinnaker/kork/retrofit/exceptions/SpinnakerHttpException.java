@@ -64,6 +64,7 @@ public class SpinnakerHttpException extends SpinnakerServerException {
    */
   private final String reason;
 
+  /** Construct a SpinnakerHttpException corresponding to a RetrofitError. */
   public SpinnakerHttpException(RetrofitError e) {
     super(e);
 

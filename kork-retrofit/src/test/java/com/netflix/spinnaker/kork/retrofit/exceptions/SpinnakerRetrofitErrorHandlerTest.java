@@ -197,6 +197,8 @@ class SpinnakerRetrofitErrorHandlerTest {
 
     SpinnakerConversionException spinnakerConversionException =
         catchThrowableOfType(() -> retrofitService.getData(), SpinnakerConversionException.class);
+    assertThat(spinnakerConversionException.getRetryable()).isNotNull();
+    assertThat(spinnakerConversionException.getRetryable()).isFalse();
     assertThat(spinnakerConversionException)
         .hasMessageContaining("Expected BEGIN_OBJECT but was STRING at line 1 column 1 path $");
     assertThat(spinnakerConversionException.getUrl())

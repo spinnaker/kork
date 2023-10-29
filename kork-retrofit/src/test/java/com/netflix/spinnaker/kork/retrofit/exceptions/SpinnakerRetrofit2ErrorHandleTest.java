@@ -192,6 +192,8 @@ class SpinnakerRetrofit2ErrorHandleTest {
     SpinnakerConversionException spinnakerConversionException =
         catchThrowableOfType(
             () -> retrofit2Service.getRetrofit2().execute(), SpinnakerConversionException.class);
+    assertThat(spinnakerConversionException.getRetryable()).isNotNull();
+    assertThat(spinnakerConversionException.getRetryable()).isFalse();
     assertThat(spinnakerConversionException).hasMessage("Failed to process response body");
     assertThat(spinnakerConversionException.getUrl())
         .isEqualTo(mockWebServer.url("/retrofit2").toString());

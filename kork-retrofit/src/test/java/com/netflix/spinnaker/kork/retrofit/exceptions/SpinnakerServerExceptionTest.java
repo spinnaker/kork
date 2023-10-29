@@ -118,6 +118,8 @@ class SpinnakerServerExceptionTest {
       assertThat(newException).hasCause(e);
       SpinnakerConversionException spinnakerConversionException =
           (SpinnakerConversionException) newException;
+      assertThat(spinnakerConversionException.getRetryable()).isNotNull();
+      assertThat(spinnakerConversionException.getRetryable()).isFalse();
       assertThat(spinnakerConversionException.getUrl()).isEqualTo(url);
     }
   }
