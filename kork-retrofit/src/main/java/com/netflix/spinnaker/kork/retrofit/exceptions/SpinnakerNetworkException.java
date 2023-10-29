@@ -17,13 +17,14 @@
 package com.netflix.spinnaker.kork.retrofit.exceptions;
 
 import com.netflix.spinnaker.kork.annotations.NonnullByDefault;
+import okhttp3.Request;
 import retrofit.RetrofitError;
 
 /** Wraps an exception of kind {@link RetrofitError.Kind} NETWORK. */
 @NonnullByDefault
 public final class SpinnakerNetworkException extends SpinnakerServerException {
-  public SpinnakerNetworkException(Throwable cause, String url) {
-    super(cause, url);
+  public SpinnakerNetworkException(Throwable cause, Request request) {
+    super(cause, request);
   }
 
   public SpinnakerNetworkException(String message, SpinnakerNetworkException cause) {

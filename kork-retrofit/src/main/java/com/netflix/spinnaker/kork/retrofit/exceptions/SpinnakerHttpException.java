@@ -110,7 +110,7 @@ public class SpinnakerHttpException extends SpinnakerServerException {
    */
   public SpinnakerHttpException(
       retrofit2.Response<?> retrofit2Response, retrofit2.Retrofit retrofit) {
-    super(retrofit2Response);
+    super(retrofit2Response.raw().request());
     this.response = null;
     this.retrofit2Response = retrofit2Response;
     if ((retrofit2Response.code() == HttpStatus.NOT_FOUND.value())

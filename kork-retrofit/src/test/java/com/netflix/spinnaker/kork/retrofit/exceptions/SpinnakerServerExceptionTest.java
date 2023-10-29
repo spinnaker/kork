@@ -22,6 +22,7 @@ import com.google.gson.Gson;
 import com.netflix.spinnaker.kork.exceptions.SpinnakerException;
 import java.io.IOException;
 import java.util.List;
+import okhttp3.Request;
 import org.junit.jupiter.api.Test;
 import retrofit.RetrofitError;
 import retrofit.client.Response;
@@ -35,8 +36,10 @@ class SpinnakerServerExceptionTest {
   @Test
   void testSpinnakerNetworkExceptionWithUrl() {
     Throwable cause = new Throwable("arbitrary message");
-    String url = "some-url";
-    SpinnakerNetworkException spinnakerNetworkException = new SpinnakerNetworkException(cause, url);
+    String url = "http://some-url/";
+    Request request = new Request.Builder().url(url).build();
+    SpinnakerNetworkException spinnakerNetworkException =
+        new SpinnakerNetworkException(cause, request);
     assertThat(spinnakerNetworkException.getUrl()).isEqualTo(url);
   }
 
@@ -62,8 +65,10 @@ class SpinnakerServerExceptionTest {
   @Test
   void testSpinnakerServerExceptionWithUrl() {
     Throwable cause = new Throwable("arbitrary message");
-    String url = "some-url";
-    SpinnakerServerException spinnakerServerException = new SpinnakerServerException(cause, url);
+    String url = "http://some-url/";
+    Request request = new Request.Builder().url(url).build();
+    SpinnakerServerException spinnakerServerException =
+        new SpinnakerServerException(cause, request);
     assertThat(spinnakerServerException.getUrl()).isEqualTo(url);
   }
 

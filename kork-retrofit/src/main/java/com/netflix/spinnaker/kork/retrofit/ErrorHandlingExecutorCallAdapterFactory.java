@@ -153,11 +153,11 @@ public class ErrorHandlingExecutorCallAdapterFactory extends CallAdapter.Factory
         }
       } catch (JsonProcessingException jpe) {
         throw new SpinnakerConversionException(
-            "Failed to process response body", jpe, delegate.request().url().toString());
+            "Failed to process response body", jpe, delegate.request());
       } catch (IOException e) {
-        throw new SpinnakerNetworkException(e, delegate.request().url().toString());
+        throw new SpinnakerNetworkException(e, delegate.request());
       } catch (Exception e) {
-        throw new SpinnakerServerException(e, delegate.request().url().toString());
+        throw new SpinnakerServerException(e, delegate.request());
       }
       throw new SpinnakerHttpException(syncResp, retrofit);
     }
@@ -251,11 +251,11 @@ public class ErrorHandlingExecutorCallAdapterFactory extends CallAdapter.Factory
 
       SpinnakerServerException exception;
       if (t instanceof IOException) {
-        exception = new SpinnakerNetworkException(t, call.request().url().toString());
+        exception = new SpinnakerNetworkException(t, call.request());
       } else if (t instanceof SpinnakerHttpException) {
         exception = (SpinnakerHttpException) t;
       } else {
-        exception = new SpinnakerServerException(t, call.request().url().toString());
+        exception = new SpinnakerServerException(t, call.request());
       }
       final SpinnakerServerException finalException = exception;
       callbackExecutor.execute(
