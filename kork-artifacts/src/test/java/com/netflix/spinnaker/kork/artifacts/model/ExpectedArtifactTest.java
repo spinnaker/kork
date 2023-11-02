@@ -220,6 +220,6 @@ final class ExpectedArtifactTest {
         Arguments.of("SGVsbG8gV29ybGQK", null, false, "other reference as null"),
         Arguments.of("SGVsbG8gV29ybGQK", "", false, "other reference is empty"),
         Arguments.of("", "SGVsbG8gV29ybGQK", true, "match reference is empty"),
-        Arguments.of("+++", "+++", true, "all possible base64 characters"));
+        Arguments.of("+++", "+++", true, "valid base64 but invalid regex"));
   }
 }
