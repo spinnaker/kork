@@ -27,7 +27,6 @@ import com.netflix.spinnaker.kork.annotations.NonnullByDefault;
 import com.netflix.spinnaker.kork.client.ServiceClientFactory;
 import com.netflix.spinnaker.retrofit.Slf4jRetrofitLogger;
 import retrofit.Endpoint;
-import retrofit.RequestInterceptor;
 import retrofit.RestAdapter;
 import retrofit.converter.JacksonConverter;
 
@@ -36,22 +35,17 @@ class RetrofitServiceFactory implements ServiceClientFactory {
 
   private final RestAdapter.LogLevel retrofitLogLevel;
   private final OkHttpClientProvider clientProvider;
-  private final RequestInterceptor spinnakerRequestInterceptor;
 
   RetrofitServiceFactory(
-      RestAdapter.LogLevel retrofitLogLevel,
-      OkHttpClientProvider clientProvider,
-      RequestInterceptor spinnakerRequestInterceptor) {
+      RestAdapter.LogLevel retrofitLogLevel, OkHttpClientProvider clientProvider) {
     this.retrofitLogLevel = retrofitLogLevel;
     this.clientProvider = clientProvider;
-    this.spinnakerRequestInterceptor = spinnakerRequestInterceptor;
   }
 
   @Override
   public <T> T create(Class<T> type, ServiceEndpoint serviceEndpoint, ObjectMapper objectMapper) {
     Endpoint endpoint = newFixedEndpoint(serviceEndpoint.getBaseUrl());
     return new RestAdapter.Builder()
-        .setRequestInterceptor(spinnakerRequestInterceptor)
         .setConverter(new JacksonConverter(objectMapper))
         .setEndpoint(endpoint)
         .setClient(new Ok3Client(clientProvider.getClient(serviceEndpoint)))

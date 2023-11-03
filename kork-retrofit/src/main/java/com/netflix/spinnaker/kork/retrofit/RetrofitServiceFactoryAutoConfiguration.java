@@ -24,7 +24,6 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
-import retrofit.RequestInterceptor;
 import retrofit.RestAdapter;
 
 @Configuration
@@ -34,10 +33,7 @@ public class RetrofitServiceFactoryAutoConfiguration {
   @Bean
   @Order(Ordered.LOWEST_PRECEDENCE)
   ServiceClientFactory serviceClientFactory(
-      RestAdapter.LogLevel retrofitLogLevel,
-      OkHttpClientProvider clientProvider,
-      RequestInterceptor spinnakerRequestInterceptor) {
-    return new RetrofitServiceFactory(
-        retrofitLogLevel, clientProvider, spinnakerRequestInterceptor);
+      RestAdapter.LogLevel retrofitLogLevel, OkHttpClientProvider clientProvider) {
+    return new RetrofitServiceFactory(retrofitLogLevel, clientProvider);
   }
 }
