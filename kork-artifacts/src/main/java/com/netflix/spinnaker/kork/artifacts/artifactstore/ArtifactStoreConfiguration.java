@@ -55,7 +55,7 @@ public class ArtifactStoreConfiguration {
     return new ArtifactStoreURISHA256Builder();
   }
 
-  @Bean
+  @Bean(destroyMethod = "clearInstance")
   @ConditionalOnExpression("${artifact-store.s3.enabled:false}")
   public ArtifactStore s3ArtifactStore(
       Optional<PermissionEvaluator> permissionEvaluator,

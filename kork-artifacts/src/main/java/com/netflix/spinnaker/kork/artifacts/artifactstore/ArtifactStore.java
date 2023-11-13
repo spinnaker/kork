@@ -44,6 +44,15 @@ public abstract class ArtifactStore {
     ArtifactStore.instance = storage;
   }
 
+  /**
+   * Meant to be called during spring context cleanup, e.g. via a bean's destroyMethod, or for
+   * explicit cleanup in a non-spring test.
+   */
+  public static void clearInstance() {
+    ArtifactStore.instance = null;
+    singletonSet.set(false);
+  }
+
   public boolean isArtifactURI(String value) {
     return value.startsWith(ArtifactStoreURIBuilder.uriScheme + "://");
   }
