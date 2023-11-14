@@ -16,12 +16,14 @@
 package com.netflix.spinnaker.kork.artifacts.artifactstore;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.netflix.spinnaker.kork.artifacts.artifactstore.s3.S3ArtifactStore;
+import com.netflix.spinnaker.kork.artifacts.artifactstore.s3.S3ArtifactStoreGetter;
+import com.netflix.spinnaker.kork.artifacts.artifactstore.s3.S3ArtifactStoreStorer;
 import java.net.URI;
 import java.util.Optional;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -56,32 +58,52 @@ public class ArtifactStoreConfiguration {
   }
 
   @Bean(destroyMethod = "clearInstance")
+  public ArtifactStore artifactStore(
+      ArtifactStoreGetter artifactStoreGetter, ArtifactStoreStorer artifactStoreStorer) {
+
+    ArtifactStore storage = new ArtifactStore(artifactStoreGetter, artifactStoreStorer);
+    ArtifactStore.setInstance(storage);
+    return storage;
+  }
+
+  @Bean
+  @ConditionalOnProperty(
+      value = "artifact-store.s3.enabled",
+      havingValue = "false",
+      matchIfMissing = true)
+  public NoopArtifactStoreStorer noopArtifactStoreStorer() {
+    return new NoopArtifactStoreStorer();
+  }
+
+  @Bean
   @ConditionalOnExpression("${artifact-store.s3.enabled:false}")
-  public ArtifactStore s3ArtifactStore(
-      Optional<PermissionEvaluator> permissionEvaluator,
+  public S3ArtifactStoreStorer s3ArtifactStoreStorer(
       ArtifactStoreConfigurationProperties properties,
       @Qualifier("artifactS3Client") S3Client s3Client,
       ArtifactStoreURIBuilder artifactStoreURIBuilder) {
+    return new S3ArtifactStoreStorer(
+        s3Client,
+        properties.getS3().getBucket(),
+        artifactStoreURIBuilder,
+        properties.getApplicationsRegex());
+  }
+
+  @Bean
+  public S3ArtifactStoreGetter s3ArtifactStoreGetter(
+      Optional<PermissionEvaluator> permissionEvaluator,
+      ArtifactStoreConfigurationProperties properties,
+      @Qualifier("artifactS3Client") S3Client s3Client) {
 
     if (permissionEvaluator.isEmpty()) {
       log.warn(
           "PermissionEvaluator is not present. This means anyone will be able to access any artifact in the store.");
     }
 
-    ArtifactStore storage =
-        new S3ArtifactStore(
-            s3Client,
-            permissionEvaluator.orElse(null),
-            properties.getS3().getBucket(),
-            artifactStoreURIBuilder,
-            properties.getApplicationsRegex());
-
-    ArtifactStore.setInstance(storage);
-    return storage;
+    return new S3ArtifactStoreGetter(
+        s3Client, permissionEvaluator.orElse(null), properties.getS3().getBucket());
   }
 
   @Bean
-  @ConditionalOnExpression("${artifact-store.s3.enabled:false}")
   public S3Client artifactS3Client(ArtifactStoreConfigurationProperties properties) {
     S3ClientBuilder builder = S3Client.builder();
     ArtifactStoreConfigurationProperties.S3ClientConfig config = properties.getS3();

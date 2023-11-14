@@ -16,29 +16,18 @@
 package com.netflix.spinnaker.kork.artifacts.artifactstore.s3;
 
 import com.netflix.spinnaker.kork.artifacts.ArtifactTypes;
-import com.netflix.spinnaker.kork.artifacts.artifactstore.ArtifactDecorator;
 import com.netflix.spinnaker.kork.artifacts.artifactstore.ArtifactReferenceURI;
-import com.netflix.spinnaker.kork.artifacts.artifactstore.ArtifactStore;
+import com.netflix.spinnaker.kork.artifacts.artifactstore.ArtifactStoreStorer;
 import com.netflix.spinnaker.kork.artifacts.artifactstore.ArtifactStoreURIBuilder;
 import com.netflix.spinnaker.kork.artifacts.model.Artifact;
 import com.netflix.spinnaker.kork.exceptions.SpinnakerException;
 import com.netflix.spinnaker.security.AuthenticatedRequest;
 import java.util.Base64;
-import java.util.NoSuchElementException;
 import java.util.regex.Pattern;
 import lombok.extern.log4j.Log4j2;
 import org.apache.http.HttpStatus;
-import org.springframework.security.access.PermissionEvaluator;
-import org.springframework.security.authentication.AuthenticationServiceException;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
-import software.amazon.awssdk.core.ResponseBytes;
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.services.s3.S3Client;
-import software.amazon.awssdk.services.s3.model.GetObjectRequest;
-import software.amazon.awssdk.services.s3.model.GetObjectResponse;
-import software.amazon.awssdk.services.s3.model.GetObjectTaggingRequest;
-import software.amazon.awssdk.services.s3.model.GetObjectTaggingResponse;
 import software.amazon.awssdk.services.s3.model.HeadObjectRequest;
 import software.amazon.awssdk.services.s3.model.NoSuchKeyException;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
@@ -47,29 +36,26 @@ import software.amazon.awssdk.services.s3.model.Tag;
 import software.amazon.awssdk.services.s3.model.Tagging;
 
 /**
- * S3ArtifactStore will store artifacts in a s3 compatible service
+ * S3ArtifactStoreStorer will store artifacts in a s3 compatible service
  *
  * <p>Note: It is very important that the S3 bucket has object lock on it to prevent multiple writes
  * {@see https://docs.aws.amazon.com/AmazonS3/latest/userguide/object-lock-overview.html}
  */
 @Log4j2
-public class S3ArtifactStore extends ArtifactStore {
+public class S3ArtifactStoreStorer implements ArtifactStoreStorer {
   private final S3Client s3Client;
-  private final PermissionEvaluator permissionEvaluator;
   private final String bucket;
   private final ArtifactStoreURIBuilder uriBuilder;
   private final String applicationsRegex;
   private static final String ENFORCE_PERMS_KEY = "application";
 
-  public S3ArtifactStore(
+  public S3ArtifactStoreStorer(
       S3Client s3Client,
-      PermissionEvaluator permissionEvaluator,
       String bucket,
       ArtifactStoreURIBuilder uriBuilder,
       String applicationsRegex) {
     this.s3Client = s3Client;
     this.bucket = bucket;
-    this.permissionEvaluator = permissionEvaluator;
     this.uriBuilder = uriBuilder;
     this.applicationsRegex = applicationsRegex;
   }
@@ -131,67 +117,6 @@ public class S3ArtifactStore extends ArtifactStore {
     }
 
     return reference.getBytes();
-  }
-
-  /**
-   * get will return the Artifact with the provided id, and will lastly run the {@link
-   * ArtifactDecorator} to further populate the artifact for returning
-   */
-  @Override
-  public Artifact get(ArtifactReferenceURI uri, ArtifactDecorator... decorators) {
-    hasAuthorization(
-        uri,
-        AuthenticatedRequest.getSpinnakerUser()
-            .orElseThrow(
-                () -> new NoSuchElementException("Could not authenticate due to missing user id")));
-
-    GetObjectRequest request = GetObjectRequest.builder().bucket(bucket).key(uri.paths()).build();
-
-    ResponseBytes<GetObjectResponse> resp = s3Client.getObjectAsBytes(request);
-    Artifact.ArtifactBuilder builder =
-        Artifact.builder()
-            .type(ArtifactTypes.REMOTE_BASE64.getMimeType())
-            .reference(Base64.getEncoder().encodeToString(resp.asByteArray()));
-
-    if (decorators == null) {
-      return builder.build();
-    }
-
-    for (ArtifactDecorator decorator : decorators) {
-      builder = decorator.decorate(builder);
-    }
-
-    return builder.build();
-  }
-
-  /**
-   * hasAuthorization will ensure that the user has proper permissions for retrieving the stored
-   * artifact
-   *
-   * @throws AuthenticationServiceException when user does not have correct permissions
-   */
-  private void hasAuthorization(ArtifactReferenceURI uri, String userId) {
-    GetObjectTaggingRequest request =
-        GetObjectTaggingRequest.builder().bucket(bucket).key(uri.paths()).build();
-
-    GetObjectTaggingResponse resp = s3Client.getObjectTagging(request);
-    Tag tag =
-        resp.tagSet().stream()
-            .filter(t -> t.key().equals(ENFORCE_PERMS_KEY))
-            .findFirst()
-            .orElse(null);
-    Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-
-    if (tag == null
-        || (permissionEvaluator != null
-            && !permissionEvaluator.hasPermission(auth, tag.value(), "application", "READ"))) {
-      log.error(
-          "Could not authenticate to retrieve artifact user={} applicationOfStoredArtifact={}",
-          userId,
-          (tag == null) ? "(none)" : tag.value());
-      throw new AuthenticationServiceException(
-          userId + " does not have permission to access this artifact");
-    }
   }
 
   /**

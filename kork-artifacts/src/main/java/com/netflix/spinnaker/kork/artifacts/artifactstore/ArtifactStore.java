@@ -19,22 +19,35 @@ import com.netflix.spinnaker.kork.artifacts.model.Artifact;
 import java.util.concurrent.atomic.AtomicBoolean;
 import lombok.Getter;
 
-/**
- * ArtifactStore is an interface that allows for different types of artifact storage to be used
- * during runtime
- */
-public abstract class ArtifactStore {
+/** ArtifactStore allows for different types of artifact storage to be used during runtime */
+public class ArtifactStore implements ArtifactStoreGetter, ArtifactStoreStorer {
   /** ensures the singleton has only been set once */
   private static final AtomicBoolean singletonSet = new AtomicBoolean(false);
 
   @Getter private static ArtifactStore instance = null;
 
-  public abstract Artifact store(Artifact artifact);
+  private final ArtifactStoreGetter artifactStoreGetter;
+
+  private final ArtifactStoreStorer artifactStoreStorer;
+
+  public ArtifactStore(
+      ArtifactStoreGetter artifactStoreGetter, ArtifactStoreStorer artifactStoreStorer) {
+    this.artifactStoreGetter = artifactStoreGetter;
+    this.artifactStoreStorer = artifactStoreStorer;
+  }
+
+  /** Store an artifact in the artifact store */
+  public Artifact store(Artifact artifact) {
+    return artifactStoreStorer.store(artifact);
+  }
+
   /**
    * get is used to return an artifact with some id, while also decorating that artifact with any
    * necessary fields needed which should be then be returned by the artifact store.
    */
-  public abstract Artifact get(ArtifactReferenceURI uri, ArtifactDecorator... decorators);
+  public Artifact get(ArtifactReferenceURI uri, ArtifactDecorator... decorators) {
+    return artifactStoreGetter.get(uri, decorators);
+  }
 
   public static void setInstance(ArtifactStore storage) {
     if (!singletonSet.compareAndSet(false, true)) {
