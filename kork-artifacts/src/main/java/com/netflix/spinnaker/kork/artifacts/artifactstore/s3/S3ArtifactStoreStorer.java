@@ -15,6 +15,8 @@
  */
 package com.netflix.spinnaker.kork.artifacts.artifactstore.s3;
 
+import static com.netflix.spinnaker.kork.artifacts.artifactstore.s3.S3ArtifactStore.ENFORCE_PERMS_KEY;
+
 import com.netflix.spinnaker.kork.artifacts.ArtifactTypes;
 import com.netflix.spinnaker.kork.artifacts.artifactstore.ArtifactReferenceURI;
 import com.netflix.spinnaker.kork.artifacts.artifactstore.ArtifactStoreStorer;
@@ -47,7 +49,6 @@ public class S3ArtifactStoreStorer implements ArtifactStoreStorer {
   private final String bucket;
   private final ArtifactStoreURIBuilder uriBuilder;
   private final String applicationsRegex;
-  private static final String ENFORCE_PERMS_KEY = "application";
 
   public S3ArtifactStoreStorer(
       S3Client s3Client,

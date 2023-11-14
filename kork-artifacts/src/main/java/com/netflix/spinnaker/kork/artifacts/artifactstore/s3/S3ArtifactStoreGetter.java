@@ -15,6 +15,8 @@
  */
 package com.netflix.spinnaker.kork.artifacts.artifactstore.s3;
 
+import static com.netflix.spinnaker.kork.artifacts.artifactstore.s3.S3ArtifactStore.ENFORCE_PERMS_KEY;
+
 import com.netflix.spinnaker.kork.artifacts.ArtifactTypes;
 import com.netflix.spinnaker.kork.artifacts.artifactstore.ArtifactDecorator;
 import com.netflix.spinnaker.kork.artifacts.artifactstore.ArtifactReferenceURI;
@@ -42,7 +44,6 @@ public class S3ArtifactStoreGetter implements ArtifactStoreGetter {
   private final S3Client s3Client;
   private final PermissionEvaluator permissionEvaluator;
   private final String bucket;
-  private static final String ENFORCE_PERMS_KEY = "application";
 
   public S3ArtifactStoreGetter(
       S3Client s3Client, PermissionEvaluator permissionEvaluator, String bucket) {
