@@ -17,6 +17,7 @@ package com.netflix.spinnaker.kork.artifacts.artifactstore.s3;
 
 import static com.netflix.spinnaker.kork.artifacts.artifactstore.s3.S3ArtifactStore.ENFORCE_PERMS_KEY;
 
+import com.google.common.base.Preconditions;
 import com.netflix.spinnaker.kork.artifacts.ArtifactTypes;
 import com.netflix.spinnaker.kork.artifacts.artifactstore.ArtifactDecorator;
 import com.netflix.spinnaker.kork.artifacts.artifactstore.ArtifactReferenceURI;
@@ -25,6 +26,7 @@ import com.netflix.spinnaker.kork.artifacts.model.Artifact;
 import com.netflix.spinnaker.security.AuthenticatedRequest;
 import java.util.Base64;
 import java.util.NoSuchElementException;
+import java.util.Optional;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.security.access.PermissionEvaluator;
 import org.springframework.security.authentication.AuthenticationServiceException;
@@ -41,12 +43,12 @@ import software.amazon.awssdk.services.s3.model.Tag;
 /** Retrieve objects from an s3 compatible service */
 @Log4j2
 public class S3ArtifactStoreGetter implements ArtifactStoreGetter {
-  private final S3Client s3Client;
+  private final Optional<S3Client> s3Client;
   private final PermissionEvaluator permissionEvaluator;
   private final String bucket;
 
   public S3ArtifactStoreGetter(
-      S3Client s3Client, PermissionEvaluator permissionEvaluator, String bucket) {
+      Optional<S3Client> s3Client, PermissionEvaluator permissionEvaluator, String bucket) {
     this.s3Client = s3Client;
     this.bucket = bucket;
     this.permissionEvaluator = permissionEvaluator;
@@ -58,6 +60,11 @@ public class S3ArtifactStoreGetter implements ArtifactStoreGetter {
    */
   @Override
   public Artifact get(ArtifactReferenceURI uri, ArtifactDecorator... decorators) {
+    if (s3Client.isEmpty()) {
+      throw new IllegalStateException(
+          "unable to retrieve artifact " + uri.toString() + " from s3 with no s3 client");
+    }
+
     hasAuthorization(
         uri,
         AuthenticatedRequest.getSpinnakerUser()
@@ -66,7 +73,7 @@ public class S3ArtifactStoreGetter implements ArtifactStoreGetter {
 
     GetObjectRequest request = GetObjectRequest.builder().bucket(bucket).key(uri.paths()).build();
 
-    ResponseBytes<GetObjectResponse> resp = s3Client.getObjectAsBytes(request);
+    ResponseBytes<GetObjectResponse> resp = s3Client.get().getObjectAsBytes(request);
     Artifact.ArtifactBuilder builder =
         Artifact.builder()
             .type(ArtifactTypes.REMOTE_BASE64.getMimeType())
@@ -90,10 +97,11 @@ public class S3ArtifactStoreGetter implements ArtifactStoreGetter {
    * @throws AuthenticationServiceException when user does not have correct permissions
    */
   private void hasAuthorization(ArtifactReferenceURI uri, String userId) {
+    Preconditions.checkState(s3Client.isPresent());
     GetObjectTaggingRequest request =
         GetObjectTaggingRequest.builder().bucket(bucket).key(uri.paths()).build();
 
-    GetObjectTaggingResponse resp = s3Client.getObjectTagging(request);
+    GetObjectTaggingResponse resp = s3Client.get().getObjectTagging(request);
     Tag tag =
         resp.tagSet().stream()
             .filter(t -> t.key().equals(ENFORCE_PERMS_KEY))

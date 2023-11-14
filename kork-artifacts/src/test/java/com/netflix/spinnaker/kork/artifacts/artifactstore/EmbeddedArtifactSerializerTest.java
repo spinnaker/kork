@@ -30,6 +30,7 @@ import com.netflix.spinnaker.kork.common.Header;
 import com.netflix.spinnaker.security.AuthenticatedRequest;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.util.Optional;
 import java.util.stream.Stream;
 import org.apache.commons.codec.binary.Base64;
 import org.junit.jupiter.api.Test;
@@ -68,7 +69,7 @@ class EmbeddedArtifactSerializerTest {
         .thenThrow(S3Exception.builder().statusCode(400).build());
     AuthenticatedRequest.set(Header.APPLICATION, "my-application");
     ArtifactStoreGetter s3ArtifactStoreGetter =
-        new S3ArtifactStoreGetter(client, null, "my-bucket");
+        new S3ArtifactStoreGetter(Optional.of(client), null, "my-bucket");
     ArtifactStoreStorer artifactStoreStorer =
         new S3ArtifactStoreStorer(client, "my-bucket", new ArtifactStoreURISHA256Builder(), null);
     ArtifactStore artifactStore = new ArtifactStore(s3ArtifactStoreGetter, artifactStoreStorer);

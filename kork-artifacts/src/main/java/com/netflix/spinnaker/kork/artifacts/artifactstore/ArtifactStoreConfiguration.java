@@ -38,7 +38,6 @@ import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.S3ClientBuilder;
 
 @Configuration
-@ConditionalOnExpression("${artifact-store.enabled:false}")
 @EnableConfigurationProperties(ArtifactStoreConfigurationProperties.class)
 @Log4j2
 public class ArtifactStoreConfiguration {
@@ -92,36 +91,41 @@ public class ArtifactStoreConfiguration {
   public S3ArtifactStoreGetter s3ArtifactStoreGetter(
       Optional<PermissionEvaluator> permissionEvaluator,
       ArtifactStoreConfigurationProperties properties,
-      @Qualifier("artifactS3Client") S3Client s3Client) {
+      @Qualifier("artifactS3Client") Optional<S3Client> s3Client) {
 
     if (permissionEvaluator.isEmpty()) {
       log.warn(
           "PermissionEvaluator is not present. This means anyone will be able to access any artifact in the store.");
     }
 
-    return new S3ArtifactStoreGetter(
-        s3Client, permissionEvaluator.orElse(null), properties.getS3().getBucket());
+    String bucket = properties.getS3() != null ? properties.getS3().getBucket() : null;
+
+    return new S3ArtifactStoreGetter(s3Client, permissionEvaluator.orElse(null), bucket);
   }
 
   @Bean
+  @ConditionalOnExpression("'${artifact-store.s3.region:}' != ''")
   public S3Client artifactS3Client(ArtifactStoreConfigurationProperties properties) {
     S3ClientBuilder builder = S3Client.builder();
     ArtifactStoreConfigurationProperties.S3ClientConfig config = properties.getS3();
 
-    // Overwriting the URL is primarily used for S3 compatible object stores
-    // like seaweedfs
-    if (config.getUrl() != null) {
-      builder =
-          builder
-              .credentialsProvider(getCredentialsProvider(config))
-              .forcePathStyle(config.isForcePathStyle())
-              .endpointOverride(URI.create(config.getUrl()));
-    } else if (config.getProfile() != null) {
-      builder = builder.credentialsProvider(ProfileCredentialsProvider.create(config.getProfile()));
-    }
+    if (config != null) {
+      // Overwriting the URL is primarily used for S3 compatible object stores
+      // like seaweedfs
+      if (config.getUrl() != null) {
+        builder =
+            builder
+                .credentialsProvider(getCredentialsProvider(config))
+                .forcePathStyle(config.isForcePathStyle())
+                .endpointOverride(URI.create(config.getUrl()));
+      } else if (config.getProfile() != null) {
+        builder =
+            builder.credentialsProvider(ProfileCredentialsProvider.create(config.getProfile()));
+      }
 
-    if (config.getRegion() != null) {
-      builder = builder.region(Region.of(config.getRegion()));
+      if (config.getRegion() != null) {
+        builder = builder.region(Region.of(config.getRegion()));
+      }
     }
 
     return builder.build();
