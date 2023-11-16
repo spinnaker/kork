@@ -56,13 +56,10 @@ public class ArtifactStoreConfiguration {
     return new ArtifactStoreURISHA256Builder();
   }
 
-  @Bean(destroyMethod = "clearInstance")
+  @Bean
   public ArtifactStore artifactStore(
       ArtifactStoreGetter artifactStoreGetter, ArtifactStoreStorer artifactStoreStorer) {
-
-    ArtifactStore storage = new ArtifactStore(artifactStoreGetter, artifactStoreStorer);
-    ArtifactStore.setInstance(storage);
-    return storage;
+    return new ArtifactStore(artifactStoreGetter, artifactStoreStorer);
   }
 
   @Bean
