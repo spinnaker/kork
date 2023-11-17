@@ -110,30 +110,26 @@ public class ExpressionsSupportTest {
   @Test
   public void artifactReferenceInSpEL() {
     MockArtifactStore artifactStore = new MockArtifactStore();
-    try {
-      ArtifactStore.setInstance(artifactStore);
-      ExpressionProperties expressionProperties = new ExpressionProperties();
-      String expectedValue = "Hello world";
-      artifactStore.cache.put("ref://app/sha", expectedValue);
-      String expr = "${#fromBase64(\"ref://app/sha\")}";
-      Map<String, Object> testContext =
-          Collections.singletonMap(
-              "artifactReference", Collections.singletonMap("artifactReference", expr));
+    ArtifactStore.setInstance(artifactStore);
+    ExpressionProperties expressionProperties = new ExpressionProperties();
+    String expectedValue = "Hello world";
+    artifactStore.cache.put("ref://app/sha", expectedValue);
+    String expr = "${#fromBase64(\"ref://app/sha\")}";
+    Map<String, Object> testContext =
+        Collections.singletonMap(
+            "artifactReference", Collections.singletonMap("artifactReference", expr));
 
-      ExpressionsSupport expressionsSupport = new ExpressionsSupport(null, expressionProperties);
+    ExpressionsSupport expressionsSupport = new ExpressionsSupport(null, expressionProperties);
 
-      StandardEvaluationContext evaluationContext =
-          expressionsSupport.buildEvaluationContext(
-              new ExpressionTransformTest.Pipeline(new ExpressionTransformTest.Trigger(123)), true);
+    StandardEvaluationContext evaluationContext =
+        expressionsSupport.buildEvaluationContext(
+            new ExpressionTransformTest.Pipeline(new ExpressionTransformTest.Trigger(123)), true);
 
-      String evaluated =
-          new ExpressionTransform(parserContext, parser, Function.identity())
-              .transformString(expr, evaluationContext, new ExpressionEvaluationSummary());
+    String evaluated =
+        new ExpressionTransform(parserContext, parser, Function.identity())
+            .transformString(expr, evaluationContext, new ExpressionEvaluationSummary());
 
-      assertThat(evaluated).isEqualTo(expectedValue);
-    } finally {
-      ArtifactStore.clearInstance();
-    }
+    assertThat(evaluated).isEqualTo(expectedValue);
   }
 
   @Test

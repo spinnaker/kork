@@ -16,15 +16,13 @@
 package com.netflix.spinnaker.kork.artifacts.artifactstore;
 
 import com.netflix.spinnaker.kork.artifacts.model.Artifact;
-import java.util.concurrent.atomic.AtomicBoolean;
 import lombok.Getter;
+import lombok.extern.log4j.Log4j2;
 
 /** ArtifactStore allows for different types of artifact storage to be used during runtime */
+@Log4j2
 public class ArtifactStore implements ArtifactStoreGetter, ArtifactStoreStorer {
-  /** ensures the singleton has only been set once */
-  private static final AtomicBoolean singletonSet = new AtomicBoolean(false);
-
-  @Getter private static ArtifactStore instance = null;
+  @Getter private static volatile ArtifactStore instance = null;
 
   private final ArtifactStoreGetter artifactStoreGetter;
 
@@ -50,20 +48,14 @@ public class ArtifactStore implements ArtifactStoreGetter, ArtifactStoreStorer {
   }
 
   public static void setInstance(ArtifactStore storage) {
-    if (!singletonSet.compareAndSet(false, true)) {
-      throw new IllegalStateException("Multiple attempts at setting ArtifactStore's singleton");
+    synchronized (ArtifactStore.class) {
+      if (instance == null) {
+        instance = storage;
+        return;
+      }
+
+      log.warn("Multiple attempts in setting the singleton artifact store");
     }
-
-    ArtifactStore.instance = storage;
-  }
-
-  /**
-   * Meant to be called during spring context cleanup, e.g. via a bean's destroyMethod, or for
-   * explicit cleanup in a non-spring test.
-   */
-  public static void clearInstance() {
-    ArtifactStore.instance = null;
-    singletonSet.set(false);
   }
 
   public boolean isArtifactURI(String value) {

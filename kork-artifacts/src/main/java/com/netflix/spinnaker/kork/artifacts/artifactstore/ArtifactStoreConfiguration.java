@@ -59,7 +59,9 @@ public class ArtifactStoreConfiguration {
   @Bean
   public ArtifactStore artifactStore(
       ArtifactStoreGetter artifactStoreGetter, ArtifactStoreStorer artifactStoreStorer) {
-    return new ArtifactStore(artifactStoreGetter, artifactStoreStorer);
+    ArtifactStore artifactStore = new ArtifactStore(artifactStoreGetter, artifactStoreStorer);
+    ArtifactStore.setInstance(artifactStore);
+    return artifactStore;
   }
 
   @Bean
