@@ -21,6 +21,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.netflix.spinnaker.kork.artifacts.artifactstore.ArtifactStore;
 import com.netflix.spinnaker.kork.artifacts.artifactstore.ArtifactStoreConfiguration;
 import com.netflix.spinnaker.kork.artifacts.artifactstore.ArtifactStoreURIBuilder;
+import com.netflix.spinnaker.kork.artifacts.artifactstore.NoopArtifactStoreGetter;
 import com.netflix.spinnaker.kork.artifacts.artifactstore.NoopArtifactStoreStorer;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -41,22 +42,10 @@ class S3ArtifactStoreConfigurationTest {
   }
 
   @Test
-  void testArtifactStoreDefaults() {
-    runner.run(
-        ctx -> {
-          assertThat(ctx).hasSingleBean(ArtifactStoreURIBuilder.class);
-          assertThat(ctx).hasSingleBean(ArtifactStore.class);
-          assertThat(ctx).hasSingleBean(S3ArtifactStoreGetter.class);
-          assertThat(ctx).hasSingleBean(NoopArtifactStoreStorer.class);
-          assertThat(ctx).doesNotHaveBean(S3ArtifactStoreStorer.class);
-          assertThat(ctx).doesNotHaveBean(S3Client.class);
-        });
-  }
-
-  @Test
   void testArtifactStoreS3Disabled() {
     runner
         .withPropertyValues(
+            "artifact-store.type=s3",
             "artifact-store.s3.enabled=false",
             "artifact-store.s3.region=us-west-2") // arbitrary region
         .run(
@@ -65,6 +54,7 @@ class S3ArtifactStoreConfigurationTest {
               assertThat(ctx).hasSingleBean(ArtifactStore.class);
               assertThat(ctx).hasSingleBean(S3ArtifactStoreGetter.class);
               assertThat(ctx).hasSingleBean(NoopArtifactStoreStorer.class);
+              assertThat(ctx).doesNotHaveBean(NoopArtifactStoreGetter.class);
               assertThat(ctx).doesNotHaveBean(S3ArtifactStoreStorer.class);
               assertThat(ctx).hasSingleBean(S3Client.class);
             });
@@ -74,6 +64,7 @@ class S3ArtifactStoreConfigurationTest {
   void testArtifactStoreS3Enabled() {
     runner
         .withPropertyValues(
+            "artifact-store.type=s3",
             "artifact-store.s3.enabled=true",
             "artifact-store.s3.region=us-west-2") // arbitrary region
         .run(
@@ -82,6 +73,7 @@ class S3ArtifactStoreConfigurationTest {
               assertThat(ctx).hasSingleBean(ArtifactStore.class);
               assertThat(ctx).hasSingleBean(S3ArtifactStoreGetter.class);
               assertThat(ctx).hasSingleBean(S3ArtifactStoreStorer.class);
+              assertThat(ctx).doesNotHaveBean(NoopArtifactStoreGetter.class);
               assertThat(ctx).doesNotHaveBean(NoopArtifactStoreStorer.class);
               assertThat(ctx).hasSingleBean(S3Client.class);
             });
