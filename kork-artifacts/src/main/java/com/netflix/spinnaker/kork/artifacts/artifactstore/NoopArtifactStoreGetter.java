@@ -21,6 +21,9 @@ import com.netflix.spinnaker.kork.artifacts.model.Artifact;
 public class NoopArtifactStoreGetter implements ArtifactStoreGetter {
 
   public Artifact get(ArtifactReferenceURI uri, ArtifactDecorator... decorators) {
-    throw new IllegalStateException("unable to retrieve artifact " + uri.toString());
+    throw new IllegalStateException(
+        "unable to retrieve artifact "
+            + uri.toString()
+            + " since there's no artifact store getter configured");
   }
 }
