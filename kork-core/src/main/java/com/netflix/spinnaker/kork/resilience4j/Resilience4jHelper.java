@@ -53,21 +53,21 @@ public class Resilience4jHelper {
                 description,
                 retryEvent.getName(),
                 retryEvent.getNumberOfRetryAttempts(),
-                retryEvent.getLastThrowable().toString());
+                String.valueOf(retryEvent.getLastThrowable()));
           } else if (retryEvent instanceof RetryOnSuccessEvent) {
             log.info(
                 "{} for {} is now successful in attempt #{}. Last attempt had failed with exception: {}",
                 description,
                 retryEvent.getName(),
                 retryEvent.getNumberOfRetryAttempts() + 1,
-                retryEvent.getLastThrowable().toString());
+                String.valueOf(retryEvent.getLastThrowable()));
           } else if (retryEvent instanceof RetryOnRetryEvent) {
             log.info(
                 "Retrying {} for {}. Attempt #{} failed with exception: {}",
                 description,
                 retryEvent.getName(),
                 retryEvent.getNumberOfRetryAttempts(),
-                retryEvent.getLastThrowable().toString());
+                String.valueOf(retryEvent.getLastThrowable()));
           } else if (!(retryEvent instanceof RetryOnIgnoredErrorEvent)) {
             // don't log anything for Ignored exceptions as it just leads to noise in the logs
             log.info(retryEvent.toString());
