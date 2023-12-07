@@ -16,22 +16,23 @@
 
 package com.netflix.spinnaker.credentials.poller;
 
-import com.netflix.spinnaker.credentials.definition.AbstractCredentialsLoader;
-import java.util.List;
+import com.netflix.spinnaker.credentials.Credentials;
+import com.netflix.spinnaker.credentials.definition.CredentialsLoader;
+import com.netflix.spinnaker.kork.annotations.NonnullByDefault;
 import java.util.concurrent.TimeUnit;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.annotation.SchedulingConfigurer;
 import org.springframework.scheduling.config.ScheduledTaskRegistrar;
 import org.springframework.scheduling.support.PeriodicTrigger;
 
-@EnableConfigurationProperties(PollerConfigurationProperties.class)
+@Configuration(proxyBeanMethods = false)
 @RequiredArgsConstructor
-@Slf4j
+@NonnullByDefault
 public class PollerConfiguration implements SchedulingConfigurer {
   private final PollerConfigurationProperties config;
-  private final List<AbstractCredentialsLoader<?>> pollers;
+  private final ObjectProvider<CredentialsLoader<? extends Credentials>> pollers;
 
   @Override
   public void configureTasks(ScheduledTaskRegistrar taskRegistrar) {
