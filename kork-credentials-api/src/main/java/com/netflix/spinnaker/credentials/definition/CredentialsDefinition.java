@@ -17,14 +17,18 @@
 package com.netflix.spinnaker.credentials.definition;
 
 import com.netflix.spinnaker.credentials.Credentials;
+import com.netflix.spinnaker.credentials.constraint.ValidatedCredentials;
 
 /**
  * Contains properties that define {@link Credentials}. {@link CredentialsDefinition} can be POJOs
  * deserialized from configuration or an external system. These are optional but useful to use
- * built-in {@link CredentialsParser}.
+ * built-in {@link CredentialsParser}. Implementations that wish to support account storage must
+ * also be annotated with {@link CredentialsType} corresponding to the type discriminator to use for
+ * serialization and deserialization.
  *
  * <p>equals is checked to detect change in definitions
  */
+@ValidatedCredentials
 public interface CredentialsDefinition {
   String getName();
 }
