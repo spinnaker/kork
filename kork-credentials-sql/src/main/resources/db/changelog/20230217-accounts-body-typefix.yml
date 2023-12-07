@@ -1,0 +1,17 @@
+databaseChangeLog:
+  - changeSet:
+      id: fix-accounts-body-column
+      author: msicker
+      preConditions:
+        - onFail: MARK_RAN
+        - dbms:
+            type: postgresql
+      changes:
+        - modifyDataType:
+            tableName: accounts
+            columnName: body
+            newDataType: jsonb
+        - modifyDataType:
+            tableName: accounts_history
+            columnName: body
+            newDataType: jsonb

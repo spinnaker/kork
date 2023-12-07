@@ -1,0 +1,15 @@
+databaseChangeLog:
+  - changeSet:
+      id: add-last-modified-by-to-accounts-history
+      author: msicker
+      changes:
+        - addColumn:
+            tableName: accounts_history
+            columns:
+              - column:
+                  name: modified_by
+                  type: varchar(255)
+      rollback:
+        - dropColumn:
+            columnName: modified_by
+            tableName: accounts_history

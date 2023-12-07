@@ -1,0 +1,198 @@
+databaseChangeLog:
+  - changeSet:
+      id: migrate-timestamps-types-postgres
+      author: msicker
+      preConditions:
+        - dbms:
+            type: postgresql
+        - onFail: MARK_RAN
+      changes:
+        - addColumn:
+            tableName: accounts
+            columns:
+              - column:
+                  name: ctime
+                  type: timestamp(3)
+                  valueComputed: 'to_timestamp(created_at / 1000.0)'
+                  defaultValueComputed: now()
+                  constraints:
+                    nullable: false
+              - column:
+                  name: mtime
+                  type: timestamp(3)
+                  valueComputed: 'to_timestamp(last_modified_at / 1000.0)'
+                  defaultValueComputed: now()
+                  constraints:
+                    nullable: false
+        - addColumn:
+            tableName: accounts_history
+            columns:
+              - column:
+                  name: mtime
+                  type: timestamp(3)
+                  valueComputed: 'to_timestamp(last_modified_at / 1000.0)'
+                  defaultValueComputed: now()
+                  constraints:
+                    nullable: false
+      rollback:
+        - dropColumn:
+            tableName: accounts
+            columns:
+              - column:
+                  name: ctime
+              - column:
+                  name: mtime
+        - dropColumn:
+            tableName: accounts_history
+            columnName: mtime
+
+  - changeSet:
+      id: migrate-timestamp-types-mysql
+      author: msicker
+      preConditions:
+        - dbms:
+            type: mysql,mariadb
+        - onFail: MARK_RAN
+      validCheckSum:
+        # original checksum
+        - 8:83978a8be20e32eb1e4d52a452906eee
+        # later changed to update valueComputed and defaultValueComputed
+        - 8:61e246aa8e76f43acddee9cad734260c
+      changes:
+        - addColumn:
+            tableName: accounts
+            columns:
+              - column:
+                  name: ctime
+                  type: timestamp(3)
+                  valueComputed: 'from_unixtime(greatest(created_at, 86400000) / 1000.0)'
+                  defaultValueComputed: now(3)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: mtime
+                  type: timestamp(3)
+                  valueComputed: 'from_unixtime(greatest(last_modified_at, 86400000) / 1000.0)'
+                  defaultValueComputed: now(3)
+                  constraints:
+                    nullable: false
+        - addColumn:
+            tableName: accounts_history
+            columns:
+              - column:
+                  name: mtime
+                  type: timestamp(3)
+                  valueComputed: 'from_unixtime(greatest(last_modified_at, 86400000) / 1000.0)'
+                  defaultValueComputed: now(3)
+                  constraints:
+                    nullable: false
+      rollback:
+        - dropColumn:
+            tableName: accounts
+            columns:
+              - column:
+                  name: ctime
+              - column:
+                  name: mtime
+        - dropColumn:
+            tableName: accounts_history
+            columnName: mtime
+
+  - changeSet:
+      id: drop-bigint-timestamp-columns
+      author: msicker
+      changes:
+        - dropIndex:
+            tableName: accounts
+            indexName: accounts_timestamp_index
+        - dropColumn:
+            tableName: accounts
+            columns:
+              - column:
+                  name: created_at
+              - column:
+                  name: last_modified_at
+        - dropColumn:
+            tableName: accounts_history
+            columnName: last_modified_at
+
+  - changeSet:
+      id: add-accounts-etag-column
+      author: msicker
+      changes:
+        - sql:
+            sql: >
+              alter table accounts
+              add etag varchar(32) generated always as (md5(body)) stored
+        - modifySql:
+            dbms: postgresql
+            replace:
+              replace: body
+              with: body::text
+      rollback:
+        - dropColumn:
+            tableName: accounts
+            columnName: etag
+
+  - changeSet:
+      id: drop-accounts-history-version-column
+      author: msicker
+      preConditions:
+        - dbms:
+            type: postgresql
+        - onFail: MARK_RAN
+      changes:
+        - dropUniqueConstraint:
+            tableName: accounts_history
+            constraintName: accounts_history_pkey
+        - dropColumn:
+            tableName: accounts_history
+            columnName: version
+
+  - changeSet:
+      id: drop-accounts-history-version-column-mysql
+      author: msicker
+      preConditions:
+        - dbms:
+            type: mysql,mariadb
+        - onFail: MARK_RAN
+      changes:
+        - dropPrimaryKey:
+            tableName: accounts_history
+        - dropColumn:
+            tableName: accounts_history
+            columnName: version
+
+  - changeSet:
+      id: add-accounts-history-revision-column
+      author: msicker
+      changes:
+        - addColumn:
+            tableName: accounts_history
+            columns:
+              - column:
+                  name: revision
+                  type: bigint
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+      rollback:
+        - dropColumn:
+            tableName: accounts_history
+            columnName: revision
+
+  - changeSet:
+      id: add-accounts-history-id-index
+      author: msicker
+      changes:
+        - createIndex:
+            tableName: accounts_history
+            indexName: accounts_history_id_idx
+            columns:
+              - column:
+                  name: id
+      rollback:
+        - dropIndex:
+            tableName: accounts_history
+            indexName: accounts_history_id_idx

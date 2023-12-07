@@ -1,0 +1,162 @@
+databaseChangeLog:
+- changeSet:
+    id: create-accounts-table
+    author: msicker
+    # in case you're in clouddriver and already have this table, let's skip this step
+    preConditions:
+      - onFail: MARK_RAN
+      - not:
+          tableExists:
+            tableName: accounts
+    changes:
+    - createTable:
+        tableName: accounts
+        columns:
+        - column:
+            name: id
+            type: varchar(255)
+            constraints:
+              primaryKey: true
+              nullable: false
+        - column:
+            name: type
+            type: varchar(50)
+            constraints:
+              nullable: false
+        - column:
+            name: body
+            type: json
+            constraints:
+              nullable: false
+        - column:
+            name: created_at
+            type: bigint
+            constraints:
+              nullable: false
+        - column:
+            name: last_modified_at
+            type: bigint
+            constraints:
+              nullable: false
+        - column:
+            name: last_modified_by
+            type: varchar(255)
+            constraints:
+              nullable: false
+    - modifySql:
+        dbms: mysql
+        append:
+          value: " engine innodb DEFAULT CHARSET=utf8mb4 COLLATE utf8mb4_unicode_ci"
+    - modifySql:
+        dbms: postgresql
+        replace:
+          replace: json
+          with: jsonb
+    rollback:
+      - dropTable:
+          tableName: accounts
+
+- changeSet:
+    id: create-accounts-table-index
+    author: jcavanagh
+    preConditions:
+      - onFail: MARK_RAN
+      - not:
+          indexExists:
+            indexName: accounts_type_index
+            tableName: accounts
+    changes:
+    - createIndex:
+        indexName: accounts_type_index
+        tableName: accounts
+        columns:
+        - column:
+            name: id
+        - column:
+            name: type
+    - createIndex:
+        indexName: accounts_timestamp_index
+        tableName: accounts
+        columns:
+        - column:
+            name: id
+        - column:
+            name: type
+        - column:
+            name: created_at
+        - column:
+            name: last_modified_at
+    rollback:
+      - dropIndex:
+          indexName: accounts_type_index
+          tableName: accounts
+      - dropIndex:
+          indexName: accounts_timestamp_index
+          tableName: accounts
+
+- changeSet:
+    id: create-accounts-history-table
+    author: msicker
+    # in case you're in clouddriver and already have this table, let's skip this step
+    preConditions:
+      - onFail: MARK_RAN
+      - not:
+          tableExists:
+            tableName: accounts_history
+    validCheckSum:
+      # original checksum from when this was part of clouddriver
+      - 8:128b46fd7cb5101d166d502875178609
+      # and other checksums from when the file was moved
+      - 8:70a48f38c83bfa9eb5e146011be548b8
+      # and furthermore, fixed the sorting of the version column
+      - 8:91ef81247dea4dfb592dc7cad44f856f
+    changes:
+    - createTable:
+        tableName: accounts_history
+        columns:
+        - column:
+            name: id
+            type: varchar(255)
+            constraints:
+              primaryKey: true
+              nullable: false
+        - column:
+            name: type
+            type: varchar(50)
+            constraints:
+              nullable: true
+        - column:
+            name: body
+            type: json
+            constraints:
+              nullable: true
+        - column:
+            name: last_modified_at
+            type: bigint
+            constraints:
+              nullable: false
+        - column:
+            name: version
+            type: int
+            descending: true
+            constraints:
+              primaryKey: true
+              nullable: false
+        - column:
+            name: is_deleted
+            type: boolean
+            defaultValueBoolean: false
+            constraints:
+              nullable: false
+    - modifySql:
+        dbms: mysql
+        append:
+          value: " engine innodb DEFAULT CHARSET=utf8mb4 COLLATE utf8mb4_unicode_ci"
+    - modifySql:
+        dbms: postgresql
+        replace:
+          replace: json
+          with: jsonb
+    rollback:
+    - dropTable:
+        tableName: accounts_history

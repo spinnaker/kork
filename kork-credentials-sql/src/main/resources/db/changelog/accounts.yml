@@ -1,0 +1,13 @@
+databaseChangeLog:
+  - include:
+      file: 20210927-accounts.yml
+      relativeToChangelogFile: true
+  - include:
+      file: 20230217-accounts-body-typefix.yml
+      relativeToChangelogFile: true
+  - include:
+      file: 20230418-accounts-timestamps.yml
+      relativeToChangelogFile: true
+  - include:
+      file: 20230928-accounts-history-audit.yml
+      relativeToChangelogFile: true
