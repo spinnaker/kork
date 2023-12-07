@@ -18,10 +18,8 @@ package com.netflix.spinnaker.security
 
 import org.hamcrest.Matchers
 import org.springframework.security.core.GrantedAuthority
-import org.springframework.security.core.authority.SimpleGrantedAuthority
+import org.springframework.security.core.userdetails.User
 import spock.lang.Specification
-
-import static com.netflix.spinnaker.security.AllowedAccountsAuthorities.PREFIX
 
 class AllowedAccountsAuthoritiesSpec extends Specification {
   def "extracts allowed accounts from granted authorities"() {
@@ -41,14 +39,14 @@ class AllowedAccountsAuthoritiesSpec extends Specification {
 
     where:
     accounts                       || expected
-    ["A", null, "", "b", "b", "C"] || [a(PREFIX + "a"), a(PREFIX + "b"), a(PREFIX + "c")]
+    ['A', null, '', 'b', 'b', 'C'] || [a('a'), a('b'), a('c')]
   }
 
   private static GrantedAuthority a(String name) {
-    return new SimpleGrantedAuthority(name)
+    return new AllowedAccountAuthority(name)
   }
 
-  private static org.springframework.security.core.userdetails.User u(String name, Collection<String> accounts = []) {
-    new org.springframework.security.core.userdetails.User(name, "", accounts.collect { a(PREFIX + it) })
+  private static User u(String name, Collection<String> accounts = []) {
+    new User(name, "", accounts.collect { a(it) })
   }
 }

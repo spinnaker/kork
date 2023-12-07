@@ -18,49 +18,66 @@ package com.netflix.spinnaker.security;
 
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Objects;
+import java.util.List;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.util.CollectionUtils;
+import org.springframework.util.StringUtils;
 
 public class AllowedAccountsAuthorities {
   public static final String PREFIX = "ALLOWED_ACCOUNT_";
 
-  public static Collection<GrantedAuthority> getAllowedAccountAuthorities(UserDetails userDetails) {
-    if (userDetails == null
-        || userDetails.getAuthorities() == null
-        || userDetails.getAuthorities().isEmpty()) {
-      return Collections.emptySet();
-    }
-
-    return userDetails.getAuthorities().stream()
-        .filter(a -> a.getAuthority().startsWith(PREFIX))
-        .collect(Collectors.toSet());
-  }
-
   @SuppressWarnings("deprecation")
-  public static Collection<String> getAllowedAccounts(UserDetails userDetails) {
+  @Nonnull
+  public static Collection<String> getAllowedAccounts(@Nullable UserDetails userDetails) {
+    if (userDetails == null || CollectionUtils.isEmpty(userDetails.getAuthorities())) {
+      return List.of();
+    }
     if (userDetails instanceof User) {
       return ((User) userDetails).getAllowedAccounts();
     }
-    return getAllowedAccountAuthorities(userDetails).stream()
-        .map(a -> a.getAuthority().substring(PREFIX.length()))
+    return filterAllowedAccountAuthorities(userDetails.getAuthorities())
+        .map(AllowedAccountAuthority::getAccount)
         .sorted()
         .collect(Collectors.toList());
   }
 
-  public static Collection<GrantedAuthority> buildAllowedAccounts(Collection<String> accounts) {
+  @Nonnull
+  public static Collection<String> getAllowedAccountNames(@Nullable Authentication auth) {
+    if (auth == null) {
+      return List.of();
+    }
+    return filterAllowedAccountAuthorities(auth.getAuthorities())
+        .map(AllowedAccountAuthority::getAccount)
+        .sorted()
+        .collect(Collectors.toList());
+  }
+
+  private static Stream<AllowedAccountAuthority> filterAllowedAccountAuthorities(
+      Collection<? extends GrantedAuthority> authorities) {
+    if (CollectionUtils.isEmpty(authorities)) {
+      return Stream.empty();
+    }
+    return authorities.stream()
+        .filter(AllowedAccountAuthority.class::isInstance)
+        .map(AllowedAccountAuthority.class::cast);
+  }
+
+  @Nonnull
+  public static Collection<AllowedAccountAuthority> buildAllowedAccounts(
+      Collection<String> accounts) {
     if (accounts == null || accounts.isEmpty()) {
       return Collections.emptySet();
     }
 
     return accounts.stream()
-        .filter(Objects::nonNull)
-        .filter(s -> !s.isEmpty())
-        .map(String::toLowerCase)
-        .map(s -> PREFIX + s)
-        .map(SimpleGrantedAuthority::new)
+        .filter(StringUtils::hasLength)
+        .map(AllowedAccountAuthority::new)
         .collect(Collectors.toSet());
   }
 }
