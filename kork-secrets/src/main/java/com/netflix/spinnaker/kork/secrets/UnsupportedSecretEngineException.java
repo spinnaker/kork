@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 Apple Inc.
+ * Copyright 2023 Apple Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,25 +14,17 @@
  * limitations under the License.
  */
 
-package com.netflix.spinnaker.kork.secrets.user;
+package com.netflix.spinnaker.kork.secrets;
 
-import com.netflix.spinnaker.kork.annotations.NonnullByDefault;
-import lombok.RequiredArgsConstructor;
-
-@NonnullByDefault
-@RequiredArgsConstructor
-// not using @UserSecretType as this is an unstructured type
-// see StringUserSecretSerde
-public class StringUserSecretData implements UserSecretData {
-  private final String data;
-
-  @Override
-  public String getSecretString(String key) {
-    return data;
+/** Exception thrown when an unsupported secret engine is called upon for decrypting a secret. */
+public class UnsupportedSecretEngineException extends SecretDecryptionException
+    implements SecretError {
+  public UnsupportedSecretEngineException(String engine) {
+    super(String.format("Unsupported secret engine identifier '%s'", engine));
   }
 
   @Override
-  public String getSecretString() {
-    return data;
+  public String getErrorCode() {
+    return SecretErrorCode.UNSUPPORTED_SECRET_ENGINE.getErrorCode();
   }
 }

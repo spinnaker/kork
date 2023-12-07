@@ -51,7 +51,7 @@ import lombok.ToString;
  *
  * <p>User secrets may contain more than one secret value. The {@code k} parameter may be specified
  * to select one of the secrets by name which will return a projected version of the secret with the
- * selected key.
+ * selected key. <em>Only one {@code k} parameter should be specified in a secret URI.</em>
  *
  * @see UserSecret
  */
@@ -59,7 +59,7 @@ import lombok.ToString;
 @ToString
 @Getter
 public class UserSecretReference {
-  private static final Pattern SECRET_URI = Pattern.compile("^secret(File)?://.+");
+  private static final Pattern SECRET_URI = Pattern.compile("^secret://.+");
   public static final String SECRET_SCHEME = "secret";
 
   @Nonnull private final String engineIdentifier;
@@ -67,21 +67,38 @@ public class UserSecretReference {
 
   private UserSecretReference(URI uri) {
     if (!SECRET_SCHEME.equals(uri.getScheme())) {
-      throw new InvalidSecretFormatException("Only secret:// URIs supported");
+      throw new InvalidUserSecretReferenceException("Only secret:// URIs supported", uri);
     }
-    engineIdentifier = uri.getAuthority();
-    String[] queryKeyValues = uri.getQuery().split("&");
+    String authority = uri.getAuthority();
+    if (authority == null) {
+      throw new InvalidUserSecretReferenceException(
+          "No secret engine defined in user secret URI", uri);
+    }
+    engineIdentifier = authority;
+    String query = uri.getQuery();
+    if (query == null) {
+      throw new InvalidUserSecretReferenceException(
+          "User secret URI has no query string defined", uri);
+    }
+    String[] queryKeyValues = query.split("&");
     if (queryKeyValues.length == 0) {
-      throw new InvalidSecretFormatException(
-          "Invalid user secret URI has no query parameters defined");
+      throw new InvalidUserSecretReferenceException(
+          "Invalid user secret URI has no query parameters defined", uri);
     }
     for (String keyValue : queryKeyValues) {
       String[] pair = keyValue.split("=", 2);
       if (pair.length != 2) {
-        throw new InvalidSecretFormatException(
-            "Invalid user secret query string; missing parameter value for '" + keyValue + "'");
+        throw new InvalidUserSecretReferenceException(
+            "Invalid user secret query string; missing parameter value for '" + keyValue + "'",
+            uri);
       }
-      parameters.put(pair[0], pair[1]);
+      String key = pair[0];
+      if (parameters.containsKey(key)) {
+        throw new InvalidUserSecretReferenceException(
+            "Invalid user secret query string has duplicate key '" + key + "'", uri);
+      }
+      String value = pair[1];
+      parameters.put(key, value);
     }
   }
 
@@ -90,14 +107,14 @@ public class UserSecretReference {
    *
    * @param input URI data to parse
    * @return the parsed UserSecretReference
-   * @throws InvalidSecretFormatException when the URI is invalid
+   * @throws InvalidUserSecretReferenceException when the URI is invalid
    */
   @Nonnull
   public static UserSecretReference parse(@Nonnull String input) {
     try {
       return new UserSecretReference(new URI(input));
     } catch (URISyntaxException e) {
-      throw new InvalidSecretFormatException(e);
+      throw new InvalidUserSecretReferenceException(input, e);
     }
   }
 

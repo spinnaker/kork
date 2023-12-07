@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 Apple Inc.
+ * Copyright 2023 Apple Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,25 +14,15 @@
  * limitations under the License.
  */
 
-package com.netflix.spinnaker.kork.secrets.user;
+package com.netflix.spinnaker.kork.secrets;
 
-import com.netflix.spinnaker.kork.annotations.NonnullByDefault;
-import lombok.RequiredArgsConstructor;
+import com.netflix.spinnaker.kork.exceptions.HasAdditionalAttributes;
 
-@NonnullByDefault
-@RequiredArgsConstructor
-// not using @UserSecretType as this is an unstructured type
-// see StringUserSecretSerde
-public class StringUserSecretData implements UserSecretData {
-  private final String data;
+/** Common interface for exceptions that have a corresponding {@link SecretErrorCode}. */
+public interface SecretError extends HasAdditionalAttributes {
+  /** Returns the error code constant for this error. */
+  String getErrorCode();
 
-  @Override
-  public String getSecretString(String key) {
-    return data;
-  }
-
-  @Override
-  public String getSecretString() {
-    return data;
-  }
+  /** Returns the exception message provided by this error. */
+  String getMessage();
 }
