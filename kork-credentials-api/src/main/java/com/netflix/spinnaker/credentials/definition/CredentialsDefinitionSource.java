@@ -16,6 +16,8 @@
 
 package com.netflix.spinnaker.credentials.definition;
 
+import com.netflix.spinnaker.credentials.CredentialsSource;
+import com.netflix.spinnaker.kork.plugins.api.internal.SpinnakerExtensionPoint;
 import java.util.List;
 
 /**
@@ -24,6 +26,13 @@ import java.util.List;
  *
  * @param <T>
  */
-public interface CredentialsDefinitionSource<T extends CredentialsDefinition> {
+public interface CredentialsDefinitionSource<T extends CredentialsDefinition>
+    extends SpinnakerExtensionPoint {
+  /** Returns the list of credential definitions provided by this source. */
   List<T> getCredentialsDefinitions();
+
+  /** Returns the type of source where these credential definitions are provided. */
+  default CredentialsSource getSource() {
+    return CredentialsSource.CONFIG;
+  }
 }
