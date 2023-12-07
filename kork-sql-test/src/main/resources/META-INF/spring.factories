@@ -1,0 +1,2 @@
+com.netflix.spinnaker.kork.sql.test.AutoConfigureDatabase=\
+  com.netflix.spinnaker.kork.sql.test.DatabaseInitializer
