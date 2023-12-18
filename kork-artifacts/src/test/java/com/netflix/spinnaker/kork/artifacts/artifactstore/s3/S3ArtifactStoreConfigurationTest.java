@@ -23,6 +23,7 @@ import com.netflix.spinnaker.kork.artifacts.artifactstore.ArtifactStoreConfigura
 import com.netflix.spinnaker.kork.artifacts.artifactstore.ArtifactStoreURIBuilder;
 import com.netflix.spinnaker.kork.artifacts.artifactstore.NoopArtifactStoreGetter;
 import com.netflix.spinnaker.kork.artifacts.artifactstore.NoopArtifactStoreStorer;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInfo;
@@ -40,6 +41,16 @@ class S3ArtifactStoreConfigurationTest {
   @BeforeEach
   void init(TestInfo testInfo) {
     System.out.println("--------------- Test " + testInfo.getDisplayName());
+  }
+
+  @AfterEach
+  void cleanup() {
+    // Clear ArtifactStore.instance so we don't leave lingering state for other
+    // tests that assume it's null.
+    //
+    // Note that ArtifactStore.setInstance(null) doesn't set instance to null
+    // if it's already set.
+    ReflectionTestUtils.setField(ArtifactStore.class, "instance", null);
   }
 
   @Test
@@ -63,29 +74,20 @@ class S3ArtifactStoreConfigurationTest {
 
   @Test
   void testArtifactStoreS3Enabled() {
-    try {
-      runner
-          .withPropertyValues(
-              "artifact-store.type=s3",
-              "artifact-store.s3.enabled=true",
-              "artifact-store.s3.region=us-west-2") // arbitrary region
-          .run(
-              ctx -> {
-                assertThat(ctx).hasSingleBean(ArtifactStoreURIBuilder.class);
-                assertThat(ctx).hasSingleBean(ArtifactStore.class);
-                assertThat(ctx).hasSingleBean(S3ArtifactStoreGetter.class);
-                assertThat(ctx).hasSingleBean(S3ArtifactStoreStorer.class);
-                assertThat(ctx).doesNotHaveBean(NoopArtifactStoreGetter.class);
-                assertThat(ctx).doesNotHaveBean(NoopArtifactStoreStorer.class);
-                assertThat(ctx).hasSingleBean(S3Client.class);
-              });
-    } finally {
-      // This test likely sets ArtifactStore.instance.  Clear it so we don't
-      // leave lingering state for other tests that assume it's null.
-      //
-      // Note that ArtifactStore.setInstance(null) doesn't set instance to null
-      // if it's already set.
-      ReflectionTestUtils.setField(ArtifactStore.class, "instance", null);
-    }
+    runner
+        .withPropertyValues(
+            "artifact-store.type=s3",
+            "artifact-store.s3.enabled=true",
+            "artifact-store.s3.region=us-west-2") // arbitrary region
+        .run(
+            ctx -> {
+              assertThat(ctx).hasSingleBean(ArtifactStoreURIBuilder.class);
+              assertThat(ctx).hasSingleBean(ArtifactStore.class);
+              assertThat(ctx).hasSingleBean(S3ArtifactStoreGetter.class);
+              assertThat(ctx).hasSingleBean(S3ArtifactStoreStorer.class);
+              assertThat(ctx).doesNotHaveBean(NoopArtifactStoreGetter.class);
+              assertThat(ctx).doesNotHaveBean(NoopArtifactStoreStorer.class);
+              assertThat(ctx).hasSingleBean(S3Client.class);
+            });
   }
 }
