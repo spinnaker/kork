@@ -1,0 +1,53 @@
+/*
+ * Copyright 2023 Apple Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package com.netflix.spinnaker.credentials.definition.error;
+
+import com.netflix.spinnaker.credentials.definition.CredentialsDefinitionRepository;
+import com.netflix.spinnaker.kork.exceptions.SpinnakerException;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
+import javax.annotation.Nullable;
+import lombok.Getter;
+
+/**
+ * Base exception type for exceptions thrown by {@link CredentialsDefinitionRepository}. This
+ * exception type may also be used for wrapping transitive exceptions.
+ */
+public class CredentialsDefinitionRepositoryException extends SpinnakerException {
+  @Getter protected final Map<String, Object> additionalAttributes = new HashMap<>();
+
+  protected CredentialsDefinitionRepositoryException(String name, String message) {
+    this(name, message, null);
+  }
+
+  protected CredentialsDefinitionRepositoryException(Collection<String> names, String message) {
+    this(names, message, null);
+  }
+
+  protected CredentialsDefinitionRepositoryException(
+      String name, String message, @Nullable Throwable cause) {
+    super(message, cause);
+    additionalAttributes.put("name", name);
+  }
+
+  protected CredentialsDefinitionRepositoryException(
+      Collection<String> names, String message, @Nullable Throwable cause) {
+    super(message, cause);
+    additionalAttributes.put("names", names);
+  }
+}
