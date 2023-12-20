@@ -17,7 +17,6 @@
 
 package com.netflix.spinnaker.security;
 
-import java.util.Locale;
 import javax.annotation.Nullable;
 
 /**
@@ -28,8 +27,6 @@ public interface AuthorizationMapControlled extends PermissionMapControlled<Auth
   @Nullable
   @Override
   default Authorization valueOf(@Nullable Object authorization) {
-    return authorization != null
-        ? Enum.valueOf(Authorization.class, authorization.toString().toUpperCase(Locale.ROOT))
-        : null;
+    return Authorization.parse(authorization);
   }
 }

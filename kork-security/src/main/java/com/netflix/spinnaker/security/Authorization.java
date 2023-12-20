@@ -16,6 +16,8 @@
 
 package com.netflix.spinnaker.security;
 
+import java.util.Locale;
+import javax.annotation.Nullable;
 import org.springframework.security.core.Authentication;
 
 /**
@@ -27,4 +29,17 @@ public enum Authorization {
   WRITE,
   EXECUTE,
   CREATE,
+  ;
+
+  public static @Nullable Authorization parse(@Nullable Object o) {
+    if (o == null) {
+      return null;
+    }
+    String name = o.toString().toUpperCase(Locale.ROOT);
+    try {
+      return valueOf(name);
+    } catch (IllegalArgumentException e) {
+      return null;
+    }
+  }
 }
