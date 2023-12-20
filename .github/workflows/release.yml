@@ -13,7 +13,7 @@ jobs:
   release:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - run: git fetch --prune --unshallow
       # Given a tag, determine what branch we are on, so we can bump dependencies in the correct branch
       - name: Get Branch
@@ -35,7 +35,7 @@ jobs:
           fi
           echo "exactly one branch ($BRANCHES)"
           echo BRANCH=$BRANCHES >> $GITHUB_ENV
-      - uses: actions/setup-java@v3
+      - uses: actions/setup-java@v4
         with:
           java-version: 11
           distribution: 'zulu'

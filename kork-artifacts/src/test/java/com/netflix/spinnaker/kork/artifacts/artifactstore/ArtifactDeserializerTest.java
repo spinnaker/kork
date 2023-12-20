@@ -28,38 +28,62 @@ import java.util.Map;
 import org.junit.jupiter.api.Test;
 
 class ArtifactDeserializerTest {
-  private class InMemoryArtifactStore extends ArtifactStore {
-    public Map<String, Artifact> storageMap = new HashMap<>();
+  private class InMemoryArtifactStore {
+    private final Map<String, Artifact> storageMap = new HashMap<>();
 
     public InMemoryArtifactStore put(String id, Artifact artifact) {
       storageMap.put(id, artifact);
       return this;
     }
 
-    @Override
-    public Artifact store(Artifact artifact) {
-      storageMap.put(artifact.getReference(), artifact);
-      return artifact;
+    public Artifact get(String id) {
+      return storageMap.get(id);
+    }
+  }
+
+  private class InMemoryArtifactStoreStorer implements ArtifactStoreStorer {
+    public final InMemoryArtifactStore inMemoryArtifactStore;
+
+    public InMemoryArtifactStoreStorer(InMemoryArtifactStore inMemoryArtifactStore) {
+      this.inMemoryArtifactStore = inMemoryArtifactStore;
     }
 
     @Override
-    public Artifact get(String id, ArtifactDecorator... decorator) {
-      return storageMap.get(id);
+    public Artifact store(Artifact artifact) {
+      inMemoryArtifactStore.put(artifact.getReference(), artifact);
+      return artifact;
+    }
+  }
+
+  private class InMemoryArtifactStoreGetter implements ArtifactStoreGetter {
+    public final InMemoryArtifactStore inMemoryArtifactStore;
+
+    public InMemoryArtifactStoreGetter(InMemoryArtifactStore inMemoryArtifactStore) {
+      this.inMemoryArtifactStore = inMemoryArtifactStore;
+    }
+
+    @Override
+    public Artifact get(ArtifactReferenceURI uri, ArtifactDecorator... decorator) {
+      return inMemoryArtifactStore.get(uri.uri());
     }
   }
 
   @Test
   public void simpleDeserialization() throws IOException {
     String artifactJSON =
-        "{\"type\":\"remote/base64\",\"customKind\":false,\"name\":null,\"version\":null,\"location\":null,\"reference\":\"stored://link\",\"metadata\":{},\"artifactAccount\":null,\"provenance\":null,\"uuid\":null}";
+        "{\"type\":\"remote/base64\",\"customKind\":false,\"name\":null,\"version\":null,\"location\":null,\"reference\":\"ref://link\",\"metadata\":{},\"artifactAccount\":null,\"provenance\":null,\"uuid\":null}";
     String expectedReference = "foobar";
     Artifact expectedArtifact =
         Artifact.builder()
             .type(ArtifactTypes.REMOTE_BASE64.getMimeType())
             .reference(expectedReference)
             .build();
-    InMemoryArtifactStore storage =
-        new InMemoryArtifactStore().put("stored://link", expectedArtifact);
+    InMemoryArtifactStore inMemoryArtifactStore =
+        new InMemoryArtifactStore().put("ref://link", expectedArtifact);
+    ArtifactStore storage =
+        new ArtifactStore(
+            new InMemoryArtifactStoreGetter(inMemoryArtifactStore),
+            new InMemoryArtifactStoreStorer(inMemoryArtifactStore));
     ArtifactDeserializer deserializer = new ArtifactDeserializer(new ObjectMapper(), storage);
 
     // We avoid using an object mapper here since the Artifact class has a

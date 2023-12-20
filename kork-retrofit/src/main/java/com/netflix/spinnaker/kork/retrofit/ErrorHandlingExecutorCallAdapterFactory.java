@@ -16,7 +16,8 @@
 
 package com.netflix.spinnaker.kork.retrofit;
 
-import com.netflix.spinnaker.kork.retrofit.exceptions.RetrofitException;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.netflix.spinnaker.kork.retrofit.exceptions.SpinnakerConversionException;
 import com.netflix.spinnaker.kork.retrofit.exceptions.SpinnakerHttpException;
 import com.netflix.spinnaker.kork.retrofit.exceptions.SpinnakerNetworkException;
 import com.netflix.spinnaker.kork.retrofit.exceptions.SpinnakerServerException;
@@ -26,11 +27,9 @@ import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.Objects;
 import java.util.concurrent.Executor;
-import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import okhttp3.Request;
 import okio.Timeout;
-import org.springframework.http.HttpStatus;
 import retrofit2.Call;
 import retrofit2.CallAdapter;
 import retrofit2.Callback;
@@ -146,29 +145,21 @@ public class ErrorHandlingExecutorCallAdapterFactory extends CallAdapter.Factory
      */
     @Override
     public Response<T> execute() {
-      Response<T> syncResp;
+      Response<T> syncResp = null;
       try {
         syncResp = delegate.execute();
         if (syncResp.isSuccessful()) {
           return syncResp;
         }
+      } catch (JsonProcessingException jpe) {
+        throw new SpinnakerConversionException(
+            "Failed to process response body", jpe, delegate.request());
       } catch (IOException e) {
-        throw new SpinnakerNetworkException(e);
+        throw new SpinnakerNetworkException(e, delegate.request());
       } catch (Exception e) {
-        throw new SpinnakerServerException(e);
+        throw new SpinnakerServerException(e, delegate.request());
       }
-      throw createSpinnakerHttpException(syncResp);
-    }
-
-    @Nonnull
-    private SpinnakerHttpException createSpinnakerHttpException(Response<T> response) {
-      SpinnakerHttpException retval =
-          new SpinnakerHttpException(RetrofitException.httpError(response, retrofit));
-      if ((response.code() == HttpStatus.NOT_FOUND.value())
-          || (response.code() == HttpStatus.BAD_REQUEST.value())) {
-        retval.setRetryable(false);
-      }
-      return retval;
+      throw new SpinnakerHttpException(syncResp, retrofit);
     }
 
     /**
@@ -249,7 +240,7 @@ public class ErrorHandlingExecutorCallAdapterFactory extends CallAdapter.Factory
               public void run() {
                 callback.onFailure(
                     executorCallbackCall,
-                    executorCallbackCall.createSpinnakerHttpException(response));
+                    new SpinnakerHttpException(response, executorCallbackCall.retrofit));
               }
             });
       }
@@ -260,11 +251,11 @@ public class ErrorHandlingExecutorCallAdapterFactory extends CallAdapter.Factory
 
       SpinnakerServerException exception;
       if (t instanceof IOException) {
-        exception = new SpinnakerNetworkException(t);
+        exception = new SpinnakerNetworkException(t, call.request());
       } else if (t instanceof SpinnakerHttpException) {
         exception = (SpinnakerHttpException) t;
       } else {
-        exception = new SpinnakerServerException(t);
+        exception = new SpinnakerServerException(t, call.request());
       }
       final SpinnakerServerException finalException = exception;
       callbackExecutor.execute(
