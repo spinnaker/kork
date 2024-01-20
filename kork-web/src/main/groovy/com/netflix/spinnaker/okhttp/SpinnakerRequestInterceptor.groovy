@@ -20,14 +20,14 @@ import com.netflix.spinnaker.security.AuthenticatedRequest
 import retrofit.RequestInterceptor
 
 class SpinnakerRequestInterceptor implements RequestInterceptor {
-  private final OkHttpClientConfigurationProperties okHttpClientConfigurationProperties
+  private final boolean propagateSpinnakerHeaders;
 
-  SpinnakerRequestInterceptor(OkHttpClientConfigurationProperties okHttpClientConfigurationProperties) {
-    this.okHttpClientConfigurationProperties = okHttpClientConfigurationProperties
+  SpinnakerRequestInterceptor(boolean propagateSpinnakerHeaders) {
+    this.propagateSpinnakerHeaders = propagateSpinnakerHeaders
   }
 
   void intercept(RequestInterceptor.RequestFacade request) {
-    if (!okHttpClientConfigurationProperties.propagateSpinnakerHeaders) {
+    if (!propagateSpinnakerHeaders) {
       // noop
       return
     }

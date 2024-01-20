@@ -84,11 +84,8 @@ class SpinnakerRequestInterceptorTest {
   @ParameterizedTest(name = "propagateSpinnakerHeaders = {0}")
   @ValueSource(booleans = {false, true})
   void propagateSpinnakerHeaders(boolean propagateSpinnakerHeaders) {
-    OkHttpClientConfigurationProperties okHttpClientConfigurationProperties =
-        new OkHttpClientConfigurationProperties();
-    okHttpClientConfigurationProperties.setPropagateSpinnakerHeaders(propagateSpinnakerHeaders);
     SpinnakerRequestInterceptor spinnakerRequestInterceptor =
-        new SpinnakerRequestInterceptor(okHttpClientConfigurationProperties);
+        new SpinnakerRequestInterceptor(propagateSpinnakerHeaders);
 
     RetrofitService retrofitService =
         makeRetrofitService(wireMock.baseUrl(), spinnakerRequestInterceptor);
