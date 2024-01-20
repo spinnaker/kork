@@ -22,6 +22,7 @@ import static com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.ok;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import com.github.tomakehurst.wiremock.junit5.WireMockExtension;
 import com.github.tomakehurst.wiremock.junit5.WireMockRuntimeInfo;
@@ -32,6 +33,7 @@ import java.util.Map;
 import okhttp3.OkHttpClient;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInfo;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -106,6 +108,36 @@ class SpinnakerRequestHeaderInterceptorTest {
             requestPatternBuilder.withHeader(header.getHeader(), equalTo(value));
           } else {
             requestPatternBuilder.withoutHeader(header.getHeader());
+          }
+          wireMock.verify(requestPatternBuilder);
+        });
+  }
+
+  @Test
+  void skipAccountHeaders() throws Exception {
+    SpinnakerRequestHeaderInterceptor spinnakerRequestHeaderInterceptor =
+        new SpinnakerRequestHeaderInterceptor(
+            true /* propagateSpinnakerHeaders */, true /* skipAccountsHeader */);
+
+    RetrofitService retrofitService =
+        makeRetrofitService(wireMock.baseUrl(), spinnakerRequestHeaderInterceptor);
+
+    // Add some spinnaker headers to the MDC, including the accounts header
+    assertThat(TEST_SPINNAKER_HEADERS).containsKey(Header.ACCOUNTS);
+    TEST_SPINNAKER_HEADERS.forEach(AuthenticatedRequest::set);
+
+    // Make a request
+    retrofitService.getRequest().execute();
+
+    // Verify that wiremock received all spinnaker headers except the accounts header
+    TEST_SPINNAKER_HEADERS.forEach(
+        (Header header, String value) -> {
+          RequestPatternBuilder requestPatternBuilder =
+              getRequestedFor(urlPathEqualTo(REQUEST_PATH));
+          if (Header.ACCOUNTS.equals(header)) {
+            requestPatternBuilder.withoutHeader(header.getHeader());
+          } else {
+            requestPatternBuilder.withHeader(header.getHeader(), equalTo(value));
           }
           wireMock.verify(requestPatternBuilder);
         });
