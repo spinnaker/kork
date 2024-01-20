@@ -28,17 +28,16 @@ import okhttp3.Response;
  */
 public class SpinnakerRequestHeaderInterceptor implements Interceptor {
 
-  private final OkHttpClientConfigurationProperties okHttpClientConfigurationProperties;
+  private final boolean propagateSpinnakerHeaders;
 
-  public SpinnakerRequestHeaderInterceptor(
-      OkHttpClientConfigurationProperties okHttpClientConfigurationProperties) {
-    this.okHttpClientConfigurationProperties = okHttpClientConfigurationProperties;
+  public SpinnakerRequestHeaderInterceptor(boolean propagateSpinnakerHeaders) {
+    this.propagateSpinnakerHeaders = propagateSpinnakerHeaders;
   }
 
   @Override
   public Response intercept(Chain chain) throws IOException {
     Request.Builder builder = chain.request().newBuilder();
-    if (!okHttpClientConfigurationProperties.getPropagateSpinnakerHeaders()) {
+    if (!propagateSpinnakerHeaders) {
       return chain.proceed(builder.build());
     }
 
