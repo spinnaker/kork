@@ -21,23 +21,24 @@ import static com.github.tomakehurst.wiremock.client.WireMock.get;
 import static com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.ok;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
-import static com.github.tomakehurst.wiremock.client.WireMock.verify;
+import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
 
-import com.github.tomakehurst.wiremock.client.WireMock;
+import com.github.tomakehurst.wiremock.junit5.WireMockExtension;
 import com.github.tomakehurst.wiremock.junit5.WireMockRuntimeInfo;
-import com.github.tomakehurst.wiremock.junit5.WireMockTest;
+import com.github.tomakehurst.wiremock.matching.RequestPatternBuilder;
 import com.netflix.spinnaker.kork.common.Header;
 import com.netflix.spinnaker.security.AuthenticatedRequest;
 import java.util.Map;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInfo;
+import org.junit.jupiter.api.extension.RegisterExtension;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import retrofit.RestAdapter;
 import retrofit.client.Response;
 import retrofit.http.GET;
 
-@WireMockTest
 class SpinnakerRequestInterceptorTest {
 
   public static final String REQUEST_PATH = "/foo";
@@ -57,15 +58,22 @@ class SpinnakerRequestInterceptorTest {
           Header.REQUEST_ID,
           TEST_REQUEST_ID);
 
+  /**
+   * Use this instead of annotating the class with @WireMockTest so there's a WireMock object
+   * available for parameterized tests. Otherwise the arguments from e.g. ValueSource compete with
+   * the WireMockRuntimeInfo argument that @WireMockTest provides.
+   */
+  @RegisterExtension
+  static WireMockExtension wireMock =
+      WireMockExtension.newInstance().options(wireMockConfig().dynamicPort()).build();
+
   @BeforeEach
   void setup(TestInfo testInfo, WireMockRuntimeInfo wmRuntimeInfo) {
     System.out.println("--------------- Test " + testInfo.getDisplayName());
 
-    WireMock wireMock = wmRuntimeInfo.getWireMock();
-
     // set up an arbitrary response to avoid 404s, and so it's possible to
     // verify the request headers wiremock receives.
-    wireMock.register(get(REQUEST_PATH).willReturn(ok()));
+    wireMock.stubFor(get(REQUEST_PATH).willReturn(ok()));
   }
 
   @AfterEach
@@ -73,16 +81,17 @@ class SpinnakerRequestInterceptorTest {
     AuthenticatedRequest.clear();
   }
 
-  @Test
-  void propagateSpinnakerHeadersFalse(WireMockRuntimeInfo wmRuntimeInfo) {
+  @ParameterizedTest(name = "propagateSpinnakerHeaders = {0}")
+  @ValueSource(booleans = {false, true})
+  void propagateSpinnakerHeaders(boolean propagateSpinnakerHeaders) {
     OkHttpClientConfigurationProperties okHttpClientConfigurationProperties =
         new OkHttpClientConfigurationProperties();
-    okHttpClientConfigurationProperties.setPropagateSpinnakerHeaders(false);
+    okHttpClientConfigurationProperties.setPropagateSpinnakerHeaders(propagateSpinnakerHeaders);
     SpinnakerRequestInterceptor spinnakerRequestInterceptor =
         new SpinnakerRequestInterceptor(okHttpClientConfigurationProperties);
 
     RetrofitService retrofitService =
-        makeRetrofitService(wmRuntimeInfo, spinnakerRequestInterceptor);
+        makeRetrofitService(wireMock.baseUrl(), spinnakerRequestInterceptor);
 
     // Add some spinnaker headers to the MDC
     TEST_SPINNAKER_HEADERS.forEach(AuthenticatedRequest::set);
@@ -90,44 +99,25 @@ class SpinnakerRequestInterceptorTest {
     // Make a request
     retrofitService.getRequest();
 
-    // Verify that wiremock didn't receive the spinnaker headers
+    // Verify that wiremock did/didn't receive the spinnaker headers as appropriate
     TEST_SPINNAKER_HEADERS.forEach(
         (Header header, String value) -> {
-          verify(getRequestedFor(urlPathEqualTo(REQUEST_PATH)).withoutHeader(header.getHeader()));
-        });
-  }
-
-  @Test
-  void propagateSpinnakerHeadersTrue(WireMockRuntimeInfo wmRuntimeInfo) {
-    OkHttpClientConfigurationProperties okHttpClientConfigurationProperties =
-        new OkHttpClientConfigurationProperties();
-    okHttpClientConfigurationProperties.setPropagateSpinnakerHeaders(true);
-    SpinnakerRequestInterceptor spinnakerRequestInterceptor =
-        new SpinnakerRequestInterceptor(okHttpClientConfigurationProperties);
-
-    RetrofitService retrofitService =
-        makeRetrofitService(wmRuntimeInfo, spinnakerRequestInterceptor);
-
-    // Add some spinnaker headers to the MDC
-    TEST_SPINNAKER_HEADERS.forEach(AuthenticatedRequest::set);
-
-    // Make a request
-    retrofitService.getRequest();
-
-    // Verify that wiremock received the spinnaker headers
-    TEST_SPINNAKER_HEADERS.forEach(
-        (Header header, String value) -> {
-          verify(
-              getRequestedFor(urlPathEqualTo(REQUEST_PATH))
-                  .withHeader(header.getHeader(), equalTo(value)));
+          RequestPatternBuilder requestPatternBuilder =
+              getRequestedFor(urlPathEqualTo(REQUEST_PATH));
+          if (propagateSpinnakerHeaders) {
+            requestPatternBuilder.withHeader(header.getHeader(), equalTo(value));
+          } else {
+            requestPatternBuilder.withoutHeader(header.getHeader());
+          }
+          wireMock.verify(requestPatternBuilder);
         });
   }
 
   private RetrofitService makeRetrofitService(
-      WireMockRuntimeInfo wmRuntimeInfo, SpinnakerRequestInterceptor spinnakerRequestInterceptor) {
+      String baseUrl, SpinnakerRequestInterceptor spinnakerRequestInterceptor) {
     return new RestAdapter.Builder()
         .setRequestInterceptor(spinnakerRequestInterceptor)
-        .setEndpoint(wmRuntimeInfo.getHttpBaseUrl())
+        .setEndpoint(baseUrl)
         .build()
         .create(RetrofitService.class);
   }
