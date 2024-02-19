@@ -64,6 +64,7 @@ class SpinnakerHttpExceptionTest {
         .isEqualTo("Status: " + statusCode + ", URL: " + url + ", Message: " + message);
     assertThat(spinnakerHttpException.getUrl()).isEqualTo(url);
     assertThat(spinnakerHttpException.getReason()).isEqualTo(reason);
+    assertThat(spinnakerHttpException.getHttpMethod()).isNull();
   }
 
   @Test
