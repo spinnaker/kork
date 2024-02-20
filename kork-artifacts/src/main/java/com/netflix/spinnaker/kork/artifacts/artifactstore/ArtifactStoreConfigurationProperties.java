@@ -22,6 +22,10 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 @ConfigurationProperties("artifact-store")
 public class ArtifactStoreConfigurationProperties {
   private String applicationsRegex = null;
+
+  /** The type of artifact store to use (e.g. s3). */
+  private String type = null;
+
   /** Configuration for an s3 client which will utilize credentials in the AWS credentials file. */
   @Data
   public static class S3ClientConfig {
@@ -40,5 +44,12 @@ public class ArtifactStoreConfigurationProperties {
     private boolean forcePathStyle = true;
   }
 
-  private S3ClientConfig s3 = null;
+  @Data
+  public static class HelmConfig {
+    /** Enables Rosco to expand any artifact URIs passed as parameters for Helm. */
+    private boolean expandOverrides = false;
+  }
+
+  private S3ClientConfig s3 = new S3ClientConfig();
+  private HelmConfig helm = new HelmConfig();
 }

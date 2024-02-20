@@ -19,9 +19,6 @@ package com.netflix.spinnaker.kork.retrofit.exceptions;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.google.gson.Gson;
 import com.netflix.spinnaker.kork.exceptions.SpinnakerException;
@@ -31,6 +28,7 @@ import java.util.Map;
 import okhttp3.MediaType;
 import okhttp3.ResponseBody;
 import org.junit.jupiter.api.Test;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import retrofit.RetrofitError;
 import retrofit.client.Response;
@@ -39,11 +37,11 @@ import retrofit.mime.TypedString;
 import retrofit2.Retrofit;
 import retrofit2.converter.jackson.JacksonConverterFactory;
 
-public class SpinnakerHttpExceptionTest {
+class SpinnakerHttpExceptionTest {
   private static final String CUSTOM_MESSAGE = "custom message";
 
   @Test
-  public void testSpinnakerHttpExceptionFromRetrofitError() {
+  void testSpinnakerHttpExceptionFromRetrofitError() {
     String url = "http://localhost";
     int statusCode = 200;
     String message = "arbitrary message";
@@ -66,10 +64,11 @@ public class SpinnakerHttpExceptionTest {
         .isEqualTo("Status: " + statusCode + ", URL: " + url + ", Message: " + message);
     assertThat(spinnakerHttpException.getUrl()).isEqualTo(url);
     assertThat(spinnakerHttpException.getReason()).isEqualTo(reason);
+    assertThat(spinnakerHttpException.getHttpMethod()).isNull();
   }
 
   @Test
-  public void testSpinnakerHttpExceptionFromRetrofitException() {
+  void testSpinnakerHttpExceptionFromRetrofitException() {
     final String validJsonResponseBodyString = "{\"name\":\"test\"}";
     ResponseBody responseBody =
         ResponseBody.create(
@@ -86,19 +85,20 @@ public class SpinnakerHttpExceptionTest {
     assertThat(retrofit2Service.baseUrl().toString()).isEqualTo(url);
     SpinnakerHttpException notFoundException =
         new SpinnakerHttpException(response, retrofit2Service);
-    assertNotNull(notFoundException.getResponseBody());
+    assertThat(notFoundException.getResponseBody()).isNotNull();
     assertThat(notFoundException.getUrl()).isEqualTo(url);
     assertThat(notFoundException.getReason())
         .isEqualTo("Response.error()"); // set by Response.error
     Map<String, Object> errorResponseBody = notFoundException.getResponseBody();
-    assertEquals(errorResponseBody.get("name"), "test");
-    assertEquals(HttpStatus.NOT_FOUND.value(), notFoundException.getResponseCode());
-    assertTrue(
-        notFoundException.getMessage().contains(String.valueOf(HttpStatus.NOT_FOUND.value())));
+    assertThat(errorResponseBody.get("name")).isEqualTo("test");
+    assertThat(notFoundException.getResponseCode()).isEqualTo(HttpStatus.NOT_FOUND.value());
+    assertThat(notFoundException)
+        .hasMessageContaining(String.valueOf(HttpStatus.NOT_FOUND.value()));
+    assertThat(notFoundException.getHttpMethod()).isEqualTo(HttpMethod.GET.toString());
   }
 
   @Test
-  public void testSpinnakerHttpException_NewInstance() {
+  void testSpinnakerHttpException_NewInstance() {
     String url = "http://localhost";
     String reason = "reason";
     Response response = new Response(url, 200, reason, List.of(), null);
@@ -108,10 +108,11 @@ public class SpinnakerHttpExceptionTest {
     } catch (SpinnakerException e) {
       SpinnakerException newException = e.newInstance(CUSTOM_MESSAGE);
 
-      assertTrue(newException instanceof SpinnakerHttpException);
-      assertEquals(CUSTOM_MESSAGE, newException.getMessage());
-      assertEquals(e, newException.getCause());
-      assertEquals(response.getStatus(), ((SpinnakerHttpException) newException).getResponseCode());
+      assertThat(newException).isInstanceOf(SpinnakerHttpException.class);
+      assertThat(newException).hasMessage(CUSTOM_MESSAGE);
+      assertThat(newException).hasCause(e);
+      assertThat(((SpinnakerHttpException) newException).getResponseCode())
+          .isEqualTo(response.getStatus());
       SpinnakerHttpException spinnakerHttpException = (SpinnakerHttpException) newException;
       assertThat(spinnakerHttpException.getUrl()).isEqualTo(url);
       assertThat(spinnakerHttpException.getReason()).isEqualTo(reason);
