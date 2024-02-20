@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+apply plugin:"groovy"
 
 dependencies {
   api(platform(project(":spinnaker-dependencies")))
@@ -23,6 +24,5 @@ dependencies {
 
   testImplementation "org.spockframework:spock-core"
   testImplementation "org.junit.jupiter:junit-jupiter-api"
-  testRuntimeOnly "org.junit.vintage:junit-vintage-engine"
   testRuntimeOnly "org.junit.jupiter:junit-jupiter-engine"
 }

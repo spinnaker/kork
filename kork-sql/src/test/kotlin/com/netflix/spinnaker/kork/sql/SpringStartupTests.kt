@@ -21,8 +21,8 @@ import com.netflix.spinnaker.kork.sql.health.SqlHealthIndicator
 import org.jooq.DSLContext
 import org.jooq.impl.DSL.field
 import org.jooq.impl.DSL.table
-import org.junit.Test
-import org.junit.runner.RunWith
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.extension.ExtendWith
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.getBeansOfType
 import org.springframework.boot.actuate.health.HealthIndicator
@@ -30,19 +30,21 @@ import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.context.ApplicationContext
 import org.springframework.context.annotation.Import
-import org.springframework.test.context.junit4.SpringRunner
+import org.springframework.test.context.TestPropertySource
+import org.springframework.test.context.junit.jupiter.SpringExtension
 import strikt.api.expectThat
 import strikt.assertions.isA
 import strikt.assertions.isEqualTo
 import strikt.assertions.isNotNull
 
-@RunWith(SpringRunner::class)
+@ExtendWith(SpringExtension::class)
 @SpringBootTest(
   classes = [StartupTestApp::class],
   properties = [
     "sql.enabled=true",
     "sql.migration.jdbcUrl=jdbc:h2:mem:test",
     "sql.migration.dialect=H2",
+    "sql.migration.duplicateFileMode=WARN",
     "sql.connectionPool.jdbcUrl=jdbc:h2:mem:test",
     "sql.connectionPool.dialect=H2"
   ]

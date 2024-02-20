@@ -18,6 +18,7 @@ dependencies {
   api "io.github.resilience4j:resilience4j-retry"
   api "io.github.resilience4j:resilience4j-spring-boot2"
 
+  implementation "org.apache.logging.log4j:log4j-api"
   implementation "com.fasterxml.jackson.core:jackson-annotations"
   implementation "com.fasterxml.jackson.core:jackson-databind"
   implementation "com.netflix.spectator:spectator-ext-gc"
@@ -29,5 +30,5 @@ dependencies {
   testImplementation "org.spockframework:spock-core"
   testRuntimeOnly "cglib:cglib-nodep"
   testRuntimeOnly "org.objenesis:objenesis"
-  testRuntimeOnly "org.slf4j:slf4j-simple"
+  testRuntimeOnly "org.junit.jupiter:junit-jupiter-engine"
 }

@@ -17,16 +17,36 @@
 package com.netflix.spinnaker.kork.retrofit.exceptions;
 
 import com.netflix.spinnaker.kork.annotations.NonnullByDefault;
+import okhttp3.Request;
 import retrofit.RetrofitError;
 
-/** Wraps an exception of kind {@link RetrofitError.Kind} NETWORK. */
+/** Represents a network error while attempting to execute a retrofit http client request. */
 @NonnullByDefault
 public final class SpinnakerNetworkException extends SpinnakerServerException {
+
+  /**
+   * Construct a SpinnakerNetworkException from retrofit2 with a cause (e.g. an exception sending a
+   * request or processing a response).
+   */
+  public SpinnakerNetworkException(Throwable cause, Request request) {
+    super(cause, request);
+  }
+
+  /**
+   * Construct a SpinnakerNetworkException from another SpinnakerNetworkException (e.g. via
+   * newInstance).
+   */
+  public SpinnakerNetworkException(String message, SpinnakerNetworkException cause) {
+    super(message, cause);
+  }
+
+  /** Construct a SpinnakerNetworkException corresponding to a RetrofitError. */
   public SpinnakerNetworkException(RetrofitError e) {
     super(e);
   }
 
-  public SpinnakerNetworkException(RetrofitException e) {
-    super(e);
+  @Override
+  public SpinnakerNetworkException newInstance(String message) {
+    return new SpinnakerNetworkException(message, this);
   }
 }

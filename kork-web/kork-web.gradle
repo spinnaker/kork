@@ -1,5 +1,6 @@
 apply plugin: "java-library"
 apply plugin: "groovy"
+apply from: "$rootDir/gradle/lombok.gradle"
 
 sourceSets {
   main {
@@ -12,10 +13,12 @@ dependencies {
   api(platform(project(":spinnaker-dependencies")))
 
   api project(":kork-core")
+  api project(":kork-crypto")
   api project(":kork-security")
   api project(":kork-exceptions")
   api "org.codehaus.groovy:groovy"
   api "org.springframework.boot:spring-boot-starter-web"
+  api "org.springframework.boot:spring-boot-starter-webflux"
   api "org.springframework.boot:spring-boot-starter-security"
   api "org.springframework.security:spring-security-core"
   api "com.netflix.spectator:spectator-api"
@@ -46,6 +49,7 @@ dependencies {
   testImplementation "org.spockframework:spock-spring"
   testImplementation "org.springframework.boot:spring-boot-starter-test"
   testImplementation "com.netflix.spectator:spectator-reg-micrometer"
+  testImplementation testFixtures(project(":kork-crypto"))
   testRuntimeOnly "cglib:cglib-nodep"
   testRuntimeOnly "org.objenesis:objenesis"
 }

@@ -22,6 +22,7 @@ import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.netflix.spinnaker.kork.artifacts.ArtifactTypes;
 import java.io.IOException;
 import java.util.function.Function;
 import java.util.stream.Stream;
@@ -67,6 +68,28 @@ final class ExpectedArtifactTest {
     String json = objectMapper.writeValueAsString(artifact);
     ExpectedArtifact deserializedArtifact = objectMapper.readValue(json, ExpectedArtifact.class);
     assertThat(deserializedArtifact).isEqualTo(artifact);
+  }
+
+  @Test
+  void checkEmbeddedStoredTypesMatch() {
+    Artifact embeddedTypeArtifact =
+        Artifact.builder().type(ArtifactTypes.EMBEDDED_BASE64.getMimeType()).build();
+
+    Artifact storedTypeArtifact =
+        Artifact.builder().type(ArtifactTypes.REMOTE_BASE64.getMimeType()).build();
+
+    Artifact noMatchTypeArtifact = Artifact.builder().type("does-not-exist").build();
+
+    ExpectedArtifact expectedArtifact =
+        ExpectedArtifact.builder().matchArtifact(embeddedTypeArtifact).build();
+    assertThat(expectedArtifact.matches(storedTypeArtifact)).isTrue();
+    assertThat(expectedArtifact.matches(embeddedTypeArtifact)).isTrue();
+    assertThat(expectedArtifact.matches(noMatchTypeArtifact)).isFalse();
+
+    expectedArtifact = ExpectedArtifact.builder().matchArtifact(storedTypeArtifact).build();
+    assertThat(expectedArtifact.matches(embeddedTypeArtifact)).isTrue();
+    assertThat(expectedArtifact.matches(storedTypeArtifact)).isTrue();
+    assertThat(expectedArtifact.matches(noMatchTypeArtifact)).isFalse();
   }
 
   private String fullExpectedArtifactJson() {
@@ -165,5 +188,38 @@ final class ExpectedArtifactTest {
             s -> Artifact.builder().uuid(s).build(),
             s -> Artifact.builder().artifactAccount(s).build())
         .map(Arguments::of);
+  }
+
+  @ParameterizedTest
+  @MethodSource("referenceCases")
+  void testReferenceMatches(
+      String matchReference, String otherReference, boolean shouldMatch, String caseName) {
+    ExpectedArtifact expectedArtifact =
+        ExpectedArtifact.builder()
+            .id("test")
+            .matchArtifact(
+                Artifact.builder()
+                    .type(ArtifactTypes.EMBEDDED_BASE64.getMimeType())
+                    .reference(matchReference)
+                    .build())
+            .build();
+
+    assertThat(
+            expectedArtifact.matches(
+                Artifact.builder()
+                    .type(ArtifactTypes.EMBEDDED_BASE64.getMimeType())
+                    .reference(otherReference)
+                    .build()))
+        .as(caseName)
+        .isEqualTo(shouldMatch);
+  }
+
+  private static Stream<Arguments> referenceCases() {
+    return Stream.of(
+        Arguments.of("SGVsbG8gV29ybGQK", "SGVsbG8gV29ybGQK", true, "simple"),
+        Arguments.of("SGVsbG8gV29ybGQK", null, false, "other reference as null"),
+        Arguments.of("SGVsbG8gV29ybGQK", "", false, "other reference is empty"),
+        Arguments.of("", "SGVsbG8gV29ybGQK", true, "match reference is empty"),
+        Arguments.of("+++", "+++", true, "valid base64 but invalid regex"));
   }
 }

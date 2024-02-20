@@ -23,8 +23,6 @@ if (spinnakerGradleVersion.endsWith('-SNAPSHOT')) {
   }
 }
 
-enableFeaturePreview("VERSION_ORDERING_V2")
-
 include(
   "spinnaker-dependencies",
   "kork-actuator",
@@ -39,6 +37,7 @@ include(
   "kork-core-tck",
   "kork-credentials",
   "kork-credentials-api",
+  "kork-crypto",
   "kork-eureka",
   "kork-exceptions",
   "kork-expressions",

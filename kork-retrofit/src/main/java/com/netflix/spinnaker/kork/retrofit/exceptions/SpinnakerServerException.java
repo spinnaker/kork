@@ -16,85 +16,68 @@
 
 package com.netflix.spinnaker.kork.retrofit.exceptions;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.netflix.spinnaker.kork.annotations.NonnullByDefault;
 import com.netflix.spinnaker.kork.exceptions.SpinnakerException;
-import java.util.Optional;
 import lombok.Getter;
+import okhttp3.Request;
 import retrofit.RetrofitError;
 
-/** An exception that exposes the message of a {@link RetrofitError}, or a custom message. */
+/** Represents an error while attempting to execute a retrofit http client request. */
 @NonnullByDefault
 public class SpinnakerServerException extends SpinnakerException {
 
-  /**
-   * A message derived from a RetrofitError's response body, or null if a custom message has been
-   * provided.
-   */
-  private final String rawMessage;
+  @Getter private final String url;
+  @Getter private final String httpMethod;
 
-  /**
-   * Parses the message from the {@link RetrofitErrorResponseBody} of a {@link RetrofitError}.
-   *
-   * @param e The {@link RetrofitError} thrown by an invocation of the {@link retrofit.RestAdapter}
-   */
+  /** Construct a SpinnakerServerException corresponding to a RetrofitError. */
   public SpinnakerServerException(RetrofitError e) {
-    super(e.getCause());
-    RetrofitErrorResponseBody body =
-        (RetrofitErrorResponseBody) e.getBodyAs(RetrofitErrorResponseBody.class);
-    this.rawMessage =
-        Optional.ofNullable(body).map(RetrofitErrorResponseBody::getMessage).orElse(e.getMessage());
-  }
-
-  public SpinnakerServerException(RetrofitException e) {
-    super(e.getCause());
-    RetrofitErrorResponseBody body =
-        (RetrofitErrorResponseBody) e.getErrorBodyAs(RetrofitErrorResponseBody.class);
-    this.rawMessage =
-        Optional.ofNullable(body).map(RetrofitErrorResponseBody::getMessage).orElse(e.getMessage());
+    super(e.getMessage(), e.getCause());
+    url = e.getUrl();
+    httpMethod = null;
   }
 
   /**
-   * Construct a SpinnakerServerException with a specified message, instead of deriving one from a
-   * response body.
-   *
-   * @param message the message
-   * @param cause the cause. Note that this is required (i.e. can't be null) since in the absence of
-   *     a cause or a RetrofitError that provides the cause, SpinnakerServerException is likely not
-   *     the appropriate exception class to use.
+   * Construct a SpinnakerServerException from retrofit2 with no cause (e.g. a non-200 http
+   * response).
    */
-  public SpinnakerServerException(String message, Throwable cause) {
+  public SpinnakerServerException(Request request) {
+    super();
+    url = request.url().toString();
+    httpMethod = request.method();
+  }
+
+  /**
+   * Construct a SpinnakerServerException from retrofit2 with a cause (e.g. an exception sending a
+   * request or processing a response).
+   */
+  public SpinnakerServerException(Throwable cause, Request request) {
+    super(cause);
+    this.url = request.url().toString();
+    this.httpMethod = request.method();
+  }
+
+  /**
+   * Construct a SpinnakerServerException from retrofit2 with a message and cause (e.g. an exception
+   * converting a response to the specified type).
+   */
+  public SpinnakerServerException(String message, Throwable cause, Request request) {
     super(message, cause);
-    rawMessage = null;
+    this.url = request.url().toString();
+    this.httpMethod = request.method();
+  }
+
+  /**
+   * Construct a SpinnakerServerException from another SpinnakerServerException (e.g. via
+   * newInstance).
+   */
+  public SpinnakerServerException(String message, SpinnakerServerException cause) {
+    super(message, cause);
+    this.url = cause.getUrl();
+    this.httpMethod = cause.getHttpMethod();
   }
 
   @Override
-  public String getMessage() {
-    if (rawMessage == null) {
-      return super.getMessage();
-    }
-    return rawMessage;
-  }
-
-  final String getRawMessage() {
-    return rawMessage;
-  }
-
-  @Getter
-  // Use JsonIgnoreProperties because some responses contain properties that
-  // cannot be mapped to the RetrofitErrorResponseBody class.  If the default
-  // JacksonConverter (with no extra configurations) is used to deserialize the
-  // response body and properties other than "message" exist in the JSON
-  // response, there will be an UnrecognizedPropertyException.
-  @JsonIgnoreProperties(ignoreUnknown = true)
-  private static final class RetrofitErrorResponseBody {
-    private final String message;
-
-    @JsonCreator
-    RetrofitErrorResponseBody(@JsonProperty("message") String message) {
-      this.message = message;
-    }
+  public SpinnakerServerException newInstance(String message) {
+    return new SpinnakerServerException(message, this);
   }
 }
