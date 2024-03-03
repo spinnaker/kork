@@ -17,6 +17,7 @@
 package com.netflix.spinnaker.kork.artifacts.artifactstore.s3;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -28,7 +29,6 @@ import com.netflix.spinnaker.kork.exceptions.SpinnakerException;
 import com.netflix.spinnaker.security.AuthenticatedRequest;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.HeadObjectRequest;
 import software.amazon.awssdk.services.s3.model.S3Exception;
@@ -37,7 +37,7 @@ public class S3ArtifactStoreStorerTest {
   @Test
   public void testExceptionPathOfObjectExists() {
     S3Client client = mock(S3Client.class);
-    when(client.headObject((HeadObjectRequest) Mockito.any()))
+    when(client.headObject(any(HeadObjectRequest.class)))
         .thenThrow(S3Exception.builder().statusCode(400).build());
     AuthenticatedRequest.set(Header.APPLICATION, "my-application");
     S3ArtifactStoreStorer artifactStoreStorer =
