@@ -18,14 +18,14 @@ package com.netflix.spinnaker.security;
 
 import static java.util.Collections.unmodifiableCollection;
 import static java.util.Collections.unmodifiableList;
-import static java.util.stream.Collectors.toList;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.util.StringUtils;
 
@@ -57,10 +57,11 @@ public class User implements UserDetails {
 
   @Override
   public List<? extends GrantedAuthority> getAuthorities() {
-    return roles.stream()
-        .filter(StringUtils::hasText)
-        .map(SimpleGrantedAuthority::new)
-        .collect(toList());
+    Stream<AllowedAccountAuthority> accountAuthorities =
+        allowedAccounts.stream().filter(StringUtils::hasText).map(AllowedAccountAuthority::new);
+    Stream<GrantedAuthority> roleAuthorities =
+        roles.stream().filter(StringUtils::hasText).map(SpinnakerAuthorities::forRoleName);
+    return Stream.concat(accountAuthorities, roleAuthorities).collect(Collectors.toList());
   }
 
   /** Not used */
