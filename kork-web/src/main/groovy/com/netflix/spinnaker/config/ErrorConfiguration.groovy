@@ -16,8 +16,11 @@
 
 package com.netflix.spinnaker.config
 
+import com.netflix.spinnaker.kork.api.exceptions.ConstraintViolationContext
+import com.netflix.spinnaker.kork.api.exceptions.DefaultConstraintViolationContext
 import com.netflix.spinnaker.kork.api.exceptions.ExceptionMessage
 import com.netflix.spinnaker.kork.web.controllers.GenericErrorController
+import com.netflix.spinnaker.kork.web.exceptions.ConstraintViolationAdvice
 import com.netflix.spinnaker.kork.web.exceptions.ExceptionMessageDecorator
 import com.netflix.spinnaker.kork.web.exceptions.ExceptionSummaryService
 import com.netflix.spinnaker.kork.web.exceptions.GenericExceptionHandlers
@@ -27,10 +30,22 @@ import org.springframework.boot.web.servlet.error.DefaultErrorAttributes
 import org.springframework.boot.web.servlet.error.ErrorAttributes
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
+import org.springframework.web.context.annotation.RequestScope
 import org.springframework.web.context.request.WebRequest
 
 @Configuration
 class ErrorConfiguration {
+  @Bean
+  @RequestScope
+  ConstraintViolationContext constraintViolationContext() {
+    new DefaultConstraintViolationContext()
+  }
+
+  @Bean
+  ConstraintViolationAdvice constraintViolationAdvice(ConstraintViolationContext contextProvider) {
+    new ConstraintViolationAdvice(contextProvider)
+  }
+
   @Bean
   ErrorAttributes errorAttributes() {
     final DefaultErrorAttributes defaultErrorAttributes = new DefaultErrorAttributes()
