@@ -55,4 +55,71 @@ public class S3ArtifactStoreStorerTest {
             });
     assertEquals(expectedExceptionMessage, e.getMessage());
   }
+<<<<<<< HEAD
+=======
+
+  @ParameterizedTest(
+      name = "testApplicationsRegex application = {0}, applicationsRegex = {1}, enabled = {2}")
+  @MethodSource("applicationsRegexArgs")
+  void testApplicationsRegex(String application, String applicationsRegex, boolean enabled) {
+    S3Client client = mock(S3Client.class);
+    AuthenticatedRequest.set(Header.APPLICATION, application);
+    S3ArtifactStoreStorer artifactStoreStorer =
+        new S3ArtifactStoreStorer(
+            client, "my-bucket", new ArtifactStoreURISHA256Builder(), applicationsRegex);
+    artifactStoreStorer.store(
+        Artifact.builder()
+            .type(ArtifactTypes.EMBEDDED_BASE64.getMimeType())
+            .reference("aGVsbG8gd29ybGQK")
+            .build());
+    // If enabled, expect a call to check if the object exists in the artifact store
+    verify(client, times(enabled ? 1 : 0)).headObject(any(HeadObjectRequest.class));
+    verifyNoMoreInteractions(client);
+  }
+
+  private static Stream<Arguments> applicationsRegexArgs() {
+    List<String> apps = List.of("app-one", "app-two", "app-three", "app-five.*");
+
+    // The artifact store is enabled only for exact matches (e.g. not partial
+    // matches) of applications in the list.
+    String allowRegex = "^(" + String.join("|", apps) + ")$";
+
+    // To test applicationsRegex as a "deny list", meaning that the artifact
+    // store is enabled for all apps except those in the list, use a negative
+    // lookahead (?!).  See https://stackoverflow.com/a/14147470/9572.
+    String denyRegex = "^(?!(" + String.join("|", apps) + ")$).*";
+
+    return Stream.of(
+        Arguments.of("any", null, true),
+        Arguments.of("app-one", allowRegex, true),
+        Arguments.of("app-four", allowRegex, false),
+        Arguments.of("one", allowRegex, false),
+        Arguments.of("app-one-more", allowRegex, false),
+        Arguments.of("app-five", allowRegex, true),
+        Arguments.of("app-five-more", allowRegex, true),
+        Arguments.of("app-one", denyRegex, false),
+        Arguments.of("app-four", denyRegex, true),
+        Arguments.of("one", denyRegex, true),
+        Arguments.of("app-one-more", denyRegex, true),
+        Arguments.of("app-five", denyRegex, false),
+        Arguments.of("app-five-more", denyRegex, false));
+  }
+
+  @Test
+  public void testInvalidEmbeddedBase64StillSucceeds() {
+    S3Client client = mock(S3Client.class);
+    AuthenticatedRequest.set(Header.APPLICATION, "my-application");
+    S3ArtifactStoreStorer artifactStore =
+        new S3ArtifactStoreStorer(client, "my-bucket", new ArtifactStoreURISHA256Builder(), null);
+    String expectedReference = "${ #nonbase64spel() }";
+    Artifact artifact =
+        artifactStore.store(
+            Artifact.builder()
+                .type(ArtifactTypes.EMBEDDED_BASE64.getMimeType())
+                .reference(expectedReference)
+                .build());
+    assertEquals(expectedReference, artifact.getReference());
+    assertEquals(ArtifactTypes.EMBEDDED_BASE64.getMimeType(), artifact.getType());
+  }
+>>>>>>> f1aa0aaa (fix(artifacts): Do not store non-base64 artifacts (#1164))
 }
