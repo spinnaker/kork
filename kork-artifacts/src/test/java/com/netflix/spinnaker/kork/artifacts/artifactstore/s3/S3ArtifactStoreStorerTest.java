@@ -55,4 +55,21 @@ public class S3ArtifactStoreStorerTest {
             });
     assertEquals(expectedExceptionMessage, e.getMessage());
   }
+
+  @Test
+  public void testInvalidEmbeddedBase64StillSucceeds() {
+    S3Client client = mock(S3Client.class);
+    AuthenticatedRequest.setApplication("my-application");
+    S3ArtifactStoreStorer artifactStore =
+        new S3ArtifactStoreStorer(client, "my-bucket", new ArtifactStoreURISHA256Builder(), null);
+    String expectedReference = "${ #nonbase64spel() }";
+    Artifact artifact =
+        artifactStore.store(
+            Artifact.builder()
+                .type(ArtifactTypes.EMBEDDED_BASE64.getMimeType())
+                .reference(expectedReference)
+                .build());
+    assertEquals(expectedReference, artifact.getReference());
+    assertEquals(ArtifactTypes.EMBEDDED_BASE64.getMimeType(), artifact.getType());
+  }
 }
