@@ -46,6 +46,7 @@ import java.util.SortedMap;
 import java.util.SortedSet;
 import java.util.TreeMap;
 import java.util.TreeSet;
+import org.apache.maven.artifact.versioning.DefaultArtifactVersion;
 import org.pf4j.PluginManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -90,6 +91,7 @@ public class ExpressionsSupport {
                 LinkedHashSet.class,
                 HashMap.class,
                 LinkedHashMap.class,
+                DefaultArtifactVersion.class,
                 TreeMap.class,
                 TreeSet.class));
     Collections.addAll(allowedReturnTypes, extraAllowedReturnTypes);
@@ -282,6 +284,16 @@ public class ExpressionsSupport {
     }
 
     /**
+     * Parses a string to an integer
+     *
+     * @param str represents an int
+     * @return an integer
+     */
+    public static DefaultArtifactVersion toArtifactVersion(String str) {
+      return new DefaultArtifactVersion(str);
+    }
+
+    /**
      * Parses a string to a float
      *
      * @param str represents an float
@@ -343,6 +355,13 @@ public class ExpressionsSupport {
               "toInt",
               "Converts a string to integer",
               new FunctionParameter(String.class, "value", "A String value to convert to an int")),
+          new FunctionDefinition(
+              "toArtifactVersion",
+              "Converts a string to a Maven Default Artifact Version",
+              new FunctionParameter(
+                  String.class,
+                  "value",
+                  "A String value to convert to a Maven Default Artifact Version")),
           new FunctionDefinition(
               "toFloat",
               "Converts a string to float",
