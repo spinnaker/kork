@@ -14,6 +14,7 @@ dependencies {
   api "org.slf4j:slf4j-api"
 
   implementation "org.springframework.boot:spring-boot"
+  implementation "org.apache.maven:maven-artifact:3.9.6"
 
   testImplementation project(":kork-artifacts")
   testImplementation "org.assertj:assertj-core"
