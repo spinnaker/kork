@@ -12,6 +12,7 @@ ext {
     bouncycastle     : "1.77",
     brave            : "5.12.3",
     gcp              : "25.3.0",
+    groovy           : "4.0.15",
     jsch             : "0.1.54",
     jschAgentProxy   : "0.0.9",
     // spring boot 2.7.18 specifies logback 1.2.12.  Pin to 1.2.13 to resolve
@@ -55,14 +56,17 @@ dependencies {
   api(platform("org.jetbrains.kotlin:kotlin-bom:$kotlinVersion"))
   api(platform("org.junit:junit-bom:5.9.0")) // untill spring boot >= 3.0.0
   api(platform("io.zipkin.brave:brave-bom:${versions.brave}"))
-  api(platform("org.springframework.boot:spring-boot-dependencies:${versions.springBoot}"))
+  api(platform("org.apache.groovy:groovy-bom:${versions.groovy}")) // until upgrade of spring boot >= 3.0.13
+  api(platform("org.springframework.boot:spring-boot-dependencies:${versions.springBoot}")) {
+    exclude group: "org.codehaus.groovy", module: "*" // until upgrade of spring boot >= 3.0.13
+  }
   api(platform("com.amazonaws:aws-java-sdk-bom:${versions.aws}"))
   api(platform("com.google.protobuf:protobuf-bom:${versions.protobuf}"))
   api(platform("com.google.cloud:libraries-bom:${versions.gcp}"))
   api(platform("software.amazon.awssdk:bom:${versions.awsv2}"))
   api(platform("org.springframework.cloud:spring-cloud-dependencies:${versions.springCloud}"))
   api(platform("io.strikt:strikt-bom:0.31.0"))
-  api(platform("org.spockframework:spock-bom:2.2-groovy-3.0"))
+  api(platform("org.spockframework:spock-bom:2.2-groovy-4.0"))
   api(platform("com.oracle.oci.sdk:oci-java-sdk-bom:3.21.0"))
   api(platform("org.testcontainers:testcontainers-bom:1.19.8"))
   api(platform("io.arrow-kt:arrow-stack:${versions.arrow}"))
@@ -78,14 +82,26 @@ dependencies {
     api("ch.qos.logback:logback-access:${versions.logback}") {
        force = true
     }
+    api("io.rest-assured:xml-path:${versions.restassured}") {
+      force = true
+    }
+    api("io.rest-assured:json-path:${versions.restassured}") {
+      force = true
+    }
+    api("io.rest-assured:rest-assured:${versions.restassured}") {
+      force = true
+    }
+    api("io.rest-assured:rest-assured-common:${versions.restassured}") {
+      force = true
+    }
     api("com.amazonaws:aws-java-sdk:${versions.aws}")
-    api("com.google.api-client:google-api-client:1.30.10") // TODO: Track update for CVE-2020-7692, reanalysis pending.
-    api("com.google.apis:google-api-services-admin-directory:directory_v1-rev105-1.25.0")
-    api("com.google.apis:google-api-services-cloudbuild:v1-rev836-1.25.0")
-    api("com.google.apis:google-api-services-compute:beta-rev20201102-1.30.10")
-    api("com.google.apis:google-api-services-iam:v1-rev267-1.25.0")
-    api("com.google.apis:google-api-services-monitoring:v3-rev477-1.25.0")
-    api("com.google.apis:google-api-services-storage:v1-rev141-1.25.0")
+    api("com.google.api-client:google-api-client:1.33.0") // TODO: Track update for CVE-2020-7692, reanalysis pending.
+    api("com.google.apis:google-api-services-admin-directory:directory_v1-rev20220125-1.32.1")
+    api("com.google.apis:google-api-services-cloudbuild:v1-rev20211230-1.32.1")
+    api("com.google.apis:google-api-services-compute:beta-rev20211228-1.32.1")
+    api("com.google.apis:google-api-services-iam:v1-rev20220105-1.32.1")
+    api("com.google.apis:google-api-services-monitoring:v3-rev20220117-1.32.1") //v3-rev20210618-1.31.5
+    api("com.google.apis:google-api-services-storage:v1-rev20220210-1.32.1")
     api("com.google.cloud:google-cloud-secretmanager:2.3.10")
     api("com.google.code.findbugs:jsr305:3.0.2")
     api("com.google.guava:guava:33.0.0-jre")
