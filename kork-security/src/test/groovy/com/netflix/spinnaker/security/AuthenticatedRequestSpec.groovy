@@ -18,6 +18,9 @@ package com.netflix.spinnaker.security
 
 import com.netflix.spinnaker.kork.common.Header
 import org.slf4j.MDC
+import org.springframework.security.authentication.TestingAuthenticationToken
+import org.springframework.security.core.AuthenticatedPrincipal
+import org.springframework.security.core.context.SecurityContextHolder
 import spock.lang.Specification
 
 class AuthenticatedRequestSpec extends Specification {
@@ -135,5 +138,19 @@ class AuthenticatedRequestSpec extends Specification {
     AuthenticatedRequest.clear()
     then:
     closure.run()
+  }
+
+  void "should support AuthenticatedPrincipal"() {
+    when:
+    def user = new TestingAuthenticationToken(new TestPrincipal(name: 'foo'), '',
+      [SpinnakerAuthorities.forRoleName('alpha')])
+    SecurityContextHolder.context.authentication = user
+
+    then:
+    AuthenticatedRequest.spinnakerUser.get() == 'foo'
+  }
+
+  static class TestPrincipal implements AuthenticatedPrincipal {
+    String name
   }
 }
