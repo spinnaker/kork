@@ -105,6 +105,8 @@ dependencies {
     api("com.google.apis:google-api-services-iam:v1-rev20240502-2.0.0")
     api("com.google.apis:google-api-services-monitoring:v3-rev20240427-2.0.0")
     api("com.google.apis:google-api-services-storage:v1-rev20240319-2.0.0")
+    api("com.google.apis:google-api-services-appengine:v1-rev20240415-2.0.0")
+    api("com.google.apis:google-api-services-run:v1-rev20240426-2.0.0")
     api("com.google.cloud:google-cloud-secretmanager:2.37.0")
     api("com.google.code.findbugs:jsr305:3.0.2")
     api("com.google.guava:guava:33.0.0-jre")
