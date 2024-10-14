@@ -19,7 +19,7 @@ ext {
     // CVE-2023-6378 and CVE-2023-6481 until spring boot 3.1.7 which brings in
     // 1.4.14.  See https://logback.qos.ch/news.html#1.3.12.
     logback          : "1.2.13",
-    protobuf         : "3.21.12",
+    protobuf         : "3.25.2",
     okhttp           : "2.7.5", // CVE-2016-2402
     okhttp3          : "4.9.3",
     openapi          : "1.3.9", // this needs to be kept in sync with spring boot as it pulls in the spring-boot-dependencies BOM
