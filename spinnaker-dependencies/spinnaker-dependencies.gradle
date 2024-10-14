@@ -11,7 +11,7 @@ ext {
     awsv2            : "2.23.7",
     bouncycastle     : "1.77",
     brave            : "5.12.3",
-    gcp              : "25.3.0",
+    gcp              : "26.34.0",
     groovy           : "4.0.15",
     jsch             : "0.1.54",
     jschAgentProxy   : "0.0.9",
