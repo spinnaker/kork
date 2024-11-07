@@ -14,6 +14,19 @@
  * limitations under the License.
  */
 
+dependencyResolutionManagement {
+  versionCatalogs {
+    libs {
+      version('protobuf', '3.25.2')
+
+      library('protobuf-java', 'com.google.protobuf', 'protobuf-java').versionRef('protobuf')
+      library('protoc', 'com.google.protobuf', 'protoc').versionRef('protobuf')
+
+      plugin('protobuf', 'com.google.protobuf').version('0.9.4')
+    }
+  }
+}
+
 if (spinnakerGradleVersion.endsWith('-SNAPSHOT')) {
   pluginManagement {
     repositories {
