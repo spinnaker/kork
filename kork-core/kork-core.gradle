@@ -9,6 +9,7 @@ dependencies {
   api project(":kork-api")
   api project(":kork-annotations")
   api project(":kork-exceptions")
+  api project(":kork-flags")
   api "org.springframework.boot:spring-boot-autoconfigure"
   api "org.springframework.boot:spring-boot-starter-aop"
   api "org.springframework.boot:spring-boot-starter-actuator"
@@ -30,6 +31,7 @@ dependencies {
   testImplementation "org.junit.jupiter:junit-jupiter-api"
   testImplementation("org.mockito:mockito-core")
   testImplementation "org.spockframework:spock-core"
+  testImplementation "org.springframework:spring-test"
   testRuntimeOnly "cglib:cglib-nodep"
   testRuntimeOnly "org.objenesis:objenesis"
   testRuntimeOnly "org.junit.jupiter:junit-jupiter-engine"
