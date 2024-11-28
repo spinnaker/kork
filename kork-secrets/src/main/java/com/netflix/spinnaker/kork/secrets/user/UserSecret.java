@@ -19,14 +19,12 @@ package com.netflix.spinnaker.kork.secrets.user;
 import com.netflix.spinnaker.kork.annotations.NonnullByDefault;
 import com.netflix.spinnaker.kork.secrets.SecretEngine;
 import com.netflix.spinnaker.security.AccessControlled;
-import java.util.Collections;
-import java.util.Set;
-import java.util.stream.Collectors;
+import com.netflix.spinnaker.security.SpinnakerAuthorities;
+import java.util.List;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.experimental.Delegate;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.authority.AuthorityUtils;
 
 /**
  * User secrets are externally stored secrets with additional user-provided metadata regarding who
@@ -51,11 +49,7 @@ public class UserSecret implements AccessControlled {
 
   @Override
   public boolean isAuthorized(Authentication authentication, Object authorization) {
-    Set<String> userAuthorities =
-        AuthorityUtils.authorityListToSet(authentication.getAuthorities());
-    Set<String> permittedAuthorities =
-        getRoles().stream().map(role -> "ROLE_" + role).collect(Collectors.toSet());
-    return permittedAuthorities.isEmpty()
-        || !Collections.disjoint(userAuthorities, permittedAuthorities);
+    List<String> roles = getRoles();
+    return roles.isEmpty() || SpinnakerAuthorities.hasAnyRole(authentication, roles);
   }
 }
