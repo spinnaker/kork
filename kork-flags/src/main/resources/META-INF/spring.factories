@@ -1,0 +1,2 @@
+org.springframework.context.ApplicationContextInitializer=\
+  com.netflix.spinnaker.kork.flags.OpenFeatureCoreInitializer
