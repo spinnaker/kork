@@ -17,6 +17,8 @@
 package com.netflix.spinnaker.kork.secrets;
 
 import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 import lombok.RequiredArgsConstructor;
@@ -27,6 +29,13 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class SecretEngineRegistry {
   private final ObjectProvider<SecretEngine> secretEngines;
+
+  // This is used by the Armory kubesvc plugin
+  public Map<String, SecretEngine> getRegisteredEngines() {
+    return secretEngines
+        .orderedStream()
+        .collect(Collectors.toMap(SecretEngine::identifier, Function.identity()));
+  }
 
   public List<SecretEngine> getSecretEngineList() {
     return secretEngines.orderedStream().collect(Collectors.toList());
