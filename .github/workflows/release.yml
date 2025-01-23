@@ -37,7 +37,8 @@ jobs:
           echo BRANCH=$BRANCHES >> $GITHUB_ENV
       - uses: actions/setup-java@v4
         with:
-          java-version: 11
+          java-version: |
+            17
           distribution: 'zulu'
           cache: 'gradle'
       - name: Assemble release info
@@ -59,10 +60,10 @@ jobs:
           ORG_GRADLE_PROJECT_nexusPgpSigningKey: ${{ secrets.NEXUS_PGP_SIGNING_KEY }}
           ORG_GRADLE_PROJECT_nexusPgpSigningPassword: ${{ secrets.NEXUS_PGP_SIGNING_PASSWORD }}
         run: |
-          ./gradlew --info publishToNexus closeAndReleaseNexusStagingRepository
+          ./gradlew -PenableCrossCompilerPlugin=true --info publishToNexus closeAndReleaseNexusStagingRepository
       - name: Create release
         if: steps.release_info.outputs.SKIP_RELEASE == 'false'
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         with:
           body: |
             ${{ steps.release_info.outputs.CHANGELOG }}
@@ -74,7 +75,7 @@ jobs:
       - name: Pause before dependency bump
         run: sleep 600
       - name: Trigger dependency bump workflow
-        uses: peter-evans/repository-dispatch@v2
+        uses: peter-evans/repository-dispatch@v3
         with:
           token: ${{ secrets.SPINNAKER_GITHUB_TOKEN }}
           event-type: bump-dependencies

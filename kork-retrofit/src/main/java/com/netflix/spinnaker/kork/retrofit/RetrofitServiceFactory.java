@@ -25,7 +25,10 @@ import com.netflix.spinnaker.config.ServiceEndpoint;
 import com.netflix.spinnaker.config.okhttp3.OkHttpClientProvider;
 import com.netflix.spinnaker.kork.annotations.NonnullByDefault;
 import com.netflix.spinnaker.kork.client.ServiceClientFactory;
+import com.netflix.spinnaker.kork.retrofit.exceptions.SpinnakerRetrofitErrorHandler;
 import com.netflix.spinnaker.retrofit.Slf4jRetrofitLogger;
+import java.util.List;
+import okhttp3.Interceptor;
 import retrofit.Endpoint;
 import retrofit.RequestInterceptor;
 import retrofit.RestAdapter;
@@ -54,10 +57,23 @@ class RetrofitServiceFactory implements ServiceClientFactory {
         .setRequestInterceptor(spinnakerRequestInterceptor)
         .setConverter(new JacksonConverter(objectMapper))
         .setEndpoint(endpoint)
+        .setErrorHandler(SpinnakerRetrofitErrorHandler.getInstance())
         .setClient(new Ok3Client(clientProvider.getClient(serviceEndpoint)))
         .setLogLevel(retrofitLogLevel)
         .setLog(new Slf4jRetrofitLogger(type))
         .build()
         .create(type);
+  }
+
+  @Override
+  public <T> T create(
+      Class<T> type,
+      ServiceEndpoint serviceEndpoint,
+      ObjectMapper objectMapper,
+      List<Interceptor> interceptors) {
+    throw new IllegalArgumentException(
+        String.format(
+            "Retrofit1 client doesn't support okhttp3 Interceptors. Failed to build %s ",
+            type.getName()));
   }
 }

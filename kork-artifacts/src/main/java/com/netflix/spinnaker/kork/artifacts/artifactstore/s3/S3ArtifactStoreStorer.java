@@ -48,7 +48,7 @@ public class S3ArtifactStoreStorer implements ArtifactStoreStorer {
   private final S3Client s3Client;
   private final String bucket;
   private final ArtifactStoreURIBuilder uriBuilder;
-  private final String applicationsRegex;
+  private final Pattern applicationsPattern;
 
   public S3ArtifactStoreStorer(
       S3Client s3Client,
@@ -58,7 +58,10 @@ public class S3ArtifactStoreStorer implements ArtifactStoreStorer {
     this.s3Client = s3Client;
     this.bucket = bucket;
     this.uriBuilder = uriBuilder;
-    this.applicationsRegex = applicationsRegex;
+    this.applicationsPattern =
+        (applicationsRegex != null)
+            ? Pattern.compile(applicationsRegex, Pattern.CASE_INSENSITIVE)
+            : null;
   }
 
   /**
@@ -76,7 +79,21 @@ public class S3ArtifactStoreStorer implements ArtifactStoreStorer {
       return artifact;
     }
 
-    if (applicationsRegex != null && !Pattern.matches(applicationsRegex, application)) {
+    if (applicationsPattern != null && !applicationsPattern.matcher(application).matches()) {
+      return artifact;
+    }
+
+    byte[] referenceBytes;
+    try {
+      referenceBytes = getReferenceAsBytes(artifact);
+    } catch (IllegalArgumentException e) {
+      // When this occurs, that means we've run into an embedded/base64 artifact
+      // that does not contain base64 in its reference. This can happen a couple
+      // of ways with using SpEL within an artifact, manipulating the pipeline
+      // JSON directly, etc. So instead of trying to evaluate SpEL here or
+      // failing, we will just return the raw artifact, and not store this
+      // particular one.
+      log.warn("Artifact cannot be stored due to reference not being base64 encoded");
       return artifact;
     }
 
@@ -102,7 +119,7 @@ public class S3ArtifactStoreStorer implements ArtifactStoreStorer {
             .tagging(Tagging.builder().tagSet(accountTag).build())
             .build();
 
-    s3Client.putObject(request, RequestBody.fromBytes(getReferenceAsBytes(artifact)));
+    s3Client.putObject(request, RequestBody.fromBytes(referenceBytes));
     return remoteArtifact;
   }
 

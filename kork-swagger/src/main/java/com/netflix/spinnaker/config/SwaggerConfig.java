@@ -16,27 +16,20 @@
 
 package com.netflix.spinnaker.config;
 
-import static com.google.common.base.Predicates.or;
-
-import com.google.common.base.Predicate;
-import com.google.common.collect.ImmutableList;
+import io.swagger.v3.oas.models.ExternalDocumentation;
+import io.swagger.v3.oas.models.OpenAPI;
+import io.swagger.v3.oas.models.info.Contact;
+import io.swagger.v3.oas.models.info.Info;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
-import java.util.stream.Collectors;
 import javax.annotation.Nullable;
+import org.springdoc.core.SpringDocUtils;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import springfox.documentation.builders.PathSelectors;
-import springfox.documentation.builders.RequestHandlerSelectors;
-import springfox.documentation.service.ApiInfo;
-import springfox.documentation.spi.DocumentationType;
-import springfox.documentation.spring.web.paths.AbstractPathProvider;
-import springfox.documentation.spring.web.plugins.Docket;
-import springfox.documentation.swagger2.annotations.EnableSwagger2;
 
-@EnableSwagger2
 @Configuration
 @ConditionalOnProperty("swagger.enabled")
 @ConfigurationProperties(prefix = "swagger")
@@ -48,19 +41,21 @@ public class SwaggerConfig {
   private String basePath = "";
   private String documentationPath = "/";
 
-  private static final ImmutableList<String> IGNORED_CLASS_NAMES =
-      ImmutableList.of("groovy.lang.MetaClass");
+  private static final List<String> IGNORED_CLASS_NAMES = List.of("groovy.lang.MetaClass");
 
   @Bean
-  public Docket gateApi() {
-    return new Docket(DocumentationType.SWAGGER_2)
-        .pathProvider(new BasePathProvider(basePath, documentationPath))
-        .select()
-        .apis(RequestHandlerSelectors.any())
-        .paths(paths())
-        .build()
-        .apiInfo(apiInfo())
-        .ignoredParameterTypes(ignoredClasses());
+  public OpenAPI gateApi() {
+    Arrays.stream((ignoredClasses()))
+        .forEach(
+            each -> {
+              SpringDocUtils.getConfig().addJavaTypeToIgnore(each);
+            });
+    return new OpenAPI()
+        .info(new Info().description(description).title(title).contact(new Contact().name(contact)))
+        .externalDocs(
+            new ExternalDocumentation()
+                .url("https://spinnaker.io")
+                .description("Spinnaker Documentation"));
   }
 
   private static Class[] ignoredClasses() {
@@ -77,14 +72,6 @@ public class SwaggerConfig {
     } catch (ClassNotFoundException e) {
       return null;
     }
-  }
-
-  private Predicate<String> paths() {
-    return or(patterns.stream().map(PathSelectors::regex).collect(Collectors.toList()));
-  }
-
-  private ApiInfo apiInfo() {
-    return new ApiInfo(title, description, null, null, contact, null, null);
   }
 
   public void setTitle(String title) {
@@ -121,25 +108,5 @@ public class SwaggerConfig {
 
   public String getDocumentationPath() {
     return documentationPath;
-  }
-
-  public class BasePathProvider extends AbstractPathProvider {
-    private String basePath;
-    private String documentationPath;
-
-    private BasePathProvider(String basePath, String documentationPath) {
-      this.basePath = basePath;
-      this.documentationPath = documentationPath;
-    }
-
-    @Override
-    protected String applicationPath() {
-      return basePath;
-    }
-
-    @Override
-    protected String getDocumentationPath() {
-      return documentationPath;
-    }
   }
 }

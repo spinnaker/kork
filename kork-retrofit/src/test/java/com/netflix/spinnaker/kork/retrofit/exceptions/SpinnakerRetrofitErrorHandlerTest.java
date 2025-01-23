@@ -22,6 +22,7 @@ import static org.assertj.core.api.Assertions.catchThrowableOfType;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.jakewharton.retrofit.Ok3Client;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
@@ -52,6 +53,7 @@ class SpinnakerRetrofitErrorHandlerTest {
 
     retrofitService =
         new RestAdapter.Builder()
+            .setClient(new Ok3Client())
             .setEndpoint(mockWebServer.url("/").toString())
             .setErrorHandler(SpinnakerRetrofitErrorHandler.getInstance())
             .build()
@@ -174,6 +176,17 @@ class SpinnakerRetrofitErrorHandlerTest {
     assertThat(spinnakerHttpException.getHeaders().containsKey("Test")).isTrue();
     assertThat(spinnakerHttpException.getHeaders().get("Test").contains("true")).isTrue();
     assertThat(spinnakerHttpException.getUrl()).isEqualTo(mockWebServer.url("/foo").toString());
+  }
+
+  @Test
+  void testExceptionFromRetrofitErrorHasNullHttpMethod() {
+    mockWebServer.enqueue(
+        new MockResponse()
+            .setResponseCode(HttpStatus.BAD_REQUEST.value())
+            .setHeader("Test", "true"));
+    SpinnakerHttpException spinnakerHttpException =
+        catchThrowableOfType(() -> retrofitService.getFoo(), SpinnakerHttpException.class);
+    assertThat(spinnakerHttpException.getHttpMethod()).isNull();
   }
 
   @Test
