@@ -112,7 +112,7 @@ public class Retrofit2ServiceFactoryTest {
             .willReturn(
                 aResponse()
                     .withHeader("Content-Type", "application/json")
-                    .withBody("{\"message\": \"success\", \"code\": 200}")));
+                    .withBody("{\"message\": \"success\"}")));
 
     ServiceEndpoint serviceEndpoint =
         new DefaultServiceEndpoint("retrofit2service", "http://localhost:" + port);
@@ -120,7 +120,8 @@ public class Retrofit2ServiceFactoryTest {
         serviceClientProvider.getService(Retrofit2TestService.class, serviceEndpoint);
     Response<Map<String, String>> response =
         Retrofit2SyncCall.executeCall(retrofit2TestService.getSomething());
-
+    assertEquals(response.code(), 200);
+    assertEquals(response.headers().get("Content-Type"), "application/json");
     assertEquals(response.body().get("message"), "success");
   }
 
