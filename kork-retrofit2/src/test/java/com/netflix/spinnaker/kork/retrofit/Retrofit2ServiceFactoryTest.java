@@ -200,7 +200,10 @@ public class Retrofit2ServiceFactoryTest {
         assertThrows(
             SpinnakerConversionException.class,
             () -> Retrofit2SyncCall.executeCall(retrofit2TestService.getSomething()));
-    assertEquals("Failed to process response body", exception.getMessage());
+    assertEquals(
+        "Failed to process response body: Unexpected end-of-input: was expecting closing quote for a string value\n"
+            + " at [Source: (okhttp3.ResponseBody$BomAwareReader); line: 1, column: 29]",
+        exception.getMessage());
   }
 
   @Configuration
