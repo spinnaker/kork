@@ -4,6 +4,7 @@ apply from: "$rootDir/gradle/kotlin-test.gradle"
 dependencies {
   api(platform(project(":spinnaker-dependencies")))
   implementation project(":kork-web")
+  implementation project(":kork-retrofit")
   implementation "com.squareup.retrofit2:retrofit"
   implementation "com.squareup.retrofit2:converter-jackson"
   implementation "com.squareup.okhttp3:logging-interceptor"
@@ -15,5 +16,6 @@ dependencies {
 
   testImplementation "com.squareup.okhttp3:mockwebserver"
   testImplementation "com.squareup.retrofit2:retrofit-mock"
+  testImplementation "com.github.tomakehurst:wiremock-jre8"
 
 }
