@@ -1,18 +1,16 @@
 plugins {
-  id "java-library"
-  id "com.google.protobuf" version "0.8.12"
+  alias libs.plugins.protobuf
 }
 
 dependencies {
   api(platform(project(":spinnaker-dependencies")))
 
-  implementation "com.google.protobuf:protobuf-java"
+  implementation libs.protobuf.java
 }
 
 protobuf {
   protoc {
-    // TODO: figure out how to reference version in BOM.
-    artifact = "com.google.protobuf:protoc:3.21.12"
+    artifact = libs.protoc.get()
   }
 }
 

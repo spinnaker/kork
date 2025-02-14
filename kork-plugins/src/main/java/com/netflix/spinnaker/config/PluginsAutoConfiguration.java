@@ -21,6 +21,7 @@ import static com.netflix.spinnaker.kork.plugins.PackageKt.FRAMEWORK_V2;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.netflix.spectator.api.Registry;
 import com.netflix.spinnaker.config.PluginsConfigurationProperties.PluginRepositoryProperties;
+import com.netflix.spinnaker.kork.BootstrapComponents;
 import com.netflix.spinnaker.kork.annotations.Beta;
 import com.netflix.spinnaker.kork.dynamicconfig.DynamicConfigService;
 import com.netflix.spinnaker.kork.dynamicconfig.SpringDynamicConfigService;
@@ -50,8 +51,6 @@ import com.netflix.spinnaker.kork.plugins.v2.PluginFrameworkInitializer;
 import com.netflix.spinnaker.kork.plugins.v2.SpinnakerPluginService;
 import com.netflix.spinnaker.kork.plugins.v2.SpringPluginFactory;
 import com.netflix.spinnaker.kork.version.ServiceVersion;
-import com.netflix.spinnaker.kork.version.SpringPackageVersionResolver;
-import com.netflix.spinnaker.kork.version.VersionResolver;
 import java.net.URL;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -77,7 +76,11 @@ import org.springframework.context.support.GenericApplicationContext;
 import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.core.env.Environment;
 
-@Import({Front50PluginsConfiguration.class, RemotePluginsConfiguration.class})
+@Import({
+  Front50PluginsConfiguration.class,
+  RemotePluginsConfiguration.class,
+  BootstrapComponents.class
+})
 public class PluginsAutoConfiguration {
 
   private static final Logger log = LoggerFactory.getLogger(PluginsAutoConfiguration.class);
@@ -95,19 +98,6 @@ public class PluginsAutoConfiguration {
     String defaultRootPath = PluginsConfigurationProperties.DEFAULT_ROOT_PATH;
     return new SpringPluginStatusProvider(
         dynamicConfigService, configNamespace + "." + defaultRootPath);
-  }
-
-  @Bean
-  @ConditionalOnMissingBean(VersionResolver.class)
-  public static VersionResolver versionResolver(ApplicationContext applicationContext) {
-    return new SpringPackageVersionResolver(applicationContext);
-  }
-
-  @Bean
-  @ConditionalOnMissingBean(ServiceVersion.class)
-  public static ServiceVersion serviceVersion(
-      ApplicationContext applicationContext, List<VersionResolver> versionResolvers) {
-    return new ServiceVersion(applicationContext, versionResolvers);
   }
 
   @Bean
