@@ -24,6 +24,7 @@ import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.verify;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.tomakehurst.wiremock.WireMockServer;
@@ -36,6 +37,9 @@ import com.netflix.spinnaker.config.okhttp3.DefaultOkHttpClientBuilderProvider;
 import com.netflix.spinnaker.config.okhttp3.OkHttpClientProvider;
 import com.netflix.spinnaker.kork.client.ServiceClientFactory;
 import com.netflix.spinnaker.kork.client.ServiceClientProvider;
+import com.netflix.spinnaker.kork.retrofit.exceptions.SpinnakerConversionException;
+import com.netflix.spinnaker.kork.retrofit.exceptions.SpinnakerHttpException;
+import com.netflix.spinnaker.kork.retrofit.exceptions.SpinnakerServerException;
 import com.netflix.spinnaker.okhttp.OkHttpClientConfigurationProperties;
 import java.util.List;
 import java.util.Map;
@@ -98,7 +102,7 @@ public class Retrofit2ServiceFactoryTest {
         serviceClientProvider.getService(Retrofit2TestService.class, serviceEndpoint);
     Map<String, String> response = Retrofit2SyncCall.execute(retrofit2TestService.getSomething());
 
-    assertEquals(response.get("message"), "success");
+    assertEquals("success", response.get("message"));
   }
 
   @Test
@@ -108,7 +112,7 @@ public class Retrofit2ServiceFactoryTest {
             .willReturn(
                 aResponse()
                     .withHeader("Content-Type", "application/json")
-                    .withBody("{\"message\": \"success\", \"code\": 200}")));
+                    .withBody("{\"message\": \"success\"}")));
 
     ServiceEndpoint serviceEndpoint =
         new DefaultServiceEndpoint("retrofit2service", "http://localhost:" + port);
@@ -116,8 +120,9 @@ public class Retrofit2ServiceFactoryTest {
         serviceClientProvider.getService(Retrofit2TestService.class, serviceEndpoint);
     Response<Map<String, String>> response =
         Retrofit2SyncCall.executeCall(retrofit2TestService.getSomething());
-
-    assertEquals(response.body().get("message"), "success");
+    assertEquals(200, response.code());
+    assertEquals("application/json", response.headers().get("Content-Type"));
+    assertEquals("success", response.body().get("message"));
   }
 
   @Test
@@ -148,6 +153,57 @@ public class Retrofit2ServiceFactoryTest {
     verify(
         getRequestedFor(urlEqualTo("/test"))
             .withHeader("Authorization", equalTo("Bearer my-token")));
+  }
+
+  @Test
+  void testRetrofit2Client_withHttpException() {
+    stubFor(
+        get(urlEqualTo("/test"))
+            .willReturn(
+                aResponse()
+                    .withHeader("Content-Type", "application/json")
+                    .withStatus(400)
+                    .withBody("{\"message\": \"error\"}")));
+
+    ServiceEndpoint serviceEndpoint =
+        new DefaultServiceEndpoint("retrofit2service", "http://localhost:" + port);
+
+    Retrofit2TestService retrofit2TestService =
+        serviceClientProvider.getService(Retrofit2TestService.class, serviceEndpoint);
+
+    SpinnakerHttpException exception =
+        assertThrows(
+            SpinnakerHttpException.class,
+            () -> Retrofit2SyncCall.executeCall(retrofit2TestService.getSomething()));
+    assertEquals(400, exception.getResponseCode());
+    assertEquals(
+        "Status: 400, Method: GET, URL: http://localhost:" + port + "/test, Message: error",
+        exception.getMessage());
+  }
+
+  @Test
+  void testRetrofit2Client_withConversionException() {
+    stubFor(
+        get(urlEqualTo("/test"))
+            .willReturn(
+                aResponse()
+                    .withHeader("Content-Type", "application/json")
+                    .withBody("{\"message\": \"incorrect json}")));
+
+    ServiceEndpoint serviceEndpoint =
+        new DefaultServiceEndpoint("retrofit2service", "http://localhost:" + port);
+
+    Retrofit2TestService retrofit2TestService =
+        serviceClientProvider.getService(Retrofit2TestService.class, serviceEndpoint);
+
+    SpinnakerServerException exception =
+        assertThrows(
+            SpinnakerConversionException.class,
+            () -> Retrofit2SyncCall.executeCall(retrofit2TestService.getSomething()));
+    assertEquals(
+        "Failed to process response body: Unexpected end-of-input: was expecting closing quote for a string value\n"
+            + " at [Source: (okhttp3.ResponseBody$BomAwareReader); line: 1, column: 29]",
+        exception.getMessage());
   }
 
   @Configuration
