@@ -69,7 +69,16 @@ class UserSpec extends Specification {
   def "should filter out empty roles"() {
     expect:
       new User(roles: [""]).getAuthorities().isEmpty()
-      new User(roles: ["", "bar"]).getAuthorities()*.getAuthority() == ["bar"]
-      new User(roles: ["foo", "", "bar"]).getAuthorities()*.getAuthority() == ["foo", "bar"]
+      new User(roles: ["", "bar"]).getAuthorities()*.getAuthority() == ["ROLE_bar"]
+      new User(roles: ["foo", "", "bar"]).getAuthorities()*.getAuthority() == ["ROLE_foo", "ROLE_bar"]
+  }
+
+  def "should translate allowed accounts into granted authorities"() {
+    setup:
+      def user = new User(allowedAccounts: ['a', 'b', 'c'])
+
+    expect:
+      user.getAuthorities()*.getAuthority() ==
+        ['ALLOWED_ACCOUNT_a', 'ALLOWED_ACCOUNT_b', 'ALLOWED_ACCOUNT_c']
   }
 }

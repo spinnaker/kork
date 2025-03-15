@@ -20,6 +20,7 @@ import static java.lang.String.format;
 
 import com.google.common.base.Preconditions;
 import com.netflix.spinnaker.kork.common.Header;
+import java.security.Principal;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -33,6 +34,7 @@ import lombok.SneakyThrows;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
+import org.springframework.security.core.AuthenticatedPrincipal;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.User;
@@ -85,9 +87,16 @@ public class AuthenticatedRequest {
      * @return the user id of the provided principal
      */
     default Optional<String> getSpinnakerUser(Object principal) {
-      return (principal instanceof UserDetails)
-          ? Optional.ofNullable(((UserDetails) principal).getUsername())
-          : get(Header.USER);
+      if (principal instanceof UserDetails) {
+        return Optional.ofNullable(((UserDetails) principal).getUsername());
+      }
+      if (principal instanceof AuthenticatedPrincipal) {
+        return Optional.ofNullable(((AuthenticatedPrincipal) principal).getName());
+      }
+      if (principal instanceof Principal) {
+        return Optional.ofNullable(((Principal) principal).getName());
+      }
+      return Optional.ofNullable(principal).map(Object::toString).or(() -> get(Header.USER));
     }
   }
 

@@ -17,24 +17,24 @@
 package com.netflix.spinnaker.filters
 
 import com.netflix.spinnaker.kork.common.Header
-import com.netflix.spinnaker.security.AllowedAccountsAuthorities
+import com.netflix.spinnaker.security.AllowedAccountAuthority
 import com.netflix.spinnaker.security.AuthenticatedRequest
 import groovy.util.logging.Slf4j
+import org.springframework.security.core.context.SecurityContext
 import org.springframework.security.core.context.SecurityContextHolder
-import org.springframework.security.core.context.SecurityContextImpl
-import org.springframework.security.core.userdetails.UserDetails
+import org.springframework.security.web.context.HttpRequestResponseHolder
+import org.springframework.security.web.context.HttpSessionSecurityContextRepository
+import org.springframework.security.web.context.SecurityContextRepository
+import org.springframework.web.filter.OncePerRequestFilter
 
-import javax.servlet.Filter
 import javax.servlet.FilterChain
-import javax.servlet.FilterConfig
 import javax.servlet.ServletException
-import javax.servlet.ServletRequest
-import javax.servlet.ServletResponse
 import javax.servlet.http.HttpServletRequest
+import javax.servlet.http.HttpServletResponse
 import java.security.cert.X509Certificate
 
 @Slf4j
-class AuthenticatedRequestFilter implements Filter {
+class AuthenticatedRequestFilter extends OncePerRequestFilter {
   private static final String X509_CERTIFICATE = "javax.servlet.request.X509Certificate"
 
   /*
@@ -54,63 +54,77 @@ class AuthenticatedRequestFilter implements Filter {
   private final boolean extractSpinnakerUserOriginHeader
   private final boolean forceNewSpinnakerRequestId
   private final boolean clearAuthenticatedRequestPostFilter
+  private final SecurityContextRepository securityContextRepository
 
   public AuthenticatedRequestFilter(boolean extractSpinnakerHeaders = false,
                                     boolean extractSpinnakerUserOriginHeader = false,
                                     boolean forceNewSpinnakerRequestId = false,
-                                    boolean clearAuthenticatedRequestPostFilter = true) {
+                                    boolean clearAuthenticatedRequestPostFilter = true,
+                                    SecurityContextRepository securityContextRepository = null) {
     this.extractSpinnakerHeaders = extractSpinnakerHeaders
     this.extractSpinnakerUserOriginHeader = extractSpinnakerUserOriginHeader
     this.forceNewSpinnakerRequestId = forceNewSpinnakerRequestId
     this.clearAuthenticatedRequestPostFilter = clearAuthenticatedRequestPostFilter
+    this.securityContextRepository = securityContextRepository ?: new HttpSessionSecurityContextRepository()
   }
 
   @Override
-  void init(FilterConfig filterConfig) throws ServletException {}
-
-  @Override
-  void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
-    def spinnakerUser = null
-    def spinnakerAccounts = null
-    HashMap<String, String> otherSpinnakerHeaders = new HashMap<>()
+  protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain) throws ServletException, IOException {
+    String spinnakerUser = null
+    String spinnakerAccounts = null
+    Map<String, String> otherSpinnakerHeaders = [:]
 
     try {
-      def session = ((HttpServletRequest) request).getSession(false)
-      def securityContext = (SecurityContextImpl) session?.getAttribute("SPRING_SECURITY_CONTEXT")
-      if (!securityContext) {
-        securityContext = SecurityContextHolder.getContext()
+      SecurityContext securityContext
+      // first check if there is a session with a SecurityContext (but don't create the session yet)
+      if (securityContextRepository.containsContext(request)) {
+        def holder = new HttpRequestResponseHolder(request, response)
+        securityContext = securityContextRepository.loadContext(holder)
+      } else {
+        // otherwise, try checking SecurityContextHolder as this may be a fresh session
+        securityContext = SecurityContextHolder.context
       }
 
-      def principal = securityContext?.authentication?.principal
-      if (principal && principal instanceof UserDetails) {
-        spinnakerUser = principal.username
-        spinnakerAccounts = AllowedAccountsAuthorities.getAllowedAccounts(principal).join(",")
+      // next, if an authenticated user is present, get their username and allowed account authorities
+      // (when using OAuth2, the principal may be an OAuth2User or OidcUser rather than a UserDetails instance)
+      def auth = securityContext.authentication
+      if (auth && auth.authenticated) {
+        spinnakerUser = auth.name
+        spinnakerAccounts = auth.authorities
+          .grep(AllowedAccountAuthority)
+          .collect { (it as AllowedAccountAuthority).account }
+          .join(',')
       }
     } catch (Exception e) {
       log.error("Unable to extract spinnaker user and account information", e)
     }
 
     if (extractSpinnakerHeaders) {
-      def httpServletRequest = (HttpServletRequest) request
-      spinnakerUser = spinnakerUser ?: httpServletRequest.getHeader(Header.USER.getHeader())
-      spinnakerAccounts = spinnakerAccounts ?: httpServletRequest.getHeader(Header.ACCOUNTS.getHeader())
+      // for backend services using the x-spinnaker-user header for authentication
+      spinnakerUser = spinnakerUser ?: request.getHeader(Header.USER.header)
+      spinnakerAccounts = spinnakerAccounts ?: request.getHeader(Header.ACCOUNTS.header)
 
-      Enumeration<String> headers = httpServletRequest.getHeaderNames()
-
-      for (header in headers) {
+      for (header in request.headerNames) {
         String headerUpper = header.toUpperCase()
 
         if (headerUpper.startsWith(Header.XSpinnakerPrefix)) {
-          otherSpinnakerHeaders.put(headerUpper, httpServletRequest.getHeader(header))
+          otherSpinnakerHeaders[headerUpper] = request.getHeader(header)
         }
       }
     }
 
+    // normalize anonymous principal name in case of misconfiguration
+    // [anonymous] => anonymous (occasional use in Kayenta, potentially used in Orca; shows up in test data)
+    // anonymousUser => anonymous (default principal in Spring Security's AnonymousAuthenticationFilter)
+    // __unrestricted_user__ => anonymous (principal used in Fiat for anonymous)
+    if (spinnakerUser ==~ /\[?anonymous]?User|__unrestricted_user__/) {
+      spinnakerUser = 'anonymous'
+    }
+
     if (extractSpinnakerUserOriginHeader) {
-      otherSpinnakerHeaders.put(
-        Header.USER_ORIGIN.getHeader(),
-        "deck".equalsIgnoreCase(((HttpServletRequest) request).getHeader("X-RateLimit-App")) ? "deck" : "api"
-      )
+      def app = request.getHeader('X-RateLimit-App')
+      def origin = 'deck'.equalsIgnoreCase(app) ? 'deck' : 'api'
+      otherSpinnakerHeaders[Header.USER_ORIGIN.header] = origin
     }
 
     if (forceNewSpinnakerRequestId) {
@@ -151,7 +165,4 @@ class AuthenticatedRequestFilter implements Filter {
       }
     }
   }
-
-  @Override
-  void destroy() {}
 }
