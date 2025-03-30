@@ -20,6 +20,7 @@ import static java.lang.String.format;
 
 import com.netflix.spinnaker.config.ServiceEndpoint;
 import com.netflix.spinnaker.kork.exceptions.SystemException;
+import com.netflix.spinnaker.okhttp.Retrofit2EncodeCorrectionInterceptor;
 import java.util.List;
 import okhttp3.Interceptor;
 import okhttp3.OkHttpClient;
@@ -30,8 +31,11 @@ public class OkHttpClientProvider {
 
   private final List<OkHttpClientBuilderProvider> providers;
 
+  private final Retrofit2EncodeCorrectionInterceptor retrofit2EncodeCorrectionInterceptor;
+
   public OkHttpClientProvider(List<OkHttpClientBuilderProvider> providers) {
     this.providers = providers;
+    this.retrofit2EncodeCorrectionInterceptor = new Retrofit2EncodeCorrectionInterceptor();
   }
 
   /**
@@ -45,8 +49,24 @@ public class OkHttpClientProvider {
     return getClient(service, List.of());
   }
 
+  public OkHttpClient getClient(ServiceEndpoint service, boolean skipEncodeCorrection) {
+    return getClient(service, List.of(), skipEncodeCorrection);
+  }
+
   public OkHttpClient getClient(ServiceEndpoint service, List<Interceptor> interceptors) {
+    return getClient(service, interceptors, false);
+  }
+
+  public OkHttpClient getClient(
+      ServiceEndpoint service, List<Interceptor> interceptors, boolean skipEncodeCorrection) {
     OkHttpClient.Builder builder = findProvider(service).get(service);
+    if (!skipEncodeCorrection) {
+      boolean encodeCorrectionExist =
+          interceptors.stream().anyMatch(i -> i instanceof Retrofit2EncodeCorrectionInterceptor);
+      if (!encodeCorrectionExist) {
+        builder.addInterceptor(retrofit2EncodeCorrectionInterceptor);
+      }
+    }
     interceptors.forEach(builder::addInterceptor);
     return builder.build();
   }

@@ -61,7 +61,8 @@ public class OkHttpClientProviderTest {
     when(defaultProvider.supports(service)).thenReturn(true);
     when(defaultProvider.get(service)).thenReturn(builder);
 
-    OkHttpClient result = clientProvider.getClient(service, List.of(interceptor, interceptor2));
+    OkHttpClient result =
+        clientProvider.getClient(service, List.of(interceptor, interceptor2), true);
 
     assertEquals(result.interceptors().size(), 2);
     assertEquals(result.interceptors().get(0), interceptor);

@@ -33,6 +33,7 @@ class OkHttpClientConfigurationProperties {
   int maxRequestsPerHost = 100
 
   boolean propagateSpinnakerHeaders = true
+  boolean skipRetrofit2EncodeCorrection = false
 
   File keyStore
   String keyStoreType = 'PKCS12'
