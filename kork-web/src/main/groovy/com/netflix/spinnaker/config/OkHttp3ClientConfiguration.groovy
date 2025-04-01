@@ -61,6 +61,9 @@ class OkHttp3ClientConfiguration {
    */
   private final SpinnakerRequestHeaderInterceptor spinnakerRequestHeaderInterceptor
 
+  /**
+   * {@link okhttp3.Interceptor} for correcting partial encoding done by Retrofit2.
+   */
   private final Retrofit2EncodeCorrectionInterceptor retrofit2EncodeCorrectionInterceptor
 
   @Autowired

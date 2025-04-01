@@ -25,6 +25,23 @@ import okhttp3.Interceptor;
 import okhttp3.Request;
 import okhttp3.Response;
 
+/**
+ * An {@link Interceptor} implementation that corrects the partial encoding done by Retrofit2.
+ *
+ * <p>This interceptor processes the URL path and query parameters of HTTP requests to ensure that
+ * they are correctly encoded. Retrofit2 performs partial encoding, which may result in incorrect
+ * URL encoding for certain characters. This interceptor addresses this by decoding and re-encoding
+ * the path segments and query parameters.
+ *
+ * <p>The behavior of this interceptor can be controlled via the {@code skipEncodingCorrection}
+ * flag. When this flag is set to {@code true}, the interceptor will bypass the encoding correction
+ * process and simply forward the request as-is.
+ *
+ * <p>Refer <a
+ * href="https://github.com/spinnaker/spinnaker/issues/7021">spinnaker/spinnaker/issues/7021</a> and
+ * <a href="https://github.com/square/retrofit/issues/4312">square/retrofit/issues/4312</a> for more
+ * details
+ */
 public class Retrofit2EncodeCorrectionInterceptor implements Interceptor {
 
   private final boolean skipEncodingCorrection;
@@ -50,8 +67,9 @@ public class Retrofit2EncodeCorrectionInterceptor implements Interceptor {
     // Decode and encode the path to correct the partial encoding done by retrofit2
     for (int i = 0; i < originalUrl.pathSize(); i++) {
       String retrofit2EncodedSegment = originalUrl.encodedPathSegments().get(i);
-      retrofit2EncodedSegment = processRetrofit2EncodedString(retrofit2EncodedSegment);
-      newUrlBuilder.setEncodedPathSegment(i, retrofit2EncodedSegment);
+      String encodedPathSegmentAfterCorrection =
+          processRetrofit2EncodedString(retrofit2EncodedSegment);
+      newUrlBuilder.setEncodedPathSegment(i, encodedPathSegmentAfterCorrection);
     }
 
     // Decode and encode the query parameters to correct the partial encoding done by retrofit2
@@ -68,7 +86,17 @@ public class Retrofit2EncodeCorrectionInterceptor implements Interceptor {
     return chain.proceed(newRequest);
   }
 
-  /** Extracts the encoded value of a query parameter from the full encodedQuery string. */
+  /**
+   * Gets the encoded query parameter for the given {@code paramName} from the given {@link
+   * HttpUrl}.
+   *
+   * <p>This method extracts the retrofit2-encoded query parameter from the given URL and returns
+   * its value as a string.
+   *
+   * @param url the {@link HttpUrl} to extract the query parameter from
+   * @param paramName the name of the query parameter to extract
+   * @return the encoded query parameter value, or {@code null} if the parameter is not present
+   */
   private String getEncodedQueryParam(HttpUrl url, String paramName) {
     String encodedQuery = url.encodedQuery();
     if (encodedQuery == null) {
@@ -84,19 +112,24 @@ public class Retrofit2EncodeCorrectionInterceptor implements Interceptor {
     return null;
   }
 
-  /** Decodes the retrofit2-encoded value and encodes it to the correct value. */
+  /**
+   * Fixes the partial encoding of strings done by retrofit2 by replacing all the '%' characters
+   * that are not followed by two hexadecimal digits(i.e. real % character rather than a part of an
+   * encoded representation of any special character) with '%25'. This is needed because the {@link
+   * URLDecoder#decode(String, String)} method will throw an exception if the input string contains
+   * un-encoded '%' characters.
+   *
+   * <p>This method will also replace all the '+' characters with '%2B' to preserve them, since the
+   * {@link URLDecoder#decode(String, String)} method will replace '+' with space.
+   *
+   * @param retrofit2EncodedString the string as encoded by retrofit2
+   * @return the fully encoded string
+   */
   private String processRetrofit2EncodedString(String retrofit2EncodedString) {
     String retrofit2EncodedVal =
-        retrofit2EncodedString
-            .replaceAll(
-                "%(?![0-9A-Fa-f]{2})",
-                "%25") // Replace % with %25, else URLDecoder.decode will fail
-            .replaceAll(
-                "\\+",
-                "%2B"); // this is needed to preserve +, else URLDecoder.decode will replace + with
-    // space
+        retrofit2EncodedString.replaceAll("%(?![0-9A-Fa-f]{2})", "%25").replaceAll("\\+", "%2B");
     String decodedVal = URLDecoder.decode(retrofit2EncodedVal, StandardCharsets.UTF_8);
     String encodedString = URLEncoder.encode(decodedVal, StandardCharsets.UTF_8);
-    return encodedString.replace("+", "%20"); // encoding replaces space with +
+    return encodedString.replace("+", "%20");
   }
 }

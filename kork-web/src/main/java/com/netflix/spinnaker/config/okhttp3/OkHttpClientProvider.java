@@ -33,9 +33,11 @@ public class OkHttpClientProvider {
 
   private final Retrofit2EncodeCorrectionInterceptor retrofit2EncodeCorrectionInterceptor;
 
-  public OkHttpClientProvider(List<OkHttpClientBuilderProvider> providers) {
+  public OkHttpClientProvider(
+      List<OkHttpClientBuilderProvider> providers,
+      Retrofit2EncodeCorrectionInterceptor retrofit2EncodeCorrectionInterceptor) {
     this.providers = providers;
-    this.retrofit2EncodeCorrectionInterceptor = new Retrofit2EncodeCorrectionInterceptor();
+    this.retrofit2EncodeCorrectionInterceptor = retrofit2EncodeCorrectionInterceptor;
   }
 
   /**
@@ -54,7 +56,9 @@ public class OkHttpClientProvider {
   }
 
   public OkHttpClient getClient(ServiceEndpoint service, List<Interceptor> interceptors) {
-    return getClient(service, interceptors, false);
+    // retrofit2 does partial encoding causing issues in some cases, so the default behaviour is
+    // kept to correct it by passing false for the third argument
+    return getClient(service, interceptors, false /* skipEncodeCorrection */);
   }
 
   public OkHttpClient getClient(
