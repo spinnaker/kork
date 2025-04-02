@@ -29,10 +29,12 @@ import okhttp3.Interceptor;
 import okhttp3.OkHttpClient;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.boot.test.context.SpringBootTest;
 
+@ExtendWith(MockitoExtension.class)
 @SpringBootTest(
     webEnvironment = SpringBootTest.WebEnvironment.NONE,
     classes = {OkHttpClient.class, OkHttpClientConfigurationProperties.class})
@@ -52,7 +54,6 @@ public class OkHttpClientProviderTest {
 
   @BeforeEach
   void setUp() {
-    MockitoAnnotations.openMocks(this);
     builder = new OkHttpClient.Builder();
     clientProvider =
         new OkHttpClientProvider(
