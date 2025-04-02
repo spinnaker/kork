@@ -57,15 +57,16 @@ public class Retrofit2EncodeCorrectionInterceptorTest {
 
   // to test if a path parameter value containing various special characters is handled correctly
   // with Retrofit2
-  private static final String PATH_VAL = "path: [] () = % $ & # @ ; , ? \" ' end path";
+  private static final String PATH_VAL = "path: [] () {} + ^ < > ` = % $ & # @ ; , ? \" ' end path";
   private static final String ENCODED_PATH_VAL = encodedString(PATH_VAL);
 
   // to test if a query parameter value containing various special characters is handled correctly
   // with Retrofit2
-  private static final String QUERY_PARAM1 = "qry1: [] () + = % $ & # @ ; , ? \" ' /end qry1";
+  private static final String QUERY_PARAM1 =
+      "qry1: [] () {} + ^ < > ` = $ & # @ ; , ? \" ' /end qry1";
   private static final String ENCODED_QUERY_PARAM1 = encodedString(QUERY_PARAM1);
 
-  private static final String QUERY_PARAM2 = "qry2: [] () + = % $ & # @ ; , ? \" ' end qry2";
+  private static final String QUERY_PARAM2 = "qry2: [] () + = $ & # @ ; , ? \" ' end qry2";
   private static final String ENCODED_QUERY_PARAM2 = encodedString(QUERY_PARAM2);
   private static final String QUERY_PARAM3 = "";
   private static final String EXPECTED_URL =
@@ -100,7 +101,19 @@ public class Retrofit2EncodeCorrectionInterceptorTest {
     // note the partial encoding done by Retrofit2
     assertThat(getPathFromUrl(requestReceived.getUrl()))
         .isEqualTo(
-            "/test/path:%20[]%20()%20=%20%25%20$%20&%20%23%20@%20;%20,%20%3F%20%22%20'%20end%20path/get");
+            "/test/path:%20[]%20()%20%7B%7D%20+%20%5E%20%3C%20%3E%20%60%20=%20%25%20$%20&%20%23%20@%20;%20,%20%3F%20%22%20'%20end%20path/get");
+    System.out.println(requestReceived.getUrl());
+    String url = requestReceived.getUrl();
+    String[] queryParams = getQueryParamsFromUrl(url);
+    // query parameters are partially encoded by Retrofit2
+    assertThat(queryParams[0])
+        .isEqualTo(
+            "qry1:%20[]%20()%20{}%20+%20^%20%3C%20%3E%20`%20%3D%20$%20%26%20%23%20@%20;%20,%20?%20%22%20%27%20/end%20qry1");
+    assertThat(queryParams[1])
+        .isEqualTo(
+            "qry2:%20[]%20()%20+%20%3D%20$%20%26%20%23%20@%20;%20,%20?%20%22%20%27%20end%20qry2");
+    assertThat(queryParams[2]).isEqualTo("");
+
     wireMock.verify(0, getRequestedFor(urlEqualTo(EXPECTED_URL)));
   }
 
@@ -112,9 +125,12 @@ public class Retrofit2EncodeCorrectionInterceptorTest {
     service.getRequest(PATH_VAL, QUERY_PARAM1, QUERY_PARAM2, QUERY_PARAM3).execute();
     wireMock.verify(getRequestedFor(urlEqualTo(EXPECTED_URL)));
     LoggedRequest requestReceived = wireMock.getAllServeEvents().get(0).getRequest();
-    assertThat(requestReceived.queryParameter("qry1").firstValue()).isEqualTo(QUERY_PARAM1);
-    assertThat(requestReceived.queryParameter("qry2").firstValue()).isEqualTo(QUERY_PARAM2);
-    assertThat(requestReceived.queryParameter("qry3").firstValue()).isEqualTo("");
+    System.out.println(requestReceived.getUrl());
+    String url = requestReceived.getUrl();
+    String[] queryParams = getQueryParamsFromUrl(url);
+    assertThat(queryParams[0]).isEqualTo(ENCODED_QUERY_PARAM1);
+    assertThat(queryParams[1]).isEqualTo(ENCODED_QUERY_PARAM2);
+    assertThat(queryParams[2]).isEqualTo("");
   }
 
   private Retrofit2Service getRetrofit2Service(String baseUrl, OkHttpClient okHttpClient) {
@@ -127,6 +143,9 @@ public class Retrofit2EncodeCorrectionInterceptorTest {
   }
 
   private static String encodedString(String input) {
+    // after encode(), replace  '+' characters with '%20' as encode() replaces spaces with '+'
+    // eg: '[ + ]' is encoded as '%5B+%2B+%5D', so replacing '+' with '%20' completes
+    // the encoding
     return URLEncoder.encode(input, StandardCharsets.UTF_8).replaceAll("\\+", "%20");
   }
 
@@ -134,12 +153,20 @@ public class Retrofit2EncodeCorrectionInterceptorTest {
     return url.substring(0, url.indexOf('?'));
   }
 
+  private static String[] getQueryParamsFromUrl(String url) {
+    String[] params = new String[3];
+    params[0] = url.substring(url.indexOf("qry1=") + 5, url.indexOf("&qry2="));
+    params[1] = url.substring(url.indexOf("qry2=") + 5, url.indexOf("&qry3="));
+    params[2] = url.substring(url.indexOf("qry3=") + 5);
+    return params;
+  }
+
   interface Retrofit2Service {
     @GET("test/{path}/get")
     Call<Void> getRequest(
         @Path("path") String path,
-        @Query("qry1") String qry1,
-        @Query("qry2") String qry2,
-        @Query("qry3") String qry3);
+        @Query(value = "qry1", encoded = true) String qry1,
+        @Query(value = "qry2", encoded = true) String qry2,
+        @Query(value = "qry3", encoded = true) String qry3);
   }
 }
