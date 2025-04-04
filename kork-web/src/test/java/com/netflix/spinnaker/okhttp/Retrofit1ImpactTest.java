@@ -17,13 +17,12 @@
 package com.netflix.spinnaker.okhttp;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
+import static com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.ok;
+import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
-import static org.assertj.core.api.Assertions.catchThrowable;
-import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
 import com.github.tomakehurst.wiremock.junit5.WireMockExtension;
-import com.github.tomakehurst.wiremock.verification.LoggedRequest;
 import com.jakewharton.retrofit.Ok3Client;
 import com.netflix.spectator.api.NoopRegistry;
 import com.netflix.spinnaker.config.OkHttp3ClientConfiguration;
@@ -40,7 +39,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import retrofit.RetrofitError;
 import retrofit.http.GET;
 import retrofit.http.Query;
 
@@ -75,19 +73,10 @@ public class Retrofit1ImpactTest {
     wireMock.stubFor(get("/test?qry=" + ENCODED_QUERY_PARAM_VAL).willReturn(ok()));
     Retrofit1Service retrofit1Service = getRetrofit1Service(wireMock.baseUrl());
 
-    Throwable thrown = catchThrowable(() -> retrofit1Service.get(QUERY_PARAM_VAL));
-    assertThat(thrown).isInstanceOf(RetrofitError.class);
-    RetrofitError retrofitError = (RetrofitError) thrown;
+    retrofit1Service.get(QUERY_PARAM_VAL);
 
-    // With this encoding change, the request doesn't match the stub configured
-    // above, so wiremock responds with 404/not found.
-    assertThat(retrofitError.getResponse().getStatus()).isEqualTo(404);
-
-    LoggedRequest requestReceived = wireMock.getAllServeEvents().get(0).getRequest();
-    String receivedUrl = requestReceived.getUrl();
-
-    // Retrofit2EncodeCorrectionInterceptor encodes + with %2B
-    assertThat(receivedUrl).isEqualTo("/test?qry=qry_with%2Bspace");
+    // proves no presence of Retrofit2EncodeCorrectionInterceptor in retrofit1 client
+    wireMock.verify(1, getRequestedFor(urlEqualTo("/test?qry=" + ENCODED_QUERY_PARAM_VAL)));
   }
 
   private static String encodedString(String input) {

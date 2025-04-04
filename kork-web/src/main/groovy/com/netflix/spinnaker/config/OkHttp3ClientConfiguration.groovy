@@ -106,10 +106,6 @@ class OkHttp3ClientConfiguration {
       okHttpClientBuilder.addInterceptor(okHttp3MetricsInterceptor)
     }
 
-    if (retrofit2EncodeCorrectionInterceptor != null) {
-      okHttpClientBuilder.addInterceptor(retrofit2EncodeCorrectionInterceptor)
-    }
-
     if (!okHttpClientConfigurationProperties.keyStore && !okHttpClientConfigurationProperties.trustStore) {
       return okHttpClientBuilder
     }
