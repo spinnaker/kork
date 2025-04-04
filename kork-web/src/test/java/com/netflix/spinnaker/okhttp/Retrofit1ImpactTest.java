@@ -19,8 +19,8 @@ package com.netflix.spinnaker.okhttp;
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
 import static com.github.tomakehurst.wiremock.client.WireMock.ok;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
+import static org.assertj.core.api.Assertions.catchThrowable;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import com.github.tomakehurst.wiremock.junit5.WireMockExtension;
 import com.github.tomakehurst.wiremock.verification.LoggedRequest;
@@ -75,7 +75,13 @@ public class Retrofit1ImpactTest {
     wireMock.stubFor(get("/test?qry=" + ENCODED_QUERY_PARAM_VAL).willReturn(ok()));
     Retrofit1Service retrofit1Service = getRetrofit1Service(wireMock.baseUrl());
 
-    assertThrows(RetrofitError.class, () -> retrofit1Service.get(QUERY_PARAM_VAL));
+    Throwable thrown = catchThrowable(() -> retrofit1Service.get(QUERY_PARAM_VAL));
+    assertThat(thrown).isInstanceOf(RetrofitError.class);
+    RetrofitError retrofitError = (RetrofitError) thrown;
+
+    // With this encoding change, the request doesn't match the stub configured
+    // above, so wiremock responds with 404/not found.
+    assertThat(retrofitError.getResponse().getStatus()).isEqualTo(404);
 
     LoggedRequest requestReceived = wireMock.getAllServeEvents().get(0).getRequest();
     String receivedUrl = requestReceived.getUrl();
@@ -89,6 +95,9 @@ public class Retrofit1ImpactTest {
   }
 
   private Retrofit1Service getRetrofit1Service(String baseUrl) {
+    // clientConfiguration.create() is for use with retrofit1.  The point of
+    // this test is to verify that clientConfiguration.create doesn't include
+    // the Retrofit2EncodeCorrectionInterceptor since that's only for retrofit2.
     return new retrofit.RestAdapter.Builder()
         .setEndpoint(baseUrl)
         .setClient(new Ok3Client(clientConfiguration.create().build()))
