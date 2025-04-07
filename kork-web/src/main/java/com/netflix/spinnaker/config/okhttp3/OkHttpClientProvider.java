@@ -22,8 +22,10 @@ import com.netflix.spinnaker.config.ServiceEndpoint;
 import com.netflix.spinnaker.kork.exceptions.SystemException;
 import com.netflix.spinnaker.okhttp.Retrofit2EncodeCorrectionInterceptor;
 import java.util.List;
+import java.util.Optional;
 import okhttp3.Interceptor;
 import okhttp3.OkHttpClient;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -31,13 +33,20 @@ public class OkHttpClientProvider {
 
   private final List<OkHttpClientBuilderProvider> providers;
 
-  private final Retrofit2EncodeCorrectionInterceptor retrofit2EncodeCorrectionInterceptor;
+  private final Optional<Retrofit2EncodeCorrectionInterceptor> retrofit2EncodeCorrectionInterceptor;
 
+  @Autowired
   public OkHttpClientProvider(
       List<OkHttpClientBuilderProvider> providers,
       Retrofit2EncodeCorrectionInterceptor retrofit2EncodeCorrectionInterceptor) {
     this.providers = providers;
-    this.retrofit2EncodeCorrectionInterceptor = retrofit2EncodeCorrectionInterceptor;
+    this.retrofit2EncodeCorrectionInterceptor = Optional.of(retrofit2EncodeCorrectionInterceptor);
+  }
+
+  public OkHttpClientProvider(List<OkHttpClientBuilderProvider> providers) {
+    this.providers = providers;
+    // to maintain backward compatibility with existing Retrofit1 clients
+    this.retrofit2EncodeCorrectionInterceptor = Optional.empty();
   }
 
   /**
@@ -64,11 +73,11 @@ public class OkHttpClientProvider {
   public OkHttpClient getClient(
       ServiceEndpoint service, List<Interceptor> interceptors, boolean skipEncodeCorrection) {
     OkHttpClient.Builder builder = findProvider(service).get(service);
-    if (!skipEncodeCorrection) {
+    if (!skipEncodeCorrection && retrofit2EncodeCorrectionInterceptor.isPresent()) {
       boolean encodeCorrectionExist =
           interceptors.stream().anyMatch(i -> i instanceof Retrofit2EncodeCorrectionInterceptor);
       if (!encodeCorrectionExist) {
-        builder.addInterceptor(retrofit2EncodeCorrectionInterceptor);
+        builder.addInterceptor(retrofit2EncodeCorrectionInterceptor.get());
       }
     }
     interceptors.forEach(builder::addInterceptor);

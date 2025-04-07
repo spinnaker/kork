@@ -57,7 +57,6 @@ class RetrofitServiceProviderTest  : JUnit5Minutests {
             RetrofitServiceFactoryAutoConfiguration::class.java,
             TaskExecutionAutoConfiguration::class.java,
             DefaultOkHttpClientBuilderProvider::class.java,
-            OkHttpClientProvider::class.java,
             OkHttpClientComponents::class.java,
             RetrofitConfiguration::class.java,
             TestConfiguration::class.java
@@ -89,7 +88,7 @@ class RetrofitServiceProviderTest  : JUnit5Minutests {
                 .getClient(DefaultServiceEndpoint("retrofit1", "https://www.test.com"))
                 .interceptors
                 .count { it is Retrofit2EncodeCorrectionInterceptor }
-            ).isEqualTo(1)
+            ).isEqualTo(0)
           }
         }
       }
