@@ -33,6 +33,10 @@ import retrofit.RestAdapter;
 @ConditionalOnProperty(value = "retrofit.enabled", havingValue = "true", matchIfMissing = true)
 public class RetrofitServiceFactoryAutoConfiguration {
 
+  /**
+   * Creates OkHttpClientProvider bean for use with RetrofitServiceFactory i.e. for retrofit1
+   * clients
+   */
   @Bean
   public OkHttpClientProvider okHttpClientProvider(List<OkHttpClientBuilderProvider> providers) {
     return new OkHttpClientProvider(providers);

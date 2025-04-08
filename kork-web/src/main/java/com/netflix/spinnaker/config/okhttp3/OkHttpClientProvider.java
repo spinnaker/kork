@@ -35,6 +35,16 @@ public class OkHttpClientProvider {
 
   private final Optional<Retrofit2EncodeCorrectionInterceptor> retrofit2EncodeCorrectionInterceptor;
 
+  /**
+   * Constructor used for retrofit2 clients through Retrofit2ServiceFactory.
+   * Retrofit2EncodeCorrectionInterceptor is required for retrofit2 clients for correcting the
+   * partial encoding done by retrofit2
+   *
+   * @param providers list of {@link OkHttpClientBuilderProvider} that can build a client for the
+   *     given service config
+   * @param retrofit2EncodeCorrectionInterceptor interceptor that corrects the partial encoding done
+   *     by retrofit2
+   */
   @Autowired
   public OkHttpClientProvider(
       List<OkHttpClientBuilderProvider> providers,
@@ -43,6 +53,13 @@ public class OkHttpClientProvider {
     this.retrofit2EncodeCorrectionInterceptor = Optional.of(retrofit2EncodeCorrectionInterceptor);
   }
 
+  /**
+   * Constructor used for retrofit1 clients through RetrofitServiceFactory.
+   * Retrofit2EncodeCorrectionInterceptor is not required for retrofit1 clients hence set to empty.
+   *
+   * @param providers list of {@link OkHttpClientBuilderProvider} that can build a client for the
+   *     given service config
+   */
   public OkHttpClientProvider(List<OkHttpClientBuilderProvider> providers) {
     this.providers = providers;
     // to maintain backward compatibility with existing Retrofit1 clients
