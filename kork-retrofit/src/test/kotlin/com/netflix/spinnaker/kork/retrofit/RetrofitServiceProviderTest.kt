@@ -56,6 +56,8 @@ class RetrofitServiceProviderTest  : JUnit5Minutests {
           .withConfiguration(AutoConfigurations.of(
             RetrofitServiceFactoryAutoConfiguration::class.java,
             TaskExecutionAutoConfiguration::class.java,
+            DefaultOkHttpClientBuilderProvider::class.java,
+            OkHttpClientProvider::class.java,
             OkHttpClientComponents::class.java,
             RetrofitConfiguration::class.java,
             TestConfiguration::class.java
@@ -79,6 +81,19 @@ class RetrofitServiceProviderTest  : JUnit5Minutests {
         }
       }
 
+      test("check if Retrofit2EncodeCorrectionInterceptor is added to OkHttpClientProvider") {
+        run { ctx: AssertableApplicationContext ->
+          expect {
+            that(
+              ctx.getBean(OkHttpClientProvider::class.java)
+                .getClient(DefaultServiceEndpoint("retrofit1", "https://www.test.com"))
+                .interceptors
+                .count { it is Retrofit2EncodeCorrectionInterceptor }
+            ).isEqualTo(1)
+          }
+        }
+      }
+
     }
   }
 
@@ -94,11 +109,6 @@ private open class TestConfiguration {
   @Bean
   open fun okHttpClient(httpTracing: HttpTracing): OkHttpClient {
     return RawOkHttpClientFactory().create(OkHttpClientConfigurationProperties(), emptyList(), httpTracing)
-  }
-
-  @Bean
-  open fun okHttpClientProvider(okHttpClient: OkHttpClient): OkHttpClientProvider {
-    return OkHttpClientProvider(listOf(DefaultOkHttpClientBuilderProvider(okHttpClient, OkHttpClientConfigurationProperties())), Retrofit2EncodeCorrectionInterceptor())
   }
 
   @Bean
