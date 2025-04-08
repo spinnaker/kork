@@ -30,11 +30,16 @@ import javax.servlet.http.HttpServletResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.annotation.AnnotationUtils;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpRequest;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
+import org.springframework.web.reactive.function.client.WebClientResponseException;
 import retrofit.RetrofitError;
 import retrofit.client.Header;
 
@@ -87,6 +92,36 @@ public class GenericExceptionHandlers extends BaseExceptionHandlers {
     // orca does), so handle it, as opposed to calling response.sendError
     // directly.
     handleResponseStatusAnnotatedException(e, response);
+  }
+
+  @ExceptionHandler(WebClientResponseException.class)
+  public ResponseEntity<UpstreamRequestError> handleWebClientResponseException(
+      WebClientResponseException e) {
+    HttpStatus statusCode = e.getStatusCode();
+    var builder = ResponseEntity.status(statusCode);
+    var error = new UpstreamRequestError();
+    error.setStatus(e.getRawStatusCode());
+    error.setError(e.getStatusText());
+    HttpRequest request = e.getRequest();
+    if (request != null) {
+      error.setUri(request.getURI());
+      error.setMethod(request.getMethod());
+    }
+    HttpHeaders headers = e.getHeaders();
+    String eTag = headers.getETag();
+    if (eTag != null) {
+      builder.eTag(eTag);
+    }
+    long lastModified = headers.getLastModified();
+    if (lastModified != -1) {
+      builder.lastModified(lastModified);
+    }
+    MediaType contentType = headers.getContentType();
+    if (contentType != null && contentType.isCompatibleWith(MediaType.APPLICATION_JSON)) {
+      error.setBody(e.getResponseBodyAsString());
+    }
+    error.setMessage(exceptionMessageDecorator.decorate(e, e.getMessage()));
+    return builder.body(error);
   }
 
   @ExceptionHandler(RetrofitError.class)
